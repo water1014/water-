@@ -2086,19 +2086,65 @@
       fr.onload = function () {
         var d;
         try { d = JSON.parse(fr.result); } catch (e) { toast('这个文件读不出来'); return; }
-        if (!d || (!d.history && !d.config)) { toast('不是水色物语的备份'); return; }
+        if (!d || typeof d !== 'object' || Array.isArray(d) || (d.app && d.app !== 'mizu-iro') || (!d.history && !d.config)) {
+          toast('不是水色物语的备份'); return;
+        }
+
+        var arrayFields = ['history', 'moods', 'memories', 'letters', 'playlist', 'quickPhrases', 'statuses', 'archive'];
+        for (var ai = 0; ai < arrayFields.length; ai++) {
+          var field = arrayFields[ai];
+          if (Object.prototype.hasOwnProperty.call(d, field) && !Array.isArray(d[field])) {
+            toast('备份里的「' + field + '」格式不正确'); return;
+          }
+        }
+        var objectFields = ['notes', 'weather', 'config'];
+        for (var oi = 0; oi < objectFields.length; oi++) {
+          var objectField = objectFields[oi];
+          if (Object.prototype.hasOwnProperty.call(d, objectField) &&
+              (!d[objectField] || typeof d[objectField] !== 'object' || Array.isArray(d[objectField]))) {
+            toast('备份里的设置或记录格式不正确'); return;
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(d, 'archiveNote') && typeof d.archiveNote !== 'string') {
+          toast('备份里的记忆整理摘要格式不正确'); return;
+        }
+
+        var updates = [];
+        var importMap = {
+          history: 'mizu.history', moods: 'mizu.moods', memories: 'mizu.memories',
+          notes: 'mizu.notes', weather: 'mizu.weather', letters: 'mizu.letters',
+          playlist: 'mizu.playlist', quickPhrases: 'mizu.quickPhrases',
+          statuses: 'mizu.statuses', archive: 'mizu.archive'
+        };
+        for (var dataKey in importMap) {
+          if (Object.prototype.hasOwnProperty.call(d, dataKey)) {
+            updates.push({ key: importMap[dataKey], value: JSON.stringify(d[dataKey]) });
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(d, 'archiveNote')) {
+          updates.push({ key: 'mizu.archiveNote', value: d.archiveNote });
+        }
+        if (d.config) {
+          var cur = {};
+          try { cur = JSON.parse(localStorage.getItem('mizu.config') || '{}') || {}; } catch (e3) { cur = {}; }
+          for (var ck in d.config) if (Object.prototype.hasOwnProperty.call(d.config, ck)) cur[ck] = d.config[ck];
+          updates.push({ key: 'mizu.config', value: JSON.stringify(cur) });
+        }
+
+        var before = updates.map(function (item) {
+          return { key: item.key, value: localStorage.getItem(item.key) };
+        });
         try {
-          if (d.history) localStorage.setItem('mizu.history', JSON.stringify(d.history));
-          if (d.moods) localStorage.setItem('mizu.moods', JSON.stringify(d.moods));
-          if (d.memories) localStorage.setItem('mizu.memories', JSON.stringify(d.memories));
-          if (d.notes) localStorage.setItem('mizu.notes', JSON.stringify(d.notes));
-          if (d.weather) localStorage.setItem('mizu.weather', JSON.stringify(d.weather));
-          if (d.letters) localStorage.setItem('mizu.letters', JSON.stringify(d.letters));
-          if (d.playlist) localStorage.setItem('mizu.playlist', JSON.stringify(d.playlist));
-          if (d.quickPhrases) localStorage.setItem('mizu.quickPhrases', JSON.stringify(d.quickPhrases));
-          if (d.archive) localStorage.setItem('mizu.archive', JSON.stringify(d.archive));
-          if (d.config) { var cur = JSON.parse(localStorage.getItem('mizu.config') || '{}'); for (var k in d.config) cur[k] = d.config[k]; localStorage.setItem('mizu.config', JSON.stringify(cur)); }
-        } catch (e2) { toast('湖面装不下这么多，先清一些吧'); return; }
+          updates.forEach(function (item) { localStorage.setItem(item.key, item.value); });
+        } catch (e2) {
+          before.forEach(function (item) {
+            try {
+              if (item.value === null) localStorage.removeItem(item.key);
+              else localStorage.setItem(item.key, item.value);
+            } catch (rollbackError) { /* 尽力恢复导入前的数据 */ }
+          });
+          toast('导入空间不足，已尽力恢复原有数据'); return;
+        }
         toast('回忆回来了 · 正在重启');
         setTimeout(function () { location.reload(); }, 700);
       };
@@ -2116,7 +2162,16 @@
       var list = base.endsWith('/v1') ? [base] : [base, base + '/v1'], lastErr = '';
       for (var i = 0; i < list.length; i++) {
         try {
-          var r = await fetch(list[i] + '/models', { headers: key ? { 'Authorization': 'Bearer ' + key } : {} });
+          var modelHeaders = { 'Accept': 'application/json' };
+          var hasModelAuth = false;
+          forEach(headerRows.querySelectorAll('.header-row'), function (row) {
+            var headerName = row.querySelector('.hkey').value.trim();
+            if (!headerName) return;
+            modelHeaders[headerName] = row.querySelector('.hval').value;
+            if (headerName.toLowerCase() === 'authorization') hasModelAuth = true;
+          });
+          if (key && !hasModelAuth) modelHeaders['Authorization'] = 'Bearer ' + key;
+          var r = await fetch(list[i] + '/models', { headers: modelHeaders });
           if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
           var arr = ((await r.json()) || {}).data || [];
           if (!arr.length) { lastErr = '返回结果为空'; continue; }
@@ -2142,10 +2197,11 @@
     var cfg = {};
     for (var k in config) if (Object.prototype.hasOwnProperty.call(config, k) && k !== 'apiKey') cfg[k] = config[k];
     var payload = {
-      app: 'mizu-iro', version: 1, exportedAt: new Date().toISOString(),
+      app: 'mizu-iro', version: 2, exportedAt: new Date().toISOString(),
       config: cfg, history: history, moods: moods, memories: memories,
       notes: notes, weather: weather, letters: letters, playlist: playlist,
-      quickPhrases: phrases, statuses: statuses
+      quickPhrases: phrases, statuses: statuses, archive: archive,
+      archiveNote: read(K_ARCNOTE, '')
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
