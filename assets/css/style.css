@@ -1105,3 +1105,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .abyss-panel{animation:none !important}
 }
 .app-bar{display:none}
+
+/* —— 更多页：本地回忆备份入口 —— */
+.more-backup{padding:18px;border:1px solid var(--glass-line);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(218,242,248,.54));box-shadow:var(--inset),var(--shadow)}
+.more-backup-head{display:flex;align-items:center;gap:12px;color:var(--ink)}
+.more-backup-mark{width:40px;height:40px;display:grid;place-items:center;flex:0 0 auto;border-radius:14px;background:rgba(127,212,232,.2);color:var(--accent-deep)}
+.more-backup-mark svg{width:21px;height:21px}
+.more-backup-head b,.more-backup-head small{display:block}
+.more-backup-head b{font-size:14px;font-weight:600;letter-spacing:.04em}
+.more-backup-head small{margin-top:4px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-sub)}
+.more-backup>p{margin:14px 0;color:var(--ink-sub);font-size:12px;line-height:1.8}
+.more-backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.more-backup-actions button{min-height:42px;border-radius:14px;border:1px solid var(--glass-line);background:rgba(255,255,255,.72);color:var(--accent-deep);font-size:12px;letter-spacing:.05em;transition:transform 180ms var(--ease),background 180ms var(--ease)}
+.more-backup-actions button:active{transform:scale(.97);background:rgba(127,212,232,.2)}
+[data-theme="night"] .more-backup{background:linear-gradient(145deg,rgba(53,67,78,.92),rgba(39,54,66,.82))}
+[data-theme="night"] .more-backup-actions button{background:rgba(255,255,255,.07);color:var(--ink)}
