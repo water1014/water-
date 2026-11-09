@@ -1083,6 +1083,37 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .w-val{font-size:20px;line-height:24px;font-weight:600;letter-spacing:.02em;color:var(--ink)}
 .w-cap{font-family:var(--mono);font-size:10px;line-height:16px;letter-spacing:.14em;color:var(--ink-sub)}
 [data-theme="night"] .wcard{background:rgba(40,40,46,.74);border-color:rgba(255,255,255,.08)}
+
+/* 应用屏垂直居中 + 解锁入场 */
+.hpage-apps{justify-content:center;padding-bottom:132px}
+.home.is-on{animation:homeIn var(--dur) var(--ease) both}
+@keyframes homeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .home.is-on{animation:homeFade var(--dur) var(--ease) both}
+  @keyframes homeFade{from{opacity:0}to{opacity:1}}
+}
+
+/* 果冻反馈：按下 80ms 快压，松开 420ms 带过冲慢回弹 */
+.jelly{transform:scale(1);transition:transform 420ms cubic-bezier(.34,1.9,.4,1)}
+.jelly:active{transform:scale(.9);transition:transform 80ms ease-out}
+.jelly-ic{transform:scale(1) rotate(0);transition:transform 420ms cubic-bezier(.32,2.1,.4,1)}
+.jelly-ic:active{transform:scale(.84) rotate(-4deg);transition:transform 80ms ease-out}
+.app-icon,.dock-btn,.chat-back,.chat-head .icon-btn,.send-btn,.mic-btn,.qchip,.wcard,.lock-foot,.home-mail,.chip-tool,.app-cell .app-icon{transform-origin:center}
+.app-icon:active,.dock-btn:active,.send-btn:active,.chip-tool:active,.qchip:active,.app-cell .app-icon:active{transform:scale(.9);transition:transform 80ms ease-out}
+.app-icon,.dock-btn,.send-btn,.chip-tool,.qchip{transition:transform 420ms cubic-bezier(.34,1.9,.4,1),color 200ms var(--ease),background 200ms var(--ease)}
+.chat-back:active,.chat-head .icon-btn:active,.mic-btn:active{transform:scale(.84) rotate(-4deg);transition:transform 80ms ease-out}
+.chat-back,.chat-head .icon-btn,.mic-btn{transition:transform 420ms cubic-bezier(.32,2.1,.4,1),color 200ms var(--ease),background 200ms var(--ease)}
+.wcard:active{transform:scale(.96);transition:transform 80ms ease-out}
+.wcard{transition:transform 420ms cubic-bezier(.34,1.9,.4,1)}
+.lock-foot:active{transform:scale(.94) translateY(2px);transition:transform 80ms ease-out}
+.lock-foot{transition:transform 420ms cubic-bezier(.34,1.9,.4,1)}
+@media (prefers-reduced-motion:reduce){
+  .app-icon:active,.dock-btn:active,.send-btn:active,.chip-tool:active,.qchip:active,
+  .chat-back:active,.chat-head .icon-btn:active,.mic-btn:active,.wcard:active,.lock-foot:active{transform:none}
+}
+
+.hp-eyebrow{font-family:var(--mono);font-size:10px;line-height:16px;letter-spacing:.24em;color:var(--ink-sub);opacity:.75;padding:0 4px;margin-bottom:-4px}
+.hpage-apps .hp-eyebrow{align-self:flex-start;margin-bottom:0}
 /* ============================================================
    12 · 降级
    ============================================================ */
@@ -1195,6 +1226,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
           </div>
 
           <div class="hpage">
+            <p class="hp-eyebrow">TODAY · 今天</p>
             <div class="hcard hp-mood">
               <p class="hp-label">TODAY'S MOOD · 今天的心情</p>
               <div class="mood-row" id="moodRow"></div>
@@ -1223,11 +1255,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
             </div>
           </div>
 
-          <div class="hpage">
+          <div class="hpage hpage-apps">
+            <p class="hp-eyebrow">APPS · 应用</p>
             <div class="app-grid" id="appGrid"></div>
           </div>
 
           <div class="hpage">
+            <p class="hp-eyebrow">DIARY · 日常</p>
             <div class="hcard hp-diary">
               <p class="hp-label hp-serif">My Diary</p>
               <p class="hp-diary-text" id="hpDiary">雾散之前，先让心跳慢一点。</p>
@@ -1600,7 +1634,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
       <label class="field"><span class="field-label">API Key</span>
         <input id="setKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…"></label>
       <label class="field"><span class="field-label">Model · 模型名</span>
-        <input id="setModel" type="text" spellcheck="false" placeholder="gpt-4o-mini"></label>
+        <div style="display:flex;gap:8px">
+          <input id="setModel" type="text" spellcheck="false" placeholder="gpt-4o-mini" style="flex:1 1 auto">
+          <button class="btn-ghost" id="pullModels" type="button" style="flex:0 0 auto;padding:8px 16px">拉取</button>
+        </div></label>
       <label class="field"><span class="field-label">在一起的第一天</span>
         <input id="setAnniversary" type="date"></label>
 
@@ -1645,6 +1682,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
       <div class="field" style="margin-bottom:8px">
         <span class="field-label">导出回忆</span>
         <button class="btn-ghost" id="exportBtn" type="button" style="width:100%">打包成 JSON</button>
+        <button class="btn-ghost" id="importBtn" type="button" style="width:100%;margin-top:8px">从 JSON 恢复</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
       </div>
     </div>
 
@@ -1926,7 +1965,19 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     });
   }
   function saveHistory() { write(LS_HIS, history); }
-  function saveConfig() { write(LS_CFG, config); }
+  function saveConfig() {
+    try { localStorage.setItem(LS_CFG, JSON.stringify(config)); return true; }
+    catch (e) {
+      if (config.wallpaper) {
+        config.wallpaper = '';
+        applyWallpaper();
+        toast('壁纸太大存不下 · 已回到晨雾默认');
+        try { localStorage.setItem(LS_CFG, JSON.stringify(config)); return true; } catch (e2) { /* noop */ }
+      }
+      toast('湖面的容量满了，先让一些碎片沉下去吧');
+      return false;
+    }
+  }
 
   function relationshipStart() {
     var ann = parseISO(config.anniversary);
@@ -2492,9 +2543,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     followIfNear();
   }
 
+  var followTick = false;
   function followIfNear() {
-    if (isNearBottom()) { chatScroll.scrollTop = chatScroll.scrollHeight; jumpBtn.classList.remove('show'); }
-    else updateJump();
+    if (!isNearBottom()) { updateJump(); return; }
+    jumpBtn.classList.remove('show');
+    if (followTick) return;
+    followTick = true;
+    requestAnimationFrame(function () { followTick = false; chatScroll.scrollTop = chatScroll.scrollHeight; });
   }
 
   function setSendUI(on) {
@@ -2568,6 +2623,16 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     followIfNear();
   }
 
+  function normalizeEndpoint(u) {
+    u = String(u || '').trim();
+    if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    u = u.replace(/\/+$/, '');
+    if (/\/chat\/completions$/i.test(u)) return u;
+    if (/\/v\d+$/i.test(u)) return u + '/chat/completions';
+    return u + '/v1/chat/completions';
+  }
+
   function buildHeaders() {
     var h = { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
     var hasAuth = false;
@@ -2631,7 +2696,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     ensureTyping();
     setTyping(true);
 
-    var url = (config.endpoint || '').trim();
+    var url = normalizeEndpoint(config.endpoint);
     if (!url) throw new Error('还没有填写 API 地址，点右上角齿轮设置一下吧');
     if (/api\.openai\.com/i.test(url) && !config.apiKey) throw new Error('还没有填写 API Key，点右上角齿轮配置一下吧');
 
@@ -3184,7 +3249,18 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 
 
   /* ================= 相册 ================= */
-  function saveMemories() { write('mizu.memories', memories); }
+  function saveMemories() {
+    for (var tries = 0; tries < 5; tries++) {
+      try { localStorage.setItem('mizu.memories', JSON.stringify(memories)); return true; }
+      catch (e) {
+        if (memories.length <= 1) break;
+        memories.shift();
+        toast('湖面的容量满了 · 最旧的一张先沉下去了');
+      }
+    }
+    toast('湖面的容量满了，先让一些碎片沉下去吧');
+    return false;
+  }
   function renderAlbum() {
     var grid = $('albumGrid');
     if (!grid) return;
@@ -3426,7 +3502,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     btn.textContent = '正在写…';
     var h = buildHeaders();
     h['Accept'] = 'application/json';
-    fetch(config.endpoint, {
+    fetch(normalizeEndpoint(config.endpoint), {
       method: 'POST',
       headers: h,
       body: JSON.stringify({
@@ -3743,6 +3819,67 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     applyWallpaper();
     toast('回到晨雾默认背景');
   });
+  if ($('importBtn')) {
+    $('importBtn').addEventListener('click', function () { $('importFile').click(); });
+    $('importFile').addEventListener('change', function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        var d;
+        try { d = JSON.parse(fr.result); } catch (e) { toast('这个文件读不出来'); return; }
+        if (!d || (!d.history && !d.config)) { toast('不是水色物语的备份'); return; }
+        try {
+          if (d.history) localStorage.setItem('mizu.history', JSON.stringify(d.history));
+          if (d.moods) localStorage.setItem('mizu.moods', JSON.stringify(d.moods));
+          if (d.memories) localStorage.setItem('mizu.memories', JSON.stringify(d.memories));
+          if (d.notes) localStorage.setItem('mizu.notes', JSON.stringify(d.notes));
+          if (d.weather) localStorage.setItem('mizu.weather', JSON.stringify(d.weather));
+          if (d.letters) localStorage.setItem('mizu.letters', JSON.stringify(d.letters));
+          if (d.playlist) localStorage.setItem('mizu.playlist', JSON.stringify(d.playlist));
+          if (d.quickPhrases) localStorage.setItem('mizu.quickPhrases', JSON.stringify(d.quickPhrases));
+          if (d.archive) localStorage.setItem('mizu.archive', JSON.stringify(d.archive));
+          if (d.config) { var cur = JSON.parse(localStorage.getItem('mizu.config') || '{}'); for (var k in d.config) cur[k] = d.config[k]; localStorage.setItem('mizu.config', JSON.stringify(cur)); }
+        } catch (e2) { toast('湖面装不下这么多，先清一些吧'); return; }
+        toast('回忆回来了 · 正在重启');
+        setTimeout(function () { location.reload(); }, 700);
+      };
+      fr.readAsText(f);
+      this.value = '';
+    });
+  }
+
+  if ($('pullModels')) {
+    $('pullModels').addEventListener('click', async function () {
+      var btn = this, raw = $('setEndpoint').value.trim(), key = $('setKey').value.trim();
+      if (!raw) { toast('先填接口地址'); return; }
+      btn.disabled = true; btn.textContent = '…';
+      var base = normalizeEndpoint(raw).replace(/\/chat\/completions$/i, '');
+      var list = base.endsWith('/v1') ? [base] : [base, base + '/v1'], lastErr = '';
+      for (var i = 0; i < list.length; i++) {
+        try {
+          var r = await fetch(list[i] + '/models', { headers: key ? { 'Authorization': 'Bearer ' + key } : {} });
+          if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
+          var arr = ((await r.json()) || {}).data || [];
+          if (!arr.length) { lastErr = '返回结果为空'; continue; }
+          var names = arr.map(function (m) { return m.id || m.name; }).filter(Boolean);
+          openSheet('<div class="panel-head"><h2 class="panel-title">选择模型</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div><div class="pl-list">' +
+            names.map(function (n) { return '<button class="pl-row" data-m="' + esc(n) + '" type="button"><span class="pl-meta"><span class="pl-title" style="font-family:var(--mono);font-size:13px">' + esc(n) + '</span></span></button>'; }).join('') + '</div>',
+            function (ov, close) {
+              ov.addEventListener('click', function (e) {
+                var b = e.target.closest('[data-m]');
+                if (!b) return;
+                $('setModel').value = b.getAttribute('data-m');
+                close(); toast('选好了，记得保存');
+              });
+            });
+          btn.disabled = false; btn.textContent = '拉取'; return;
+        } catch (e) { lastErr = e.message || '网络错误'; }
+      }
+      btn.disabled = false; btn.textContent = '拉取';
+      toast('没拉到模型：' + lastErr);
+    });
+  }
   $('exportBtn').addEventListener('click', function () {
     var cfg = {};
     for (var k in config) if (Object.prototype.hasOwnProperty.call(config, k) && k !== 'apiKey') cfg[k] = config[k];
@@ -4206,7 +4343,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     if (btn) { btn.disabled = true; btn.textContent = '整理中…'; }
     var h = buildHeaders();
     h['Accept'] = 'application/json';
-    fetch(config.endpoint, {
+    fetch(normalizeEndpoint(config.endpoint), {
       method: 'POST',
       headers: h,
       body: JSON.stringify({
