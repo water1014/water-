@@ -393,8 +393,8 @@
         '<div class="panel-actions"><button class="btn-primary" id="musicConnect" type="button">连接播放器</button></div>',
         function (ov, close) {
           ov.querySelector('#musicConnect').addEventListener('click', function () {
-            var url = ov.querySelector('#musicServerUrl').value.trim().replace(/\\/$/, '');
-            if (!/^https:\\/\\//i.test(url) && !/^http:\\/\\/localhost(?::\\d+)?$/i.test(url)) {
+            var url = ov.querySelector('#musicServerUrl').value.trim();\n            if (url.endsWith('/')) url = url.slice(0, -1);
+            if (url.indexOf('https://') !== 0 && !/^http:\/\/localhost(?::\d+)?$/i.test(url)) {
               toast('请输入有效的 HTTPS 服务地址'); return;
             }
             config.musicUrl = url;
