@@ -162,3 +162,11 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 - 聊天输入框聚焦后监听 `visualViewport` 的尺寸变化，并将可视高度同步到手机屏幕容器。
 - 键盘收起或屏幕旋转后清除临时高度，避免页面长期停留在键盘弹出时的尺寸。
 - 该行为依赖浏览器提供的 Visual Viewport API；不支持时保留原有 `100dvh` 布局。
+
+
+### 数据与隐私说明
+
+- 聊天记录、心情、手帐、信件与记忆归档默认保存在当前设备的浏览器本地存储中。
+- 发送消息时，当前对话上下文会通过你配置的 Endpoint 发送给对应 API 服务商，以生成回复；请以该服务商的隐私政策为准。
+- JSON 备份会排除 API Key。导入备份时会保留本机当前 API Key，避免意外覆盖密钥。
+- 清除浏览器站点数据、卸载清理 WebView 数据或更换设备可能导致本地资料丢失，请定期导出 JSON 备份。
