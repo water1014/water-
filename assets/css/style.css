@@ -1338,3 +1338,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .j-photo-details span{overflow-wrap:anywhere}
 .j-photo-story{margin:0;padding:10px 12px;border-left:2px solid rgba(127,212,232,.55);border-radius:0 10px 10px 0;background:rgba(127,212,232,.08);color:var(--ink-sub);font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
 [data-theme="night"] .j-photo-story{background:rgba(127,212,232,.07);color:#B8C9D0}
+
+
+/* Journal photo tap target */
+.j-photo-open{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:inherit;cursor:pointer}
+.j-photo-open:focus-visible{outline:2px solid var(--accent-deep);outline-offset:4px;border-radius:14px}
+.j-photo-open .j-photo{width:100%}
+.j-photo-open .j-frame-cap{display:block}
