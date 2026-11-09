@@ -404,6 +404,19 @@ try{
             </button>
           </div>
 
+          <div class="mt-search-tools">
+            <label class="mt-search-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg>
+              <input id="archiveSearch" type="search" maxlength="120" placeholder="搜索记忆里的关键词" aria-label="搜索记忆">
+            </label>
+            <select id="archiveFilter" class="mt-filter-select" aria-label="筛选记忆">
+              <option value="all">全部记忆</option>
+              <option value="pinned">只看锚点</option>
+              <option value="recent">最近 30 天</option>
+              <option value="sleep">沉睡记忆</option>
+            </select>
+          </div>
+
           <section class="mt-sec is-open" data-sec="anchors">
             <button class="mt-sec-head" type="button">
               <span class="mt-caret" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9h12l-6 7z"/></svg></span>
