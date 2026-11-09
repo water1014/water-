@@ -2079,6 +2079,7 @@
   }
 
   function saveSettings() {
+    var previousConfig = config;
     var headers = [];
     forEach(headerRows.querySelectorAll('.header-row'), function (row) {
       var k = row.querySelector('.hkey').value.trim();
@@ -2099,7 +2100,11 @@
       musicUrl: $('setMusicUrl') ? stripTrailingSlash($('setMusicUrl').value) : (config.musicUrl || ''),
       relation: config.relation
     };
-    saveConfig();
+    if (!saveConfig()) {
+      config = previousConfig;
+      toast('设置没有保存成功，请先导出备份或释放一些空间');
+      return;
+    }
     applyTheme(config.theme);
     renderHome();
     renderJournal();
