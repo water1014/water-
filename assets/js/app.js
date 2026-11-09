@@ -755,6 +755,10 @@
     if (!pendingQuote) { host.innerHTML = ''; host.hidden = true; return; }
     host.hidden = false;
     host.innerHTML = '<div class="quote-preview-copy"><span>正在引用 · ' + (pendingQuote.role === 'user' ? '我' : 'TA') + '</span><p>' + esc(pendingQuote.content) + '</p></div><button class="quote-cancel" type="button" aria-label="取消引用">×</button>';
+    host.querySelector('.quote-cancel').addEventListener('click', function () {
+      pendingQuote = null;
+      renderQuotePreview();
+    });
   }
 
   function setQuoteFromMessage(index) {
