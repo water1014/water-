@@ -1261,3 +1261,17 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .frag-editor:focus{border-color:var(--accent-deep)}
 .frag-editor[hidden],.frag-detail-text[hidden]{display:none}
 .frag-actions{flex-wrap:wrap}
+
+
+/* Chat message quote reply */
+.msg-quote-btn{border:1px solid var(--line,rgba(105,155,174,.2));background:rgba(255,255,255,.38);color:var(--muted,#78909b);border-radius:999px;padding:4px 8px;font:inherit;font-size:10px;line-height:1.35;white-space:nowrap;transition:background 160ms var(--ease),color 160ms var(--ease)}
+.msg-quote-btn:active{background:rgba(127,212,232,.24);color:var(--accent-deep)}
+.quote-preview{display:flex;align-items:center;gap:10px;margin:0 4px 8px;padding:9px 12px;border:1px solid var(--glass-line);border-left:3px solid var(--accent);border-radius:13px;background:var(--glass);box-shadow:var(--inset);min-width:0}
+.quote-preview[hidden]{display:none}
+.quote-preview-copy{flex:1;min-width:0}
+.quote-preview-copy span{display:block;font-size:10px;letter-spacing:.06em;color:var(--accent-deep);margin-bottom:3px}
+.quote-preview-copy p{margin:0;font-size:12px;line-height:1.45;color:var(--ink-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quote-cancel{width:28px;height:28px;flex:0 0 auto;border:0;border-radius:50%;background:rgba(120,150,160,.12);color:var(--muted);font-size:20px;line-height:1}
+[data-theme="night"] .msg-quote-btn{background:rgba(255,255,255,.06);color:#A6B8C0;border-color:rgba(255,255,255,.1)}
+[data-theme="night"] .quote-preview{background:rgba(18,42,52,.82);border-color:rgba(255,255,255,.1)}
+[data-theme="night"] .quote-preview-copy span{color:#A9E5F3}
