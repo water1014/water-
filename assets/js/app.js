@@ -2325,19 +2325,27 @@
     });
   }
 
-  /* 主屏滑动（rAF 节流，横向手势交给 JS，纵向交给浏览器） */
+  /* 主屏滑动：捕获指针，避免手指滑出容器后丢失手势 */
   (function () {
     if (!homeEl || !pagesEl) return;
-    var startX = 0, startY = 0, dragging = false, dx = 0, decided = false, horizontal = false;
-    var pend = 0, rafId = 0, suppress = false;
+    var startX = 0, startY = 0, dragging = false, dx = 0;
+    var decided = false, horizontal = false, activePointer = null;
+    var lastX = 0, lastAt = 0, velocity = 0, pend = 0, rafId = 0, suppress = false;
 
-    function applyDrag(px) {
+    function paint(px) {
       pend = px;
       if (rafId) return;
       rafId = requestAnimationFrame(function () {
         rafId = 0;
         pagesEl.style.transform = 'translate3d(calc(' + (-100 / HOME_PAGES * homeIndex) + '% + ' + pend + 'px),0,0)';
       });
+    }
+
+    function clearDrag() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      pagesEl.classList.remove('is-drag');
+      pagesEl.style.willChange = '';
+      activePointer = null;
     }
 
     homeEl.addEventListener('click', function (e) {
@@ -2348,38 +2356,74 @@
     }, true);
 
     homeEl.addEventListener('pointerdown', function (e) {
-      if (e.target.closest('.sprite, .dock')) return;
-      startX = e.clientX; startY = e.clientY;
-      dragging = true; dx = 0; decided = false; horizontal = false;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.sprite, .dock, input, textarea, select, [data-no-swipe]')) return;
+      startX = lastX = e.clientX;
+      startY = e.clientY;
+      lastAt = performance.now();
+      velocity = 0;
+      activePointer = e.pointerId;
+      dragging = true;
+      dx = 0;
+      decided = false;
+      horizontal = false;
       pagesEl.style.willChange = 'transform';
+      try { homeEl.setPointerCapture(e.pointerId); } catch (err) { /* capture may be unavailable */ }
     });
 
     homeEl.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
+      if (!dragging || e.pointerId !== activePointer) return;
       dx = e.clientX - startX;
       var dy = e.clientY - startY;
-      if (!decided && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+      var now = performance.now();
+      var elapsed = Math.max(1, now - lastAt);
+      velocity = (e.clientX - lastX) / elapsed;
+      lastX = e.clientX;
+      lastAt = now;
+
+      if (!decided && (Math.abs(dx) > 7 || Math.abs(dy) > 7)) {
         decided = true;
-        horizontal = Math.abs(dx) > Math.abs(dy);
+        horizontal = Math.abs(dx) > Math.abs(dy) * 1.08;
         if (horizontal) pagesEl.classList.add('is-drag');
       }
-      if (horizontal) applyDrag(dx);
+      if (!horizontal) return;
+
+      var width = Math.max(1, homeEl.clientWidth);
+      var atFirst = homeIndex === 0 && dx > 0;
+      var atLast = homeIndex === HOME_PAGES - 1 && dx < 0;
+      var visualDx = (atFirst || atLast) ? dx * 0.28 : dx;
+      paint(visualDx);
     }, { passive: true });
 
-    function end() {
-      if (!dragging) return;
+    function finish(e, cancelled) {
+      if (!dragging || (e && e.pointerId !== activePointer)) return;
       dragging = false;
-      pagesEl.classList.remove('is-drag');
-      pagesEl.style.willChange = '';
-      if (Math.abs(dx) > 8) suppress = true;
-      if (!horizontal) { goPage(homeIndex); return; }
-      if (dx < -60) goPage(homeIndex + 1);
-      else if (dx > 60) goPage(homeIndex - 1);
-      else goPage(homeIndex);
+      var width = Math.max(1, homeEl.clientWidth);
+      var threshold = Math.max(34, Math.min(64, width * 0.12));
+      var moved = Math.abs(dx);
+      var fastSwipe = moved > 18 && Math.abs(velocity) > 0.42;
+      var shouldChange = horizontal && !cancelled && (moved >= threshold || fastSwipe);
+      var direction = dx < 0 ? 1 : -1;
+      if (moved > 10) suppress = true;
+      clearDrag();
+
+      if (cancelled) {
+        goPage(homeIndex, false);
+      } else if (shouldChange) {
+        goPage(homeIndex + direction);
+      } else {
+        goPage(homeIndex);
+      }
+      if (e && activePointer !== null) {
+        try { if (homeEl.hasPointerCapture(e.pointerId)) homeEl.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+      }
     }
-    homeEl.addEventListener('pointerup', end);
-    homeEl.addEventListener('pointercancel', end);
-    homeEl.addEventListener('pointerleave', function () { if (dragging) end(); });
+
+    homeEl.addEventListener('pointerup', function (e) { finish(e, false); });
+    homeEl.addEventListener('pointercancel', function (e) { finish(e, true); });
+    homeEl.addEventListener('lostpointercapture', function (e) {
+      if (dragging && e.pointerId === activePointer) finish(e, true);
+    });
   })();
   /* 像素精灵 */
   (function () {
