@@ -1385,3 +1385,23 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .j-recap-copy{align-self:flex-start;min-height:32px;padding:5px 12px;border:1px solid rgba(85,174,202,.3);border-radius:999px;background:rgba(255,255,255,.34);color:var(--accent-deep);font-size:10px;letter-spacing:.08em}
 [data-theme="night"] .j-recap-copy{background:rgba(255,255,255,.04)}
 .j-recap-copy:active{transform:scale(.98)}
+
+
+/* Journal mixed chronological timeline */
+.j-timeline-sec{gap:12px}
+.j-timeline-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.j-timeline-total{font-size:10px;letter-spacing:.06em;color:var(--ink-sub);white-space:nowrap}
+.j-timeline{position:relative;display:flex;flex-direction:column;gap:0;padding-left:15px}
+.j-timeline:before{content:"";position:absolute;left:4px;top:7px;bottom:10px;width:1px;background:linear-gradient(to bottom,rgba(92,183,207,.18),rgba(92,183,207,.62),rgba(92,183,207,.12))}
+.j-timeline-event{position:relative;display:flex;flex-direction:column;gap:8px;padding:0 0 19px;min-width:0}
+.j-timeline-event:last-child{padding-bottom:3px}
+.j-timeline-rail{position:absolute;left:-14px;top:4px;width:7px;height:7px;border:1.5px solid var(--accent-deep);border-radius:50%;background:var(--paper);box-shadow:0 0 0 3px rgba(127,212,232,.12)}
+.j-timeline-event.is-photo .j-timeline-rail{width:9px;height:9px;left:-15px;top:3px;background:var(--accent-deep);border-color:var(--accent-deep)}
+.j-timeline-meta{display:flex;align-items:center;gap:9px;min-height:16px}
+.j-timeline-kind{font-size:9px;letter-spacing:.15em;color:var(--accent-deep);font-weight:700}
+.j-timeline-meta time{font-family:var(--mono);font-size:10px;color:var(--ink-sub);letter-spacing:.04em}
+.j-timeline-message{padding:10px 12px;border:1px solid var(--glass-line);border-radius:4px 13px 13px 13px;background:rgba(255,255,255,.34);color:var(--ink);font-size:13px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere}
+[data-theme="night"] .j-timeline-message{background:rgba(255,255,255,.035)}
+.j-timeline-event .j-photo-memory{gap:7px}
+.j-timeline-empty{padding:20px 14px;border:1px dashed var(--line);border-radius:13px;color:var(--ink-sub);font-size:11px;line-height:1.8;text-align:center}
+@media(max-width:360px){.j-timeline{padding-left:13px}.j-timeline-rail{left:-12px}.j-timeline-event.is-photo .j-timeline-rail{left:-13px}.j-timeline-message{padding:9px 10px;font-size:12px}}
