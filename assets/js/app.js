@@ -2775,6 +2775,27 @@
     if (currentView === 'archive') renderArchive();
   }
 
+  function importLovedToArchive() {
+    var loved = lovedMessages();
+    if (!loved.length) { toast('还没有收藏的句子'); return; }
+    var previous = archive;
+    var known = Object.create(null);
+    archive.forEach(function (m) { known[m.text] = true; });
+    var added = 0;
+    var next = archive.slice();
+    loved.forEach(function (m) {
+      if (known[m.content]) return;
+      known[m.content] = true;
+      next.push({ id: arcId(), type: 'favorite', text: m.content, ts: Number(m.ts) || Date.now(), heat: 0, lastHit: 0, pinned: false, private: false, summary: '' });
+      added += 1;
+    });
+    if (!added) { toast('收藏里的句子已经都在记忆库啦'); return; }
+    archive = next;
+    if (!saveArchive()) { archive = previous; return; }
+    renderArchive();
+    toast('已把 ' + added + ' 条收藏收进记忆库');
+  }
+
   function arcLayerOf(heat) {
     if (heat >= 3) return 0;
     if (heat === 2) return 1;
@@ -2942,7 +2963,9 @@
       vbox.innerHTML = '<p class="mt-vitals">记忆 ' + archive.length + ' 条 · 锚点 ' + anchors.length +
         ' 条 · 近 7 天唤起 ' + wk + ' 次 · 沉睡 ' + sleep + ' 条</p>' +
         (note ? '<p class="mt-row-text" style="margin-bottom:8px">' + esc(note) + '</p>' : '') +
-        '<button class="chip" id="arcTidy" type="button">整理</button>';
+        '<div class="mt-vitals-actions"><button class="chip" id="arcImportLoved" type="button">从收藏导入</button><button class="chip" id="arcTidy" type="button">整理</button></div>';
+      var importLoved = $('arcImportLoved');
+      if (importLoved) importLoved.addEventListener('click', importLovedToArchive);
       var tidy = $('arcTidy');
       if (tidy) tidy.addEventListener('click', tidyArchive);
     }
