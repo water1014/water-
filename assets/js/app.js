@@ -1868,8 +1868,8 @@
     if (!page) return;
     var d = parseISO(journalISO) || new Date();
     var msgs = history.filter(function (m) { return sameDay(m.ts, journalISO); });
-    var photo = null;
-    memories.forEach(function (m) { if (sameDay(m.ts, journalISO)) photo = m; });
+    var dayPhotos = memories.filter(function (m) { return m && m.img && sameDay(m.ts, journalISO); })
+      .sort(function (a, b) { return Number(b.ts) - Number(a.ts); });
     var note = notes[journalISO] || '';
     var w = weather[journalISO] || '';
     var shown = journalExpanded ? msgs : msgs.slice(0, 3);
@@ -1880,10 +1880,20 @@
     html += '<div class="j-line"></div>';
     html += '<label class="j-weather"><span>WEATHER · 天气</span><input id="jWeather" type="text" maxlength="20" placeholder="晴，有雾，风很轻…" value="' + esc(w) + '"></label>';
 
-    html += '<div class="j-sec"><p class="j-sec-title">PHOTO · 当天照片</p>';
-    if (photo) {
-      html += '<div class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="">' +
-        (journalStyle === 'polaroid' ? '<p class="j-frame-cap">' + esc(photo.caption || fmtPlain(new Date(photo.ts))) + '</p>' : '') + '</div>';
+    html += '<div class="j-sec"><p class="j-sec-title">PHOTO · 当天照片与回忆</p>';
+    if (dayPhotos.length) {
+      dayPhotos.forEach(function (photo) {
+        var photoDetails = [
+          photo.location ? '<span>⌖ ' + esc(photo.location) + '</span>' : '',
+          photo.weather ? '<span>☁ ' + esc(photo.weather) + '</span>' : '',
+          photo.mood ? '<span>♡ ' + esc(photo.mood) + '</span>' : ''
+        ].filter(Boolean).join('');
+        html += '<article class="j-photo-memory"><div class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="" loading="lazy">' +
+          (journalStyle === 'polaroid' ? '<p class="j-frame-cap">' + esc(photo.caption || fmtPlain(new Date(photo.ts))) + '</p>' : '') + '</div>' +
+          (journalStyle !== 'polaroid' && photo.caption ? '<p class="j-photo-caption">' + esc(photo.caption) + '</p>' : '') +
+          (photoDetails ? '<div class="j-photo-details">' + photoDetails + '</div>' : '') +
+          (photo.story ? '<p class="j-photo-story">' + esc(photo.story) + '</p>' : '') + '</article>';
+      });
     } else {
       html += '<div class="j-nophoto">这一天还没有照片 · 去「相册」里放一张</div>';
     }
