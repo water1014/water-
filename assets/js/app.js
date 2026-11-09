@@ -1862,11 +1862,61 @@
   var journalISO = isoOf();
   var journalStyle = 'polaroid';
   var journalExpanded = false;
+  var journalMonth = startOfDay(new Date());
+
+  function renderJournalCalendar() {
+    var box = $('journalCalendar');
+    if (!box) return;
+    var first = new Date(journalMonth.getFullYear(), journalMonth.getMonth(), 1);
+    var start = new Date(first);
+    start.setDate(1 - first.getDay());
+    var activity = {};
+    function mark(iso, kind) {
+      if (!activity[iso]) activity[iso] = {};
+      activity[iso][kind] = true;
+    }
+    history.forEach(function (m) { if (m && m.ts && !m.sticker) mark(isoOf(new Date(m.ts)), 'chat'); });
+    memories.forEach(function (m) { if (m && m.img && m.ts) mark(isoOf(new Date(m.ts)), 'photo'); });
+    Object.keys(notes).forEach(function (iso) { if (String(notes[iso] || '').trim()) mark(iso, 'note'); });
+    Object.keys(weather).forEach(function (iso) { if (String(weather[iso] || '').trim()) mark(iso, 'weather'); });
+    var days = '';
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(start);
+      d.setDate(start.getDate() + i);
+      var iso = isoOf(d), kinds = activity[iso] || {};
+      var classes = ['j-cal-day'];
+      if (d.getMonth() !== journalMonth.getMonth()) classes.push('is-outside');
+      if (iso === journalISO) classes.push('is-selected');
+      if (iso === isoOf(new Date())) classes.push('is-today');
+      var dots = ['photo', 'chat', 'note', 'weather'].filter(function (k) { return kinds[k]; })
+        .map(function (k) { return '<i class="j-cal-dot is-' + k + '" aria-hidden="true"></i>'; }).join('');
+      days += '<button class="' + classes.join(' ') + '" type="button" data-journal-day="' + iso + '" aria-label="' + iso + (dots ? '，有回忆记录' : '') + '" aria-pressed="' + (iso === journalISO ? 'true' : 'false') + '">' +
+        '<span>' + d.getDate() + '</span><span class="j-cal-dots">' + dots + '</span></button>';
+    }
+    box.innerHTML = '<div class="j-cal-head"><button type="button" class="j-cal-month-btn" data-journal-month="-1" aria-label="上个月">‹</button>' +
+      '<div><strong>' + journalMonth.getFullYear() + '年 ' + (journalMonth.getMonth() + 1) + '月</strong><small>回忆日历 · 有记录的日子会亮起</small></div>' +
+      '<button type="button" class="j-cal-month-btn" data-journal-month="1" aria-label="下个月">›</button></div>' +
+      '<div class="j-cal-grid j-cal-week">' + '日一二三四五六'.split('').map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' +
+      '<div class="j-cal-grid">' + days + '</div>' +
+      '<div class="j-cal-legend"><span><i class="j-cal-dot is-photo"></i>照片</span><span><i class="j-cal-dot is-chat"></i>聊天</span><span><i class="j-cal-dot is-note"></i>批注</span><span><i class="j-cal-dot is-weather"></i>天气</span></div>';
+  }
+
+  function handleJournalCalendarClick(e) {
+    var monthBtn = e.target.closest('[data-journal-month]');
+    if (monthBtn) {
+      journalMonth = new Date(journalMonth.getFullYear(), journalMonth.getMonth() + Number(monthBtn.getAttribute('data-journal-month')), 1);
+      renderJournalCalendar();
+      return;
+    }
+    var dayBtn = e.target.closest('[data-journal-day]');
+    if (dayBtn) setJournalDate(dayBtn.getAttribute('data-journal-day'));
+  }
 
   function renderJournal() {
     var page = $('journalPage');
     if (!page) return;
     var d = parseISO(journalISO) || new Date();
+    renderJournalCalendar();
     var msgs = history.filter(function (m) { return sameDay(m.ts, journalISO); });
     var dayPhotos = memories.filter(function (m) { return m && m.img && sameDay(m.ts, journalISO); })
       .sort(function (a, b) { return Number(b.ts) - Number(a.ts); });
@@ -1949,6 +1999,8 @@
 
   function setJournalDate(iso) {
     journalISO = iso;
+    var selectedDate = parseISO(iso);
+    if (selectedDate) journalMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     journalExpanded = false;
     var inp = $('journalDate');
     if (inp) inp.value = iso;
@@ -1956,6 +2008,7 @@
   }
   $('journalDate').value = journalISO;
   $('journalDate').addEventListener('change', function () { setJournalDate(this.value || isoOf()); });
+  $('journalCalendar').addEventListener('click', handleJournalCalendarClick);
   $('jPrev').addEventListener('click', function () {
     var d = parseISO(journalISO) || new Date();
     d.setDate(d.getDate() - 1);
