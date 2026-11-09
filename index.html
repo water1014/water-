@@ -534,7 +534,8 @@ try{
 
     <div class="settings-body">
       <label class="field"><span class="field-label">API Endpoint · 接口地址</span>
-        <input id="setEndpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions"></label>
+        <input id="setEndpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions">
+        <span class="field-hint">填写服务商提供的完整接口地址。若提示浏览器无法读取响应，通常需要服务端开放 CORS 跨域访问；仅修改网页端无法绕过服务商限制。</span></label>
       <label class="field"><span class="field-label">API Key</span>
         <input id="setKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…"></label>
       <label class="field"><span class="field-label">Model · 模型名</span>
