@@ -1004,9 +1004,12 @@
       });
     } catch (e) {
       setTyping(false); removeTyping();
+      var reason = e && (e.message || e.name) ? String(e.message || e.name) : '';
       throw new Error(window.location.protocol === 'file:'
-        ? '请求没有发出去。file:// 打开时浏览器可能拦截跨域，换成本地服务器或允许 CORS 的接口。'
-        : '请求没有发出去：检查 Endpoint 是否可访问，或对方是否允许跨域。');
+        ? '请求没有发出去。file:// 打开时浏览器可能拦截跨域，换成 HTTPS 网页或允许 CORS 的接口。'
+        : (/failed to fetch|networkerror|load failed|fetch failed/i.test(reason)
+          ? '浏览器没有拿到接口响应。常见原因：接口未开放网页跨域（CORS）、Endpoint 路径不正确、网络中断或 HTTPS 证书异常。请先核对接口地址，并确认服务端允许当前网页域名发起请求。'
+          : '请求没有发出去：' + reason));
     }
 
     if (!res.ok) {
@@ -2266,7 +2269,14 @@
           });
           if (key && !hasModelAuth) modelHeaders['Authorization'] = 'Bearer ' + key;
           var r = await fetch(list[i] + '/models', { headers: modelHeaders });
-          if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
+          if (!r.ok) {
+            var detail = '';
+            try { detail = (await r.text()).slice(0, 180); } catch (readError) { detail = ''; }
+            lastErr = 'HTTP ' + r.status + (detail ? ' · ' + detail : '');
+            if (r.status === 401 || r.status === 403) lastErr += '（检查 API Key / 自定义 Authorization 请求头）';
+            if (r.status === 404) lastErr += '（检查 Endpoint 是否包含正确的 /v1 路径）';
+            continue;
+          }
           var arr = ((await r.json()) || {}).data || [];
           if (!arr.length) { lastErr = '返回结果为空'; continue; }
           var names = arr.map(function (m) { return m.id || m.name; }).filter(Boolean);
@@ -2281,7 +2291,12 @@
               });
             });
           btn.disabled = false; btn.textContent = '拉取'; return;
-        } catch (e) { lastErr = e.message || '网络错误'; }
+        } catch (e) {
+          var message = e && (e.message || e.name) ? String(e.message || e.name) : '网络错误';
+          lastErr = /failed to fetch|networkerror|load failed|fetch failed/i.test(message)
+            ? '浏览器无法读取接口响应，可能是 CORS 跨域限制、地址/证书错误或网络中断'
+            : message;
+        }
       }
       btn.disabled = false; btn.textContent = '拉取';
       toast('没拉到模型：' + lastErr);
