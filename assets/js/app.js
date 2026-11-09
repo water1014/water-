@@ -2071,6 +2071,8 @@
   function openSettings() {
     $('setEndpoint').value = config.endpoint;
     $('setKey').value = config.apiKey;
+    $('setKey').type = 'password';
+    if ($('toggleKeyVisibility')) { $('toggleKeyVisibility').textContent = '显示'; $('toggleKeyVisibility').setAttribute('aria-label', '显示 API Key'); $('toggleKeyVisibility').setAttribute('aria-pressed', 'false'); }
     $('setModel').value = config.model;
     $('setAnniversary').value = config.anniversary || '';
     $('setSystem').value = config.system;
@@ -2128,6 +2130,14 @@
 
   if ($('openSettings')) $('openSettings').addEventListener('click', openSettings);
   $('settingsClose').addEventListener('click', function () { closeOverlay(settingsOverlay); });
+  if ($('toggleKeyVisibility')) $('toggleKeyVisibility').addEventListener('click', function () {
+    var keyInput = $('setKey');
+    var show = keyInput.type === 'password';
+    keyInput.type = show ? 'text' : 'password';
+    this.textContent = show ? '隐藏' : '显示';
+    this.setAttribute('aria-label', show ? '隐藏 API Key' : '显示 API Key');
+    this.setAttribute('aria-pressed', show ? 'true' : 'false');
+  });
   $('saveSettings').addEventListener('click', saveSettings);
   $('clearChat').addEventListener('click', function () {
     if (abortCtrl) { try { abortCtrl.abort(); } catch (e) { /* noop */ } }
