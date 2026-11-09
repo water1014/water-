@@ -1888,8 +1888,8 @@
           photo.weather ? '<span>☁ ' + esc(photo.weather) + '</span>' : '',
           photo.mood ? '<span>♡ ' + esc(photo.mood) + '</span>' : ''
         ].filter(Boolean).join('');
-        html += '<article class="j-photo-memory"><div class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="" loading="lazy">' +
-          (journalStyle === 'polaroid' ? '<p class="j-frame-cap">' + esc(photo.caption || fmtPlain(new Date(photo.ts))) + '</p>' : '') + '</div>' +
+        html += '<article class="j-photo-memory"><button class="j-photo-open" type="button" data-journal-photo="' + memories.indexOf(photo) + '" aria-label="打开这张照片的详情"><span class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="" loading="lazy">' +
+          (journalStyle === 'polaroid' ? '<span class="j-frame-cap">' + esc(photo.caption || fmtPlain(new Date(photo.ts))) + '</span>' : '') + '</span></button>' +
           (journalStyle !== 'polaroid' && photo.caption ? '<p class="j-photo-caption">' + esc(photo.caption) + '</p>' : '') +
           (photoDetails ? '<div class="j-photo-details">' + photoDetails + '</div>' : '') +
           (photo.story ? '<p class="j-photo-story">' + esc(photo.story) + '</p>' : '') + '</article>';
@@ -1914,6 +1914,26 @@
 
     page.innerHTML = html;
     page.className = 'journal-page' + (journalStyle === 'film' ? ' is-film' : '');
+    page.onclick = function (e) {
+      var trigger = e.target.closest('[data-journal-photo]');
+      if (!trigger) return;
+      var index = Number(trigger.getAttribute('data-journal-photo'));
+      var selected = memories[index];
+      if (!selected) { toast('这张照片已经不在相册里了'); return; }
+      activeAlbumPhoto = index;
+      $('lbFavorite').textContent = selected.favorite ? '♥ 已收藏' : '♡ 收藏';
+      $('lbImg').src = selected.img;
+      $('lbCap').textContent = selected.caption || '';
+      $('lbDate').textContent = fmtPlain(new Date(selected.ts));
+      $('lbExtra').textContent = [selected.location ? '⌖ ' + selected.location : '', selected.weather ? '☁ ' + selected.weather : '', selected.mood ? '♡ ' + selected.mood : '', selected.story || ''].filter(Boolean).join('  ·  ');
+      $('lbExtra').hidden = !$('lbExtra').textContent;
+      var hasChatSource = !!(selected.source && selected.source.kind === 'chat');
+      $('lbSource').textContent = hasChatSource ? ('来自聊天 · ' + (selected.source.role === 'user' ? '我' : 'TA')) : '手动添加';
+      $('lbSource').hidden = false;
+      $('lbChatSource').hidden = !hasChatSource;
+      $('lightbox').classList.add('is-open');
+      $('lightbox').setAttribute('aria-hidden', 'false');
+    };
 
     $('jWeather').addEventListener('input', function () {
       weather[journalISO] = this.value;
