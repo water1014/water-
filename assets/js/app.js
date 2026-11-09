@@ -2325,13 +2325,16 @@
     });
   }
 
-  /* 主屏滑动：捕获指针，避免手指滑出容器后丢失手势 */
+  /* 主屏滑动：移动端优先使用原生 touch 事件，避免 WebView pointercancel 抢走横向手势 */
   (function () {
     if (!homeEl || !pagesEl) return;
-    var startX = 0, startY = 0, dragging = false, dx = 0;
-    var decided = false, horizontal = false, activePointer = null;
-    var lastX = 0, lastAt = 0, velocity = 0, pend = 0, rafId = 0, suppress = false;
+    var startX = 0, startY = 0, lastX = 0, lastAt = 0;
+    var dx = 0, velocity = 0, dragging = false, decided = false, horizontal = false;
+    var touchId = null, mouseId = null, pend = 0, rafId = 0, suppress = false;
 
+    function ignored(target) {
+      return !!(target && target.closest && target.closest('.sprite, .dock, input, textarea, select, [data-no-swipe]'));
+    }
     function paint(px) {
       pend = px;
       if (rafId) return;
@@ -2340,12 +2343,55 @@
         pagesEl.style.transform = 'translate3d(calc(' + (-100 / HOME_PAGES * homeIndex) + '% + ' + pend + 'px),0,0)';
       });
     }
+    function begin(x, y, id) {
+      startX = lastX = x;
+      startY = y;
+      lastAt = performance.now();
+      dx = velocity = 0;
+      dragging = true;
+      decided = horizontal = false;
+      touchId = id;
+      pagesEl.style.willChange = 'transform';
+    }
+    function move(x, y, cancelNative) {
+      if (!dragging) return false;
+      dx = x - startX;
+      var dy = y - startY;
+      var now = performance.now();
+      var elapsed = Math.max(1, now - lastAt);
+      velocity = (x - lastX) / elapsed;
+      lastX = x;
+      lastAt = now;
 
-    function clearDrag() {
+      if (!decided && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        decided = true;
+        horizontal = Math.abs(dx) > Math.abs(dy) * 1.12;
+        if (horizontal) pagesEl.classList.add('is-drag');
+      }
+      if (!horizontal) return false;
+      if (cancelNative) cancelNative();
+      var atFirst = homeIndex === 0 && dx > 0;
+      var atLast = homeIndex === HOME_PAGES - 1 && dx < 0;
+      paint((atFirst || atLast) ? dx * 0.18 : dx);
+      return true;
+    }
+    function finish(cancelled) {
+      if (!dragging) return;
+      dragging = false;
+      var width = Math.max(1, homeEl.clientWidth);
+      var threshold = Math.max(42, Math.min(72, width * 0.14));
+      var moved = Math.abs(dx);
+      var quick = moved > 14 && Math.abs(velocity) > 0.28;
+      var change = horizontal && !cancelled && (moved >= threshold || quick);
+      var direction = dx < 0 ? 1 : -1;
+      if (horizontal && moved > 8) suppress = true;
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       pagesEl.classList.remove('is-drag');
       pagesEl.style.willChange = '';
-      activePointer = null;
+      touchId = null;
+      mouseId = null;
+      if (change) goPage(homeIndex + direction);
+      else goPage(homeIndex);
     }
 
     homeEl.addEventListener('click', function (e) {
@@ -2355,74 +2401,51 @@
       suppress = false;
     }, true);
 
-    homeEl.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      if (e.target.closest('.sprite, .dock, input, textarea, select, [data-no-swipe]')) return;
-      startX = lastX = e.clientX;
-      startY = e.clientY;
-      lastAt = performance.now();
-      velocity = 0;
-      activePointer = e.pointerId;
-      dragging = true;
-      dx = 0;
-      decided = false;
-      horizontal = false;
-      pagesEl.style.willChange = 'transform';
-      try { homeEl.setPointerCapture(e.pointerId); } catch (err) { /* capture may be unavailable */ }
-    });
-
-    homeEl.addEventListener('pointermove', function (e) {
-      if (!dragging || e.pointerId !== activePointer) return;
-      dx = e.clientX - startX;
-      var dy = e.clientY - startY;
-      var now = performance.now();
-      var elapsed = Math.max(1, now - lastAt);
-      velocity = (e.clientX - lastX) / elapsed;
-      lastX = e.clientX;
-      lastAt = now;
-
-      if (!decided && (Math.abs(dx) > 7 || Math.abs(dy) > 7)) {
-        decided = true;
-        horizontal = Math.abs(dx) > Math.abs(dy) * 1.08;
-        if (horizontal) pagesEl.classList.add('is-drag');
-      }
-      if (!horizontal) return;
-
-      var width = Math.max(1, homeEl.clientWidth);
-      var atFirst = homeIndex === 0 && dx > 0;
-      var atLast = homeIndex === HOME_PAGES - 1 && dx < 0;
-      var visualDx = (atFirst || atLast) ? dx * 0.28 : dx;
-      paint(visualDx);
+    /* Android / iOS WebView：方向锁定后才阻止默认滚动，竖向滚动仍保留 */
+    homeEl.addEventListener('touchstart', function (e) {
+      if (dragging || !e.touches || e.touches.length !== 1 || ignored(e.target)) return;
+      var t = e.touches[0];
+      begin(t.clientX, t.clientY, t.identifier);
     }, { passive: true });
 
-    function finish(e, cancelled) {
-      if (!dragging || (e && e.pointerId !== activePointer)) return;
-      dragging = false;
-      var width = Math.max(1, homeEl.clientWidth);
-      var threshold = Math.max(34, Math.min(64, width * 0.12));
-      var moved = Math.abs(dx);
-      var fastSwipe = moved > 18 && Math.abs(velocity) > 0.42;
-      var shouldChange = horizontal && !cancelled && (moved >= threshold || fastSwipe);
-      var direction = dx < 0 ? 1 : -1;
-      if (moved > 10) suppress = true;
-      clearDrag();
-
-      if (cancelled) {
-        goPage(homeIndex, false);
-      } else if (shouldChange) {
-        goPage(homeIndex + direction);
-      } else {
-        goPage(homeIndex);
+    homeEl.addEventListener('touchmove', function (e) {
+      if (!dragging || touchId === null || !e.touches) return;
+      var t = null;
+      for (var i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === touchId) { t = e.touches[i]; break; }
       }
-      if (e && activePointer !== null) {
-        try { if (homeEl.hasPointerCapture(e.pointerId)) homeEl.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
-      }
-    }
+      if (!t) return;
+      move(t.clientX, t.clientY, function () {
+        if (e.cancelable) e.preventDefault();
+      });
+    }, { passive: false });
 
-    homeEl.addEventListener('pointerup', function (e) { finish(e, false); });
-    homeEl.addEventListener('pointercancel', function (e) { finish(e, true); });
-    homeEl.addEventListener('lostpointercapture', function (e) {
-      if (dragging && e.pointerId === activePointer) finish(e, true);
+    homeEl.addEventListener('touchend', function (e) {
+      if (!dragging || touchId === null) return;
+      var t = null;
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) { t = e.changedTouches[i]; break; }
+      }
+      if (t) move(t.clientX, t.clientY);
+      finish(false);
+    }, { passive: true });
+    homeEl.addEventListener('touchcancel', function () { finish(true); }, { passive: true });
+
+    /* 桌面端保留鼠标拖动，忽略触屏 PointerEvent，避免和 touch 双重处理 */
+    homeEl.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0 || ignored(e.target)) return;
+      mouseId = e.pointerId;
+      begin(e.clientX, e.clientY, null);
+    });
+    homeEl.addEventListener('pointermove', function (e) {
+      if (mouseId === null || e.pointerId !== mouseId) return;
+      move(e.clientX, e.clientY);
+    });
+    homeEl.addEventListener('pointerup', function (e) {
+      if (mouseId !== null && e.pointerId === mouseId) finish(false);
+    });
+    homeEl.addEventListener('pointercancel', function (e) {
+      if (mouseId !== null && e.pointerId === mouseId) finish(true);
     });
   })();
   /* 像素精灵 */
