@@ -1,0 +1,15 @@
+{
+  "name": "水色物语 · MIZU-IRO",
+  "short_name": "水色物语",
+  "description": "一台只属于你们两个的小手机",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E8F7FB",
+  "theme_color": "#C9EDF7",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
