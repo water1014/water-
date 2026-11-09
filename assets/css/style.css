@@ -1309,3 +1309,5 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .album-source{display:inline-flex;align-self:flex-start;margin:2px 0 4px;padding:3px 7px;border-radius:999px;background:rgba(127,212,232,.14);color:var(--accent-deep);font-size:10px;line-height:15px;letter-spacing:.04em}
 [data-theme="night"] .chat-photo-save{background:rgba(19,45,55,.9);color:#b9eaf3;border-color:rgba(127,212,232,.22)}
 [data-theme="night"] .chat-photo-save.is-saved{background:rgba(127,212,232,.15);color:#c8f1f8}
+
+.lb-source{margin:5px 0 0;color:var(--accent-deep);font-size:11px;letter-spacing:.08em;text-align:center}
