@@ -2846,6 +2846,9 @@
   /* ==========================================================
      记忆库 · 管理视图
      ========================================================== */
+  var archiveQuery = '';
+  var archiveFilter = 'all';
+
   function renderMaintain() {
     var anchors = archive.filter(function (m) { return m.pinned; });
     var ca = $('cntAnchors');
@@ -2862,17 +2865,26 @@
       }).join('') : '<p class="mt-empty">还没有锚点。先收一条，再点它旁边的「锚点」。</p>';
     }
 
-    var recent = archive.filter(function (m) { return (Date.now() - m.ts) < 30 * DAY; }).sort(function (a, b) { return b.ts - a.ts; });
+    var query = archiveQuery.trim().toLocaleLowerCase();
+    var allFragments = archive.slice().sort(function (a, b) { return b.ts - a.ts; });
+    var filtered = allFragments.filter(function (m) {
+      var matchesText = !query || m.text.toLocaleLowerCase().indexOf(query) !== -1;
+      var matchesFilter = archiveFilter === 'all' ||
+        (archiveFilter === 'pinned' && m.pinned) ||
+        (archiveFilter === 'recent' && (Date.now() - m.ts) < 30 * DAY) ||
+        (archiveFilter === 'sleep' && (Date.now() - m.ts) >= 30 * DAY);
+      return matchesText && matchesFilter;
+    });
     var cf = $('cntFragments');
-    if (cf) cf.textContent = recent.length;
+    if (cf) cf.textContent = filtered.length;
     var fbox = $('mtFragments');
     if (fbox) {
-      fbox.innerHTML = recent.length
-        ? '<div class="frag-wrap">' + recent.map(function (m) {
-            var short = m.text.length > 12 ? m.text.slice(0, 12) + '…' : m.text;
-            return '<button class="frag" type="button" data-frag="' + m.id + '"><span class="frag-date">' + stampOf(m.ts) + '</span><span class="frag-txt">' + esc(short) + '</span></button>';
+      fbox.innerHTML = filtered.length
+        ? '<div class="frag-wrap">' + filtered.map(function (m) {
+            var short = m.text.length > 24 ? m.text.slice(0, 24) + '…' : m.text;
+            return '<button class="frag" type="button" data-frag="' + m.id + '"><span class="frag-date">' + stampOf(m.ts) + (m.pinned ? ' · 锚点' : '') + '</span><span class="frag-txt">' + esc(short) + '</span></button>';
           }).join('') + '</div>'
-        : '<p class="mt-empty">这 30 天还没有新的碎片。</p>';
+        : '<p class="mt-empty">' + (query ? '没有找到匹配的记忆。' : '这个筛选下还没有记忆。') + '</p>';
     }
 
     var sleep = archive.filter(function (m) { return (Date.now() - m.ts) > 30 * DAY; }).length;
@@ -2984,6 +2996,21 @@
     $('arcAddBtn').addEventListener('click', addFromInput);
     $('arcInput').addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addFromInput(); }
+    });
+  }
+
+  var archiveSearchEl = $('archiveSearch');
+  var archiveFilterEl = $('archiveFilter');
+  if (archiveSearchEl) {
+    archiveSearchEl.addEventListener('input', function () {
+      archiveQuery = archiveSearchEl.value || '';
+      renderMaintain();
+    });
+  }
+  if (archiveFilterEl) {
+    archiveFilterEl.addEventListener('change', function () {
+      archiveFilter = archiveFilterEl.value || 'all';
+      renderMaintain();
     });
   }
 
