@@ -1959,7 +1959,9 @@
       timeline.push({ type: 'photo', ts: Number(photo.ts) || 0, order: index, item: photo });
     });
     timeline.sort(function (a, b) {
-      return a.ts - b.ts || (a.type === 'photo' ? -1 : 1) || a.order - b.order;
+      if (a.ts !== b.ts) return a.ts - b.ts;
+      if (a.type !== b.type) return a.type === 'photo' ? -1 : 1;
+      return a.order - b.order;
     });
 
     html += '<section class="j-sec j-timeline-sec"><div class="j-timeline-head"><p class="j-sec-title">OUR DAY · 今日时光</p><span class="j-timeline-total">' + timeline.length + ' 个片段</span></div>';
