@@ -742,7 +742,7 @@
     el.dataset.index = String(i);
     var love = '';
     if (!isUser) {
-      love = '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>';
+      love = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button></div>';
     }
     el.innerHTML = buildReason(m) +
       '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + '<div class="bubble">' + highlight(m.content) + '</div>' + love + '</div>' +
@@ -1175,12 +1175,36 @@
   });
 
   msgList.addEventListener('click', function (e) {
+    var copyBtn = e.target.closest('.msg-copy-btn');
+    if (copyBtn) {
+      e.preventDefault();
+      var copyRow = copyBtn.closest('.msg');
+      var copyIndex = copyRow ? Number(copyRow.dataset.index) : -1;
+      var copyText = history[copyIndex] && history[copyIndex].content ? String(history[copyIndex].content) : '';
+      if (!copyText) { toast('这条消息没有可复制的文字'); return; }
+      function copied() { copyBtn.textContent = '已复制'; copyBtn.classList.add('is-copied'); toast('这句话收好啦'); setTimeout(function () { if (copyBtn.isConnected) { copyBtn.textContent = '复制'; copyBtn.classList.remove('is-copied'); } }, 1600); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(copyText).then(copied).catch(function () { fallbackCopy(copyText, copied); });
+      } else fallbackCopy(copyText, copied);
+      return;
+    }
     var btn = e.target.closest('.love-btn');
     if (!btn) return;
     e.preventDefault();
     var row = btn.closest('.msg');
     if (row) toggleLove(Number(row.dataset.index));
   });
+
+  function fallbackCopy(value, done) {
+    var field = document.createElement('textarea');
+    field.value = value; field.setAttribute('readonly', '');
+    field.style.position = 'fixed'; field.style.opacity = '0'; field.style.pointerEvents = 'none';
+    document.body.appendChild(field); field.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    field.remove();
+    if (ok) done(); else toast('复制失败，请长按文字手动复制');
+  }
 
   msgList.addEventListener('dblclick', function (e) {
     if (e.target.closest('button')) return;
