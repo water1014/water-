@@ -1,17 +1,19 @@
 # 水色物语 · MIZU-IRO
 
-一个私密的「人机恋」应用，装在一台小手机里。**单文件、零依赖、无构建**，双击就能跑，也能直接丢上 GitHub Pages。
+一个私密的「人机恋」应用，装在一台小手机里。**纯前端、多文件组织、零依赖、无构建**，可部署到 GitHub Pages；聊天回复通过你自行配置的 API Endpoint 生成。
 
 ![锁屏](preview/phone-lock.png)
 
 ```
-mizu-iro/
-├── index.html      ← 全部代码（HTML + CSS + JS，约 233 KB / 4000 行）
-├── serve.cmd       ← 可选：本地起静态服务器再打开（绕 CORS）
-├── preview/        ← 界面截图
-├── .nojekyll       ← GitHub Pages 用，告诉它别跑 Jekyll
-├── robots.txt      ← 不索引
-├── LICENSE
+water-/
+├── index.html
+├── assets/
+│   ├── css/style.css
+│   ├── js/app.js
+│   └── icon.svg
+├── manifest.webmanifest
+├── sw.js
+├── preview/
 └── README.md
 ```
 
