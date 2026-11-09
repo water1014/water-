@@ -2038,6 +2038,16 @@
   $('moreAbout').addEventListener('click', openAbout);
   $('aboutClose').addEventListener('click', function () { closeOverlay($('aboutOverlay')); });
   $('moreSettings').addEventListener('click', function () { openSettings(); });
+  if ($('moreExportBtn')) $('moreExportBtn').addEventListener('click', function () {
+    var exportButton = $('exportBtn');
+    if (exportButton) exportButton.click();
+    else toast('备份入口暂时不可用');
+  });
+  if ($('moreImportBtn')) $('moreImportBtn').addEventListener('click', function () {
+    var importButton = $('importBtn');
+    if (importButton) importButton.click();
+    else toast('恢复入口暂时不可用');
+  });
 
   /* ================= 设置 ================= */
   var headerRows = $('headerRows');
