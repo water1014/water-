@@ -2258,7 +2258,20 @@
   }
   $('exportBtn').addEventListener('click', function () {
     var cfg = {};
-    for (var k in config) if (Object.prototype.hasOwnProperty.call(config, k) && k !== 'apiKey') cfg[k] = config[k];
+    for (var k in config) {
+      if (!Object.prototype.hasOwnProperty.call(config, k) || k === 'apiKey') continue;
+      if (k === 'headers' && Array.isArray(config.headers)) {
+        // 自定义请求头可能携带订阅凭据，备份时按名称过滤敏感项。
+        cfg.headers = config.headers.filter(function (h) {
+          var name = String(h && h.key || '').trim();
+          return name && !/(authorization|cookie|api[-_]?key|token|secret|credential|password)/i.test(name);
+        }).map(function (h) {
+          return { key: String(h.key), value: String(h.value == null ? '' : h.value) };
+        });
+        continue;
+      }
+      cfg[k] = config[k];
+    }
     var payload = {
       app: 'mizu-iro', version: 2, exportedAt: new Date().toISOString(),
       config: cfg, history: history, moods: moods, memories: memories,
@@ -2274,7 +2287,7 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(url); if (a.parentNode) a.parentNode.removeChild(a); }, 900);
-    toast('回忆已打包 · 不含 API Key');
+    toast('回忆已打包 · 不含 API 密钥与敏感请求头');
   });
 
   /* ================= 主题按钮 / About / 抽屉 ================= */
