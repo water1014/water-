@@ -1923,11 +1923,31 @@
     var note = notes[journalISO] || '';
     var w = weather[journalISO] || '';
     var shown = journalExpanded ? msgs : msgs.slice(0, 3);
+    var textMsgs = msgs.filter(function (m) { return !m.sticker && String(m.content || '').trim(); });
+    var daySummary = [fmtPlain(d), '聊天 ' + textMsgs.length + ' 条', '照片 ' + dayPhotos.length + ' 张'];
+    if (w) daySummary.push('天气：' + w);
+    var photoStory = dayPhotos.find(function (p) { return p.story || p.caption; });
+    if (photoStory) daySummary.push('照片记忆：' + (photoStory.story || photoStory.caption));
+    if (textMsgs.length) {
+      var firstLine = String(textMsgs[0].content || '').replace(/\s+/g, ' ').trim();
+      var lastLine = String(textMsgs[textMsgs.length - 1].content || '').replace(/\s+/g, ' ').trim();
+      daySummary.push('当天的一句话：' + (firstLine.length > 100 ? firstLine.slice(0, 100) + '…' : firstLine));
+      if (lastLine !== firstLine) daySummary.push('后来：' + (lastLine.length > 100 ? lastLine.slice(0, 100) + '…' : lastLine));
+    }
+    if (note.trim()) daySummary.push('手帐批注：' + note.trim());
+    var daySummaryText = daySummary.join('\n');
+    var recapLead = textMsgs.length || dayPhotos.length || note.trim() || w
+      ? ('这一天留下了 ' + textMsgs.length + ' 条文字对话、' + dayPhotos.length + ' 张照片' + (w ? '，天气是' + w : '') + '。')
+      : '这一天还没有留下记录。也许可以从一句话、一张照片开始。';
 
     var html = '<div class="j-head"><div class="j-num num">' + d.getDate() + '</div>' +
       '<div class="j-head-side"><p class="j-ym">' + d.getFullYear() + ' · ' + pad2(d.getMonth() + 1) + '月</p>' +
       '<p class="j-week">星期' + WEEK[d.getDay()] + '</p></div></div>';
     html += '<div class="j-line"></div>';
+    html += '<section class="j-recap"><div class="j-recap-top"><span class="j-recap-kicker">A DAY TO KEEP · 今日回顾</span><span class="j-recap-count">' + textMsgs.length + ' 句 · ' + dayPhotos.length + ' 张</span></div>' +
+      '<p class="j-recap-lead">' + esc(recapLead) + '</p>' +
+      (photoStory ? '<p class="j-recap-detail">' + esc(photoStory.caption || photoStory.story) + '</p>' : '') +
+      '<button class="j-recap-copy" id="copyJournalSummary" type="button">复制这一天的回忆</button></section>';
     html += '<label class="j-weather"><span>WEATHER · 天气</span><input id="jWeather" type="text" maxlength="20" placeholder="晴，有雾，风很轻…" value="' + esc(w) + '"></label>';
 
     html += '<div class="j-sec"><p class="j-sec-title">PHOTO · 当天照片与回忆</p>';
@@ -1985,6 +2005,13 @@
       $('lightbox').setAttribute('aria-hidden', 'false');
     };
 
+    var copyRecap = $('copyJournalSummary');
+    if (copyRecap) copyRecap.addEventListener('click', function () {
+      function copied() { toast('这一天的回忆已复制'); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(daySummaryText).then(copied).catch(function () { fallbackCopy(daySummaryText, copied); });
+      } else fallbackCopy(daySummaryText, copied);
+    });
     $('jWeather').addEventListener('input', function () {
       weather[journalISO] = this.value;
       write('mizu.weather', weather);
