@@ -1275,3 +1275,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 [data-theme="night"] .msg-quote-btn{background:rgba(255,255,255,.06);color:#A6B8C0;border-color:rgba(255,255,255,.1)}
 [data-theme="night"] .quote-preview{background:rgba(18,42,52,.82);border-color:rgba(255,255,255,.1)}
 [data-theme="night"] .quote-preview-copy span{color:#A9E5F3}
+
+
+/* Memory archive: favorite import actions */
+.mt-vitals-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mt-vitals-actions .chip{min-height:38px;padding:7px 13px;letter-spacing:.04em}
