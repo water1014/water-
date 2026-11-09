@@ -54,13 +54,15 @@ self.addEventListener('fetch', function (event) {
     fetch(request).then(function (response) {
       if (response && response.status === 200 && response.type === 'basic') {
         var copy = response.clone();
-        event.waitUntil(
-          caches.open(CACHE).then(function (cache) {
-            return cache.put(request, copy);
-          }).catch(function () {
+        return caches.open(CACHE).then(function (cache) {
+          return cache.put(request, copy).catch(function () {
             // 缓存写入失败不影响本次在线响应。
-          })
-        );
+          }).then(function () {
+            return response;
+          });
+        }).catch(function () {
+          return response;
+        });
       }
       return response;
     }).catch(function () {
