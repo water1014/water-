@@ -1372,3 +1372,16 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .j-cal-legend span{display:inline-flex;align-items:center;gap:4px}
 .j-cal-legend .j-cal-dot{width:5px;height:5px}
 @media(max-width:360px){.journal-calendar{padding:11px 8px}.j-cal-day{min-height:35px}.j-cal-legend{gap:7px}}
+
+
+/* Journal daily recap */
+.j-recap{position:relative;display:flex;flex-direction:column;gap:9px;padding:15px 16px 14px;border:1px solid rgba(102,174,194,.22);border-radius:16px;background:linear-gradient(135deg,rgba(127,212,232,.13),rgba(255,255,255,.22));overflow:hidden}
+[data-theme="night"] .j-recap{background:linear-gradient(135deg,rgba(74,139,158,.18),rgba(24,43,52,.3));border-color:rgba(127,212,232,.18)}
+.j-recap-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.j-recap-kicker{font-size:9px;letter-spacing:.18em;color:var(--accent-deep);font-weight:700}
+.j-recap-count{font-size:10px;letter-spacing:.04em;color:var(--ink-sub);white-space:nowrap}
+.j-recap-lead{margin:0;color:var(--ink);font-size:13px;line-height:1.8}
+.j-recap-detail{margin:0;padding-left:10px;border-left:2px solid rgba(85,174,202,.45);color:var(--ink-sub);font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+.j-recap-copy{align-self:flex-start;min-height:32px;padding:5px 12px;border:1px solid rgba(85,174,202,.3);border-radius:999px;background:rgba(255,255,255,.34);color:var(--accent-deep);font-size:10px;letter-spacing:.08em}
+[data-theme="night"] .j-recap-copy{background:rgba(255,255,255,.04)}
+.j-recap-copy:active{transform:scale(.98)}
