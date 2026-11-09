@@ -1311,3 +1311,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 [data-theme="night"] .chat-photo-save.is-saved{background:rgba(127,212,232,.15);color:#c8f1f8}
 
 .lb-source{margin:5px 0 0;color:var(--accent-deep);font-size:11px;letter-spacing:.08em;text-align:center}
+
+
+/* Album date timeline and source return */
+.album-day-heading{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;padding:15px 2px 0;margin-top:2px;border-top:1px solid var(--glass-line);color:var(--ink);font-family:var(--serif,Georgia,serif);font-size:17px;letter-spacing:.04em}
+.album-day-heading small{color:var(--ink-sub);font-family:var(--mono,monospace);font-size:9px;letter-spacing:.12em}
+#lbChatSource[hidden]{display:none}
+#lbChatSource{border-color:rgba(91,181,204,.42);background:rgba(127,212,232,.18);color:var(--accent-deep)}
+.msg.album-source-highlight .bubble{outline:2px solid rgba(91,181,204,.7);outline-offset:5px;animation:albumSourcePulse 1.8s ease}
+@keyframes albumSourcePulse{0%,100%{outline-color:rgba(91,181,204,.12)}35%{outline-color:rgba(91,181,204,.9)}}
+@media(prefers-reduced-motion:reduce){.msg.album-source-highlight .bubble{animation:none}}
