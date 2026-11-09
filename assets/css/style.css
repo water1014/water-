@@ -1177,3 +1177,56 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .msg-copy-btn.is-copied{color:var(--accent,#4d9db2);border-color:rgba(77,157,178,.38);background:rgba(125,195,211,.13);}
 [data-theme="night"] .msg-copy-btn{background:rgba(255,255,255,.045);border-color:rgba(190,220,232,.14);color:rgba(220,235,241,.62);}
 @media(hover:hover){.msg-actions{opacity:.48}.msg.ai:hover .msg-actions{opacity:1}}
+
+
+/* 记忆库搜索与筛选 */
+.mt-search-tools{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin:0 0 14px;
+}
+.mt-search-field{
+  min-width:0;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:0 12px;
+  color:var(--ink-sub);
+  background:var(--field);
+  border:1px solid var(--field-line);
+  border-radius:14px;
+}
+.mt-search-field input{
+  width:100%;
+  min-width:0;
+  border:0;
+  outline:0;
+  color:var(--ink);
+  background:transparent;
+  font:inherit;
+  font-size:12px;
+}
+.mt-search-field input::placeholder{color:var(--ink-sub);opacity:.75}
+.mt-filter-select{
+  max-width:118px;
+  min-height:42px;
+  padding:0 9px;
+  color:var(--ink);
+  background:var(--field);
+  border:1px solid var(--field-line);
+  border-radius:14px;
+  font:inherit;
+  font-size:11px;
+}
+.mt-search-field:focus-within,.mt-filter-select:focus-visible{
+  border-color:var(--accent-deep);
+  outline:2px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  outline-offset:1px;
+}
+@media(max-width:360px){
+  .mt-search-tools{grid-template-columns:1fr}
+  .mt-filter-select{max-width:none;width:100%}
+}
