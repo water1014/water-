@@ -533,16 +533,18 @@ try{
     </div>
 
     <div class="settings-body">
+      <div class="settings-section-title"><span>连接与模型</span><small>CONNECTION · API</small></div>
       <label class="field"><span class="field-label">API Endpoint · 接口地址</span>
         <input id="setEndpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions">
         <span class="field-hint">填写服务商提供的完整接口地址。若提示浏览器无法读取响应，通常需要服务端开放 CORS 跨域访问；仅修改网页端无法绕过服务商限制。</span></label>
       <label class="field"><span class="field-label">API Key</span>
-        <input id="setKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…"></label>
+        <div class="key-field-row"><input id="setKey" type="password" spellcheck="off" autocomplete="off" placeholder="sk-…"><button class="btn-ghost" id="toggleKeyVisibility" type="button" aria-label="显示 API Key" aria-pressed="false">显示</button></div></label>
       <label class="field"><span class="field-label">Model · 模型名</span>
         <div style="display:flex;gap:8px">
           <input id="setModel" type="text" spellcheck="false" placeholder="gpt-4o-mini" style="flex:1 1 auto">
           <button class="btn-ghost" id="pullModels" type="button" style="flex:0 0 auto;padding:8px 16px">拉取</button>
         </div></label>
+      <div class="settings-section-title"><span>共同生活</span><small>OUR LIFE</small></div>
       <label class="field"><span class="field-label">在一起的第一天</span>
         <input id="setAnniversary" type="date"></label>
 
@@ -554,9 +556,13 @@ try{
         <div class="header-rows" id="headerRows"></div>
       </div>
 
-      <label class="field"><span class="field-label">音乐服务地址 · 原版网易云播放器</span>\n        <input id="setMusicUrl" type="url" spellcheck="false" placeholder="部署后填写 HTTPS 地址（可留空）"></label>\n\n      <label class="field"><span class="field-label">System Prompt · 人设</span>
+      <label class="field"><span class="field-label">音乐服务地址 · 原版网易云播放器</span>
+        <input id="setMusicUrl" type="url" spellcheck="false" placeholder="部署后填写 HTTPS 地址（可留空）"></label>
+
+      <label class="field"><span class="field-label">System Prompt · 人设</span>
         <textarea id="setSystem" rows="5" spellcheck="false"></textarea></label>
 
+      <div class="settings-section-title"><span>外观与氛围</span><small>APPEARANCE</small></div>
       <div class="field">
         <span class="field-label">外观 · THEME</span>
         <div class="theme-row" role="group" aria-label="主题">
@@ -584,6 +590,7 @@ try{
         <input id="setShell" type="checkbox" style="width:24px;height:24px;min-height:24px;padding:0;accent-color:#4FB8D4">
       </label>
 
+      <div class="settings-section-title"><span>本地数据</span><small>LOCAL DATA</small></div>
       <div class="field" style="margin-bottom:8px">
         <span class="field-label">导出回忆</span>
         <button class="btn-ghost" id="exportBtn" type="button" style="width:100%">打包成 JSON</button>
