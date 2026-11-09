@@ -1374,23 +1374,33 @@
   }
 
   function compress(file, cb, maxSide, q) {
+    if (!file || !/^image\//i.test(file.type || '') || file.size > 20 * 1024 * 1024) {
+      cb(null);
+      if (file && file.size > 20 * 1024 * 1024) toast('图片太大了，请选择 20 MB 以内的图片');
+      else toast('请选择有效的图片文件');
+      return;
+    }
     var fr = new FileReader();
     fr.onload = function () {
       var img = new Image();
       img.onload = function () {
-        var max = maxSide || 1200, quality = q || 0.8;
-        var sc = Math.min(1, max / Math.max(img.width, img.height));
-        var cv = document.createElement('canvas');
-        cv.width = Math.max(1, Math.round(img.width * sc));
-        cv.height = Math.max(1, Math.round(img.height * sc));
-        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-        cb(cv.toDataURL('image/jpeg', quality));
+        try {
+          var max = maxSide || 1200, quality = q || 0.8;
+          var sc = Math.min(1, max / Math.max(img.width, img.height));
+          var cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(img.width * sc));
+          cv.height = Math.max(1, Math.round(img.height * sc));
+          var ctx = cv.getContext('2d');
+          if (!ctx) { cb(null); return; }
+          ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          cb(cv.toDataURL('image/jpeg', quality));
+        } catch (err) { cb(null); }
       };
       img.onerror = function () { cb(null); };
       img.src = fr.result;
     };
     fr.onerror = function () { cb(null); };
-    fr.readAsDataURL(file);
+    try { fr.readAsDataURL(file); } catch (err) { cb(null); }
   }
 
   function pickImage(cb, opts) {
@@ -1516,16 +1526,13 @@
 
   /* ================= 相册 ================= */
   function saveMemories() {
-    for (var tries = 0; tries < 5; tries++) {
-      try { localStorage.setItem('mizu.memories', JSON.stringify(memories)); return true; }
-      catch (e) {
-        if (memories.length <= 1) break;
-        memories.shift();
-        toast('湖面的容量满了 · 最旧的一张先沉下去了');
-      }
+    try {
+      localStorage.setItem('mizu.memories', JSON.stringify(memories));
+      return true;
+    } catch (e) {
+      toast('设备存储空间不足，这次没有覆盖或删除旧照片');
+      return false;
     }
-    toast('湖面的容量满了，先让一些碎片沉下去吧');
-    return false;
   }
   function renderAlbum() {
     var grid = $('albumGrid');
@@ -1569,7 +1576,10 @@
           if (!img) { toast('先选一张图或粘一个链接'); return; }
           if (!pending && !/^https?:\/\//i.test(img)) { toast('链接要以 http(s) 开头'); return; }
           memories.push({ img: img, caption: ov.querySelector('#memCap').value.trim(), ts: Date.now() });
-          saveMemories();
+          if (!saveMemories()) {
+            memories.pop();
+            return;
+          }
           renderAlbum();
           renderJournal();
           close();
@@ -1587,8 +1597,11 @@
       var list = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
       var t = list[Number(del.getAttribute('data-del'))];
       if (!t) return;
+      var previousMemories = memories;
       memories = memories.filter(function (m) { return m.ts !== t.ts; });
-      saveMemories(); renderAlbum(); renderJournal();
+      if (!saveMemories()) memories = previousMemories;
+      renderAlbum(); renderJournal();
+      if (memories === previousMemories) return;
       toast('删掉了这一张');
       return;
     }
