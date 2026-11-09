@@ -1168,3 +1168,12 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 }
 .retry-send-btn:active{transform:scale(.97);background:rgba(127,212,232,.28)}
 [data-theme="night"] .retry-send-btn{color:#A9E5F3;border-color:rgba(127,212,232,.24);background:rgba(127,212,232,.12)}
+
+
+/* Assistant message actions */
+.msg-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto;margin-left:2px;opacity:.78;}
+.msg-copy-btn{border:1px solid var(--line,rgba(105,155,174,.2));background:rgba(255,255,255,.38);color:var(--muted,#78909b);border-radius:999px;padding:4px 8px;font:inherit;font-size:10px;line-height:1.35;min-height:26px;white-space:nowrap;transition:background .2s ease,color .2s ease,border-color .2s ease;}
+.msg-copy-btn:active{transform:scale(.96);}
+.msg-copy-btn.is-copied{color:var(--accent,#4d9db2);border-color:rgba(77,157,178,.38);background:rgba(125,195,211,.13);}
+[data-theme="night"] .msg-copy-btn{background:rgba(255,255,255,.045);border-color:rgba(190,220,232,.14);color:rgba(220,235,241,.62);}
+@media(hover:hover){.msg-actions{opacity:.48}.msg.ai:hover .msg-actions{opacity:1}}
