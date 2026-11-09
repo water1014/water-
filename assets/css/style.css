@@ -1328,3 +1328,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .album-story-preview{font-size:11px;line-height:17px;color:var(--ink-sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;overflow-wrap:anywhere}
 .lb-extra{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:var(--ink-sub);padding:0 4px;margin:8px 0 12px}
 #albumStoryEdit{min-height:104px;resize:vertical;line-height:1.7}
+
+
+/* Journal: album memories for the selected day */
+.j-photo-memory{display:flex;flex-direction:column;gap:8px;min-width:0}
+.j-photo-memory+.j-photo-memory{padding-top:14px;border-top:1px solid var(--line)}
+.j-photo-caption{margin:0;color:var(--ink);font-size:12px;line-height:1.6;font-weight:600}
+.j-photo-details{display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--accent-deep);font-size:11px;line-height:1.7}
+.j-photo-details span{overflow-wrap:anywhere}
+.j-photo-story{margin:0;padding:10px 12px;border-left:2px solid rgba(127,212,232,.55);border-radius:0 10px 10px 0;background:rgba(127,212,232,.08);color:var(--ink-sub);font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+[data-theme="night"] .j-photo-story{background:rgba(127,212,232,.07);color:#B8C9D0}
