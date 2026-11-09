@@ -1685,7 +1685,7 @@
     if (!grid) return;
     var all = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
     var items = all.filter(function (m) {
-      return (albumFilter !== 'favorite' || m.favorite) && (!albumQuery || String(m.caption || '').toLowerCase().indexOf(albumQuery.toLowerCase()) >= 0);
+      return (albumFilter !== 'favorite' || m.favorite) && (!albumQuery || [m.caption, m.location, m.weather, m.mood, m.story].join(' ').toLowerCase().indexOf(albumQuery.toLowerCase()) >= 0);
     });
     var html = '<div class="album-tools"><div class="album-summary"><span class="album-total">' + all.length + '</span><span>张共同记忆</span><span class="album-fav-total">♥ ' + all.filter(function (m) { return !!m.favorite; }).length + '</span></div><label class="album-search"><span aria-hidden="true">⌕</span><input id="albumSearch" type="search" maxlength="60" placeholder="找一段照片里的记忆" value="' + esc(albumQuery) + '" aria-label="搜索照片说明"></label><div class="album-filters" role="group" aria-label="相册筛选"><button type="button" data-album-filter="all" class="' + (albumFilter === 'all' ? 'is-on' : '') + '">全部</button><button type="button" data-album-filter="favorite" class="' + (albumFilter === 'favorite' ? 'is-on' : '') + '">♥ 收藏</button></div></div>';
     html += '<button class="album-add' + (all.length ? '' : ' is-wide') + '" data-add type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>放进一张照片</span></button>';
@@ -1700,7 +1700,7 @@
           lastAlbumDay = dateKey;
         }
         var idx = memories.indexOf(m);
-        html += '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span>' + (m.source && m.source.kind === 'chat' ? '<span class="album-source">来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA') + '</span>' : '') + '<span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
+        html += '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span>' + (m.location || m.weather || m.mood ? '<span class="album-details-line">' + [m.location ? '⌖ ' + esc(m.location) : '', m.weather ? '☁ ' + esc(m.weather) : '', m.mood ? '♡ ' + esc(m.mood) : ''].filter(Boolean).join(' · ') + '</span>' : '') + (m.story ? '<span class="album-story-preview">' + esc(m.story) + '</span>' : '') + (m.source && m.source.kind === 'chat' ? '<span class="album-source">来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA') + '</span>' : '') + '<span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
       });
     }
     grid.innerHTML = html;
@@ -1763,6 +1763,8 @@
       $('lbFavorite').textContent = m.favorite ? '♥ 已收藏' : '♡ 收藏';
       $('lbImg').src = m.img; $('lbCap').textContent = m.caption || '';
       $('lbDate').textContent = fmtPlain(new Date(m.ts));
+      $('lbExtra').textContent = [m.location ? '⌖ ' + m.location : '', m.weather ? '☁ ' + m.weather : '', m.mood ? '♡ ' + m.mood : '', m.story || ''].filter(Boolean).join('  ·  ');
+      $('lbExtra').hidden = !$('lbExtra').textContent;
       var hasChatSource = !!(m.source && m.source.kind === 'chat');
       $('lbSource').textContent = hasChatSource ? ('来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA')) : '手动添加';
       $('lbSource').hidden = false;
@@ -1820,12 +1822,26 @@
   });
   $('lbEdit').addEventListener('click', function (e) {
     e.stopPropagation(); if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
-    var m = memories[activeAlbumPhoto], before = m.caption || '';
-    openSheet('<div class="panel-head"><h2 class="panel-title">给这一刻写一句话</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div><label class="field"><span class="field-label">照片注记</span><input id="albumCaptionEdit" type="text" maxlength="80" value="' + esc(before) + '" placeholder="那天的风很大"></label><div class="panel-actions"><button class="btn-primary" id="albumCaptionSave" type="button">保存注记</button></div>', function (ov, close) {
+    var m = memories[activeAlbumPhoto];
+    openSheet('<div class="panel-head"><h2 class="panel-title">收藏这一刻的细节</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div>' +
+      '<label class="field"><span class="field-label">照片注记</span><input id="albumCaptionEdit" type="text" maxlength="80" value="' + esc(m.caption || '') + '" placeholder="给这张照片起个名字"></label>' +
+      '<label class="field"><span class="field-label">地点</span><input id="albumLocationEdit" type="text" maxlength="80" value="' + esc(m.location || '') + '" placeholder="例如：海边、回家的路上"></label>' +
+      '<label class="field"><span class="field-label">天气</span><input id="albumWeatherEdit" type="text" maxlength="40" value="' + esc(m.weather || '') + '" placeholder="例如：晴天，微风"></label>' +
+      '<label class="field"><span class="field-label">当时的心情</span><input id="albumMoodEdit" type="text" maxlength="40" value="' + esc(m.mood || '') + '" placeholder="例如：安心、开心、想念"></label>' +
+      '<label class="field"><span class="field-label">这一天的故事</span><textarea id="albumStoryEdit" rows="4" maxlength="1200" placeholder="把照片背后的故事留在这里…">' + esc(m.story || '') + '</textarea></label>' +
+      '<div class="panel-actions"><button class="btn-primary" id="albumCaptionSave" type="button">保存这段回忆</button></div>', function (ov, close) {
       ov.querySelector('#albumCaptionSave').addEventListener('click', function () {
-        var old = m.caption; m.caption = ov.querySelector('#albumCaptionEdit').value.trim();
-        if (!saveMemories()) { m.caption = old; return; }
-        $('lbCap').textContent = m.caption; renderAlbum(); renderJournal(); close(); toast('照片注记更新啦');
+        var fields = { caption: 'albumCaptionEdit', location: 'albumLocationEdit', weather: 'albumWeatherEdit', mood: 'albumMoodEdit', story: 'albumStoryEdit' };
+        var previous = {};
+        Object.keys(fields).forEach(function (key) { previous[key] = m[key]; m[key] = ov.querySelector('#' + fields[key]).value.trim(); });
+        if (!saveMemories()) {
+          Object.keys(fields).forEach(function (key) { if (previous[key] === undefined) delete m[key]; else m[key] = previous[key]; });
+          return;
+        }
+        $('lbCap').textContent = m.caption || '';
+        $('lbExtra').textContent = [m.location ? '⌖ ' + m.location : '', m.weather ? '☁ ' + m.weather : '', m.mood ? '♡ ' + m.mood : '', m.story || ''].filter(Boolean).join('  ·  ');
+        $('lbExtra').hidden = !$('lbExtra').textContent;
+        renderAlbum(); renderJournal(); close(); toast('这段回忆收好啦');
       });
     });
   });
