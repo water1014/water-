@@ -740,12 +740,10 @@
 
     el.className = 'msg ' + (isUser ? 'user' : 'ai');
     el.dataset.index = String(i);
-    var love = '';
-    if (!isUser) {
-      love = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button></div>';
-    }
+    var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button>' +
+      (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     el.innerHTML = buildReason(m) +
-      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + '<div class="bubble">' + highlight(m.content) + '</div>' + love + '</div>' +
+      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + '<div class="bubble">' + highlight(m.content) + '</div>' + actions + '</div>' +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
   }
