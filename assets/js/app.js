@@ -407,7 +407,7 @@
     homeIndex = Math.max(0, Math.min(HOME_PAGES - 1, i));
     if (pagesEl) {
       pagesEl.classList.toggle('is-drag', animate === false);
-      pagesEl.style.transform = 'translateX(' + (-100 / HOME_PAGES * homeIndex) + '%)';
+      pagesEl.style.transform = 'translate3d(' + (-100 / HOME_PAGES * homeIndex) + '%,0,0)';
       if (animate === false) requestAnimationFrame(function () { pagesEl.classList.remove('is-drag'); });
     }
     var dots = $('dots');
@@ -2336,7 +2336,7 @@
       if (rafId) return;
       rafId = requestAnimationFrame(function () {
         rafId = 0;
-        pagesEl.style.transform = 'translateX(' + (-100 / HOME_PAGES * homeIndex + pend / (homeEl.clientWidth || 1) * 100) + '%)';
+        pagesEl.style.transform = 'translate3d(calc(' + (-100 / HOME_PAGES * homeIndex) + '% + ' + pend + 'px),0,0)';
       });
     }
 
