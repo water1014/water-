@@ -1150,14 +1150,22 @@
   }
   function syncViewport() {
     if (!vv) return;
-    var gap = window.innerHeight - vv.height;
-    if (gap > 120) setAppHeight(vv.height);
-    else if (gap < 40) setAppHeight(null);
+    var gap = Math.max(0, window.innerHeight - vv.height);
+    // 键盘高度因设备而异；用较低阈值识别小屏键盘，并留出回弹区间。
+    if (gap > 80) setAppHeight(vv.height);
+    else if (gap < 60) setAppHeight(null);
   }
-  if (vv) { vv.addEventListener('resize', syncViewport); vv.addEventListener('scroll', syncViewport); }
-  window.addEventListener('orientationchange', function () { setAppHeight(null); });
+  if (vv) {
+    vv.addEventListener('resize', syncViewport);
+    vv.addEventListener('scroll', syncViewport);
+  }
+  window.addEventListener('resize', syncViewport);
+  window.addEventListener('orientationchange', function () {
+    setAppHeight(null);
+    setTimeout(syncViewport, 180);
+  });
   msgInput.addEventListener('focus', function () { setTimeout(syncViewport, 280); });
-  msgInput.addEventListener('blur', function () { setTimeout(syncViewport, 120); });
+  msgInput.addEventListener('blur', function () { setTimeout(syncViewport, 180); });
 
   /* ================= 搜索 ================= */
   function setSearch(open) {
