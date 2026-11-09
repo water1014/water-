@@ -2875,37 +2875,83 @@
     inp.click();
   }
 
-  /* 假语音 */
-  var micTimer = null, micHeld = false;
+  /* 语音输入：使用浏览器原生语音识别，不伪造语音转文字输入 */
+  var micTimer = null, micHeld = false, micRecognition = null;
   var recToast = document.createElement('div');
   recToast.className = 'rec-toast';
-  recToast.textContent = '松开发送 · 正在录音';
+  recToast.textContent = '松开发送 · 正在识别';
   document.body.appendChild(recToast);
 
-  function micStart(e) {
-    e.preventDefault();
-    if (sending) { toast('TA 正在回你上一句'); return; }
-    micHeld = true;
-    var btn = $('micBtn');
-    if (btn) btn.classList.add('is-rec');
-    recToast.classList.add('show');
-    clearTimeout(micTimer);
-    micTimer = setTimeout(function () { micStop(true); }, 10000);
-  }
-  function micStop(force) {
-    if (!micHeld) return;
+  function resetMic() {
     micHeld = false;
     clearTimeout(micTimer);
     var btn = $('micBtn');
     if (btn) btn.classList.remove('is-rec');
     recToast.classList.remove('show');
-    if (force === true) return;
-    history.push({ role: 'user', voice: { dur: 3 }, content: '[语音 3"]', ts: Date.now() });
-    saveHistory();
-    renderChat();
-    scrollToBottom(true);
-    sendText('[语音] 我说了一句话，你听听', true);
+    micRecognition = null;
   }
+
+  function micStart(e) {
+    e.preventDefault();
+    if (sending) { toast('TA 正在回你上一句'); return; }
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast('当前浏览器暂不支持语音转文字，请直接输入');
+      return;
+    }
+    if (micHeld) return;
+
+    micHeld = true;
+    var btn = $('micBtn');
+    if (btn) btn.classList.add('is-rec');
+    recToast.classList.add('show');
+
+    var recognition = new SpeechRecognition();
+    micRecognition = recognition;
+    recognition.lang = 'zh-CN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = function (event) {
+      var result = event.results && event.results[0] && event.results[0][0];
+      var transcript = result && result.transcript ? String(result.transcript).trim() : '';
+      if (!transcript) return;
+      var current = msgInput.value.trim();
+      msgInput.value = current ? current + ' ' + transcript : transcript;
+      autoGrow();
+      toast('识别完成，可以检查后发送');
+    };
+    recognition.onerror = function (event) {
+      var reason = event && event.error;
+      if (reason === 'not-allowed' || reason === 'service-not-allowed') toast('麦克风权限未开放');
+      else if (reason === 'no-speech') toast('没有听清，再按住试一次');
+      else if (reason !== 'aborted') toast('语音识别暂时不可用');
+    };
+    recognition.onend = function () {
+      if (micRecognition === recognition) resetMic();
+    };
+
+    try {
+      recognition.start();
+      clearTimeout(micTimer);
+      micTimer = setTimeout(function () { micStop(false); }, 10000);
+    } catch (err) {
+      resetMic();
+      toast('语音识别无法启动，请检查麦克风权限');
+    }
+  }
+
+  function micStop(force) {
+    if (!micHeld) return;
+    var recognition = micRecognition;
+    resetMic();
+    if (!recognition) return;
+    try {
+      if (force === true) recognition.abort();
+      else recognition.stop();
+    } catch (err) { /* 识别可能已自行结束 */ }
+  }
+
   if ($('micBtn')) {
     $('micBtn').addEventListener('pointerdown', micStart);
     $('micBtn').addEventListener('pointerup', function () { micStop(false); });
