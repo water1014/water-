@@ -1950,35 +1950,45 @@
       '<button class="j-recap-copy" id="copyJournalSummary" type="button">复制这一天的回忆</button></section>';
     html += '<label class="j-weather"><span>WEATHER · 天气</span><input id="jWeather" type="text" maxlength="20" placeholder="晴，有雾，风很轻…" value="' + esc(w) + '"></label>';
 
-    html += '<div class="j-sec"><p class="j-sec-title">PHOTO · 当天照片与回忆</p>';
-    if (dayPhotos.length) {
-      dayPhotos.forEach(function (photo) {
+    var timeline = [];
+    shown.forEach(function (m, index) {
+      if (m.sticker || !String(m.content || '').trim()) return;
+      timeline.push({ type: 'chat', ts: Number(m.ts) || 0, order: index, item: m });
+    });
+    dayPhotos.forEach(function (photo, index) {
+      timeline.push({ type: 'photo', ts: Number(photo.ts) || 0, order: index, item: photo });
+    });
+    timeline.sort(function (a, b) {
+      return a.ts - b.ts || (a.type === 'photo' ? -1 : 1) || a.order - b.order;
+    });
+
+    html += '<section class="j-sec j-timeline-sec"><div class="j-timeline-head"><p class="j-sec-title">OUR DAY · 今日时光</p><span class="j-timeline-total">' + timeline.length + ' 个片段</span></div>';
+    if (!timeline.length) {
+      html += '<div class="j-timeline-empty">这一天还没有留下片段。等一句话，或一张照片，来开启它。</div>';
+    } else {
+      html += '<div class="j-timeline">';
+      timeline.forEach(function (event) {
+        if (event.type === 'chat') {
+          var m = event.item;
+          html += '<article class="j-timeline-event is-chat"><span class="j-timeline-rail" aria-hidden="true"></span><div class="j-timeline-meta"><span class="j-timeline-kind">MESSAGE · ' + (m.role === 'user' ? '你' : '小沢') + '</span><time>' + hhmm(m.ts) + '</time></div><div class="j-timeline-message">' + esc(m.content) + '</div></article>';
+          return;
+        }
+        var photo = event.item;
         var photoDetails = [
           photo.location ? '<span>⌖ ' + esc(photo.location) + '</span>' : '',
           photo.weather ? '<span>☁ ' + esc(photo.weather) + '</span>' : '',
           photo.mood ? '<span>♡ ' + esc(photo.mood) + '</span>' : ''
         ].filter(Boolean).join('');
-        html += '<article class="j-photo-memory"><button class="j-photo-open" type="button" data-journal-photo="' + memories.indexOf(photo) + '" aria-label="打开这张照片的详情"><span class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="" loading="lazy">' +
+        html += '<article class="j-timeline-event is-photo"><span class="j-timeline-rail" aria-hidden="true"></span><div class="j-timeline-meta"><span class="j-timeline-kind">PHOTO · 回忆照片</span><time>' + hhmm(photo.ts) + '</time></div><div class="j-photo-memory"><button class="j-photo-open" type="button" data-journal-photo="' + memories.indexOf(photo) + '" aria-label="打开这张照片的详情"><span class="j-photo' + (journalStyle === 'polaroid' ? ' is-polaroid' : '') + '"><img src="' + esc(photo.img) + '" alt="" loading="lazy">' +
           (journalStyle === 'polaroid' ? '<span class="j-frame-cap">' + esc(photo.caption || fmtPlain(new Date(photo.ts))) + '</span>' : '') + '</span></button>' +
           (journalStyle !== 'polaroid' && photo.caption ? '<p class="j-photo-caption">' + esc(photo.caption) + '</p>' : '') +
           (photoDetails ? '<div class="j-photo-details">' + photoDetails + '</div>' : '') +
-          (photo.story ? '<p class="j-photo-story">' + esc(photo.story) + '</p>' : '') + '</article>';
+          (photo.story ? '<p class="j-photo-story">' + esc(photo.story) + '</p>' : '') + '</div></article>';
       });
-    } else {
-      html += '<div class="j-nophoto">这一天还没有照片 · 去「相册」里放一张</div>';
+      html += '</div>';
     }
-    html += '</div>';
-
-    html += '<div class="j-sec"><p class="j-sec-title">LINES · 这天的原话</p>';
-    if (!msgs.length) html += '<p class="empty-tip">这一天还没有说过话。</p>';
-    else {
-      shown.forEach(function (m) {
-        if (m.sticker) return;
-        html += '<div class="j-quote"><p class="j-who">' + (m.role === 'user' ? '你' : '小沢') + ' · ' + hhmm(m.ts) + '</p><div>' + esc(m.content) + '</div></div>';
-      });
-      if (msgs.length > 3) html += '<button class="j-more" id="jMore" type="button">' + (journalExpanded ? '收起' : '展开全部 ' + msgs.length + ' 条') + '</button>';
-    }
-    html += '</div>';
+    if (msgs.length > 3) html += '<button class="j-more" id="jMore" type="button">' + (journalExpanded ? '收起' : '展开全部 ' + msgs.length + ' 条聊天') + '</button>';
+    html += '</section>';
 
     html += '<div class="j-sec"><p class="j-sec-title">NOTE · 批注</p><textarea class="j-note" id="jNote" maxlength="500" placeholder="写给这一天的一句话…">' + esc(note) + '</textarea></div>';
 
