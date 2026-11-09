@@ -805,6 +805,7 @@
 
   /* ================= 流式 ================= */
   var sending = false, isTyping = false, abortCtrl = null, discard = false;
+  var activeRequestText = '', retryPayload = '';
   var typingEl = null, streamEl = null, streamBody = null, streamText = '';
   var queue = [], typeTimer = null, streamDone = false, streamReason = '';
 
@@ -872,6 +873,8 @@
     streamDone = false; abortCtrl = null;
 
     if (discard) { discard = false; text = ''; err = null; }
+    retryPayload = err && !text ? activeRequestText : '';
+    activeRequestText = '';
 
     if (text) {
       var found = [];
@@ -911,8 +914,16 @@
     var el = document.createElement('div');
     el.className = 'msg ai enter';
     el.innerHTML = '<div class="row"><div class="bubble bubble-error"><p>好像断线了……</p><p class="err-detail">' + esc(msg) +
-      '</p><p>再试一次好吗？</p></div></div>';
+      '</p><p>再试一次好吗？</p>' + (retryPayload ? '<button class="retry-send-btn" type="button" data-retry-send>重新发送这条消息</button>' : '') + '</div></div>';
     msgList.appendChild(el);
+    var retryBtn = el.querySelector('[data-retry-send]');
+    if (retryBtn) retryBtn.addEventListener('click', function () {
+      if (sending || !retryPayload) return;
+      var payload = retryPayload;
+      retryPayload = '';
+      el.remove();
+      sendText(payload, true, true);
+    });
     followIfNear();
   }
 
@@ -1073,6 +1084,8 @@
       saveHistory();
       if (!noHit) arcHit(text);
     }
+    activeRequestText = text;
+    retryPayload = '';
     sending = true;
     setSendUI(true);
     renderChat();
