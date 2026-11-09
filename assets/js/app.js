@@ -162,6 +162,7 @@
   /* ================= 状态 ================= */
   var config = loadConfig();
   var history = loadHistory();
+  var pendingQuote = null, activeQuote = null, retryQuote = null;
   var moods = read('mizu.moods', []) || [];
   var memories = read('mizu.memories', []) || [];
   var notes = read('mizu.notes', {}) || {};
@@ -740,12 +741,29 @@
 
     el.className = 'msg ' + (isUser ? 'user' : 'ai');
     el.dataset.index = String(i);
-    var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button>' +
+    var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' +
       (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     el.innerHTML = buildReason(m) +
       '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + '<div class="bubble">' + highlight(m.content) + '</div>' + actions + '</div>' +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
+  }
+
+  function renderQuotePreview() {
+    var host = $('quotePreview');
+    if (!host) return;
+    if (!pendingQuote) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+    host.innerHTML = '<div class="quote-preview-copy"><span>正在引用 · ' + (pendingQuote.role === 'user' ? '我' : 'TA') + '</span><p>' + esc(pendingQuote.content) + '</p></div><button class="quote-cancel" type="button" aria-label="取消引用">×</button>';
+  }
+
+  function setQuoteFromMessage(index) {
+    var m = history[index];
+    if (!m || !m.content || m.sticker || m.image || m.voice) return;
+    pendingQuote = { role: m.role, content: String(m.content).slice(0, 240), index: index };
+    renderQuotePreview();
+    msgInput.focus();
+    toast('已引用这句话');
   }
 
   function renderChat() {
@@ -872,6 +890,8 @@
 
     if (discard) { discard = false; text = ''; err = null; }
     retryPayload = err && !text ? activeRequestText : '';
+    if (err && !text) retryQuote = activeQuote;
+    else { retryQuote = null; activeQuote = null; }
     activeRequestText = '';
 
     if (text) {
@@ -920,7 +940,7 @@
       var payload = retryPayload;
       retryPayload = '';
       el.remove();
-      sendText(payload, true, true);
+      sendText(payload, true, true, retryQuote);
     });
     followIfNear();
   }
@@ -953,6 +973,9 @@
     var pins = archive.filter(function (m) { return m.pinned && m.text; }).slice(0, 12);
     if (pins.length) sys += '\n\n关于我们：' + pins.map(function (m) { return m.text; }).join('；') + '。';
     var out = [{ role: 'system', content: sys }];
+    if (activeQuote && activeQuote.content) {
+      out.push({ role: 'system', content: '用户正在回复一条此前的消息。被引用的原话来自' + (activeQuote.role === 'user' ? '用户本人' : '你') + '：\n「' + activeQuote.content + '」\n请结合这段引用理解用户当前消息，不要把引用内容误当成用户刚刚重新发送的内容。' });
+    }
     history.slice(-30).forEach(function (m) {
       if (!m.content || !m.content.trim()) return;
       out.push({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content });
@@ -1072,7 +1095,7 @@
     pump();
   }
 
-  async function sendText(text, noPush, noHit) {
+  async function sendText(text, noPush, noHit, quoteOverride) {
     if (sending) return;
     text = String(text || '').trim();
     if (!text) return;
@@ -1083,6 +1106,9 @@
       if (!noHit) arcHit(text);
     }
     activeRequestText = text;
+    activeQuote = quoteOverride || pendingQuote || null;
+    pendingQuote = null;
+    renderQuotePreview();
     retryPayload = '';
     sending = true;
     setSendUI(true);
@@ -1097,9 +1123,10 @@
   function sendMessage() {
     var t = msgInput.value.trim();
     if (!t || sending) return;
+    var quote = pendingQuote;
     msgInput.value = '';
     autoGrow();
-    sendText(t);
+    sendText(t, false, false, quote);
   }
 
   function sendSticker(key) {
@@ -1184,6 +1211,19 @@
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(copyText).then(copied).catch(function () { fallbackCopy(copyText, copied); });
       } else fallbackCopy(copyText, copied);
+      return;
+    }
+    var quoteBtn = e.target.closest('.msg-quote-btn');
+    if (quoteBtn) {
+      e.preventDefault();
+      var quoteRow = quoteBtn.closest('.msg');
+      if (quoteRow) setQuoteFromMessage(Number(quoteRow.dataset.index));
+      return;
+    }
+    if (e.target.closest('.quote-cancel')) {
+      e.preventDefault();
+      pendingQuote = null;
+      renderQuotePreview();
       return;
     }
     var btn = e.target.closest('.love-btn');
