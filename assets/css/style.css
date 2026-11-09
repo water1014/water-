@@ -1230,3 +1230,34 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .mt-search-tools{grid-template-columns:1fr}
   .mt-filter-select{max-width:none;width:100%}
 }
+
+
+/* 记忆碎片编辑 */
+.frag-detail-text{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.85;
+  max-height:42vh;
+  overflow:auto;
+}
+.frag-editor{
+  display:block;
+  width:100%;
+  min-height:150px;
+  resize:vertical;
+  box-sizing:border-box;
+  padding:12px 13px;
+  border:1px solid var(--field-line);
+  border-radius:14px;
+  outline:none;
+  color:var(--ink);
+  background:var(--field);
+  font:inherit;
+  font-size:14px;
+  line-height:1.75;
+}
+.frag-editor:focus{border-color:var(--accent-deep)}
+.frag-editor[hidden],.frag-detail-text[hidden]{display:none}
+.frag-actions{flex-wrap:wrap}
