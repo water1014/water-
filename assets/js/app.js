@@ -722,7 +722,8 @@
     if (m.image) {
       el.className = 'msg ' + (isUser ? 'user' : 'ai');
       el.dataset.index = String(i);
-      el.innerHTML = '<div class="row"><div class="bubble has-img"><img src="' + esc(m.image) + '" alt="图片消息" loading="lazy"></div></div>' +
+      var archivedImage = memories.some(function (item) { return item.img === m.image || (item.source && item.source.kind === 'chat' && Number(item.source.ts) === Number(m.ts) && item.source.role === m.role); });
+      el.innerHTML = '<div class="row"><div class="bubble has-img"><img src="' + esc(m.image) + '" alt="图片消息" loading="lazy"><button class="chat-photo-save' + (archivedImage ? ' is-saved' : '') + '" type="button" data-chat-photo aria-label="' + (archivedImage ? '照片已收进相册' : '收进相册') + '">' + (archivedImage ? '✓ 已收进相册' : '＋ 收进相册') + '</button></div></div>' +
         '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
       return el;
     }
@@ -1204,6 +1205,33 @@
   });
 
   msgList.addEventListener('click', function (e) {
+    var photoSave = e.target.closest('[data-chat-photo]');
+    if (photoSave) {
+      e.preventDefault();
+      var photoRow = photoSave.closest('.msg');
+      var photoIndex = photoRow ? Number(photoRow.dataset.index) : -1;
+      var photoMessage = history[photoIndex];
+      if (!photoMessage || !photoMessage.image) { toast('这张聊天照片暂时找不到了'); return; }
+      var exists = memories.some(function (item) {
+        return item.img === photoMessage.image || (item.source && item.source.kind === 'chat' && Number(item.source.ts) === Number(photoMessage.ts) && item.source.role === photoMessage.role);
+      });
+      if (exists) { photoSave.textContent = '✓ 已收进相册'; photoSave.classList.add('is-saved'); toast('这张照片已经在相册里啦'); return; }
+      var record = {
+        img: photoMessage.image,
+        caption: (photoMessage.role === 'user' ? '我' : 'TA') + '分享的照片',
+        ts: Number(photoMessage.ts) || Date.now(),
+        source: { kind: 'chat', role: photoMessage.role, ts: Number(photoMessage.ts) || Date.now(), content: photoMessage.content || '[图片]' }
+      };
+      memories.push(record);
+      if (!saveMemories()) { memories.pop(); return; }
+      photoSave.textContent = '✓ 已收进相册';
+      photoSave.classList.add('is-saved');
+      photoSave.setAttribute('aria-label', '照片已收进相册');
+      renderAlbum();
+      renderJournal();
+      toast('聊天照片收进相册啦');
+      return;
+    }
     var copyBtn = e.target.closest('.msg-copy-btn');
     if (copyBtn) {
       e.preventDefault();
@@ -1664,7 +1692,7 @@
     if (!items.length) html += '<div class="album-empty">' + (albumFilter === 'favorite' ? '还没有收藏的照片。遇见喜欢的，点亮它吧。' : (all.length ? '没有找到这段记忆。换个关键词试试？' : '还没有照片。等你把某一天的湖面放进来。')) + '</div>';
     else html += items.map(function (m) {
       var idx = memories.indexOf(m);
-      return '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span><span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
+      return '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span>' + (m.source && m.source.kind === 'chat' ? '<span class="album-source">来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA') + '</span>' : '') + '<span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
     }).join('');
     grid.innerHTML = html;
     var search = $('albumSearch');
