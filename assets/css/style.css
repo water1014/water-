@@ -1321,3 +1321,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .msg.album-source-highlight .bubble{outline:2px solid rgba(91,181,204,.7);outline-offset:5px;animation:albumSourcePulse 1.8s ease}
 @keyframes albumSourcePulse{0%,100%{outline-color:rgba(91,181,204,.12)}35%{outline-color:rgba(91,181,204,.9)}}
 @media(prefers-reduced-motion:reduce){.msg.album-source-highlight .bubble{animation:none}}
+
+
+/* Rich memory details */
+.album-details-line{font-size:10px;line-height:17px;color:var(--accent-deep);overflow-wrap:anywhere;margin-top:3px}
+.album-story-preview{font-size:11px;line-height:17px;color:var(--ink-sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;overflow-wrap:anywhere}
+.lb-extra{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.8;color:var(--ink-sub);padding:0 4px;margin:8px 0 12px}
+#albumStoryEdit{min-height:104px;resize:vertical;line-height:1.7}
