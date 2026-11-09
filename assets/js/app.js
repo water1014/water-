@@ -1690,10 +1690,19 @@
     var html = '<div class="album-tools"><div class="album-summary"><span class="album-total">' + all.length + '</span><span>张共同记忆</span><span class="album-fav-total">♥ ' + all.filter(function (m) { return !!m.favorite; }).length + '</span></div><label class="album-search"><span aria-hidden="true">⌕</span><input id="albumSearch" type="search" maxlength="60" placeholder="找一段照片里的记忆" value="' + esc(albumQuery) + '" aria-label="搜索照片说明"></label><div class="album-filters" role="group" aria-label="相册筛选"><button type="button" data-album-filter="all" class="' + (albumFilter === 'all' ? 'is-on' : '') + '">全部</button><button type="button" data-album-filter="favorite" class="' + (albumFilter === 'favorite' ? 'is-on' : '') + '">♥ 收藏</button></div></div>';
     html += '<button class="album-add' + (all.length ? '' : ' is-wide') + '" data-add type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>放进一张照片</span></button>';
     if (!items.length) html += '<div class="album-empty">' + (albumFilter === 'favorite' ? '还没有收藏的照片。遇见喜欢的，点亮它吧。' : (all.length ? '没有找到这段记忆。换个关键词试试？' : '还没有照片。等你把某一天的湖面放进来。')) + '</div>';
-    else html += items.map(function (m) {
-      var idx = memories.indexOf(m);
-      return '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span>' + (m.source && m.source.kind === 'chat' ? '<span class="album-source">来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA') + '</span>' : '') + '<span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
-    }).join('');
+    else {
+      var lastAlbumDay = '';
+      items.forEach(function (m) {
+        var date = new Date(m.ts);
+        var dateKey = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+        if (dateKey !== lastAlbumDay) {
+          html += '<div class="album-day-heading"><span>' + esc(dayLabel(date)) + '</span><small>' + date.getFullYear() + '.' + pad2(date.getMonth() + 1) + '.' + pad2(date.getDate()) + '</small></div>';
+          lastAlbumDay = dateKey;
+        }
+        var idx = memories.indexOf(m);
+        html += '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span>' + (m.source && m.source.kind === 'chat' ? '<span class="album-source">来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA') + '</span>' : '') + '<span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
+      });
+    }
     grid.innerHTML = html;
     var search = $('albumSearch');
     if (search) search.addEventListener('input', function () {
@@ -1754,8 +1763,10 @@
       $('lbFavorite').textContent = m.favorite ? '♥ 已收藏' : '♡ 收藏';
       $('lbImg').src = m.img; $('lbCap').textContent = m.caption || '';
       $('lbDate').textContent = fmtPlain(new Date(m.ts));
-      $('lbSource').textContent = m.source && m.source.kind === 'chat' ? ('来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA')) : '手动添加';
+      var hasChatSource = !!(m.source && m.source.kind === 'chat');
+      $('lbSource').textContent = hasChatSource ? ('来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA')) : '手动添加';
       $('lbSource').hidden = false;
+      $('lbChatSource').hidden = !hasChatSource;
       $('lightbox').classList.add('is-open'); $('lightbox').setAttribute('aria-hidden', 'false');
     }
   });
@@ -1771,6 +1782,36 @@
     });
   })();
   var activeAlbumPhoto = null;
+  $('lbChatSource').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
+    var photo = memories[activeAlbumPhoto];
+    if (!photo.source || photo.source.kind !== 'chat') { toast('这张照片没有聊天来源'); return; }
+    var sourceIndex = history.findIndex(function (message) {
+      return message.image === photo.img &&
+        message.role === photo.source.role &&
+        Number(message.ts) === Number(photo.source.ts);
+    });
+    if (sourceIndex < 0) { toast('原始聊天记录已不在当前记录中'); return; }
+    $('lightbox').classList.remove('is-open');
+    $('lightbox').setAttribute('aria-hidden', 'true');
+    activeAlbumPhoto = null;
+    openApp('chat');
+    requestAnimationFrame(function () {
+      var row = msgList.querySelector('.msg[data-index="' + sourceIndex + '"]');
+      if (!row) { toast('暂时无法定位这条聊天消息'); return; }
+      var top = row.getBoundingClientRect().top - chatScroll.getBoundingClientRect().top;
+      var target = chatScroll.scrollTop + top - (chatScroll.clientHeight - row.offsetHeight) / 2;
+      if (chatScroll.scrollTo) {
+        try { chatScroll.scrollTo({ top: Math.max(0, target), behavior: 'smooth' }); }
+        catch (err) { chatScroll.scrollTop = Math.max(0, target); }
+      } else chatScroll.scrollTop = Math.max(0, target);
+      row.classList.remove('album-source-highlight');
+      void row.offsetWidth;
+      row.classList.add('album-source-highlight');
+      setTimeout(function () { row.classList.remove('album-source-highlight'); }, 1900);
+    });
+  });
   $('lbFavorite').addEventListener('click', function (e) {
     e.stopPropagation(); if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
     var m = memories[activeAlbumPhoto], old = !!m.favorite; m.favorite = !old;
