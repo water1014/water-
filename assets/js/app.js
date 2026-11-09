@@ -1651,25 +1651,27 @@
       return false;
     }
   }
+  var albumFilter = 'all', albumQuery = '';
   function renderAlbum() {
     var grid = $('albumGrid');
     if (!grid) return;
-    var items = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
-    var html = '';
-    if (!items.length) {
-      html += '<button class="album-add is-wide" data-add type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>放进一张照片</span></button>';
-      html += '<div class="album-empty">还没有照片。等你把某一天的湖面放进来。</div>';
-    } else {
-      html += '<button class="album-add" data-add type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>放进一张照片</span></button>';
-      html += items.map(function (m, i) {
-        return '<figure class="album-card" data-idx="' + i + '">' +
-          '<div class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></div>' +
-          '<button class="album-del" data-del="' + i + '" type="button" aria-label="删除这张照片"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7.5 7l.9 12h7.2l.9-12"/></svg></button>' +
-          '<figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || ' ') + '</span><span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption>' +
-          '</figure>';
-      }).join('');
-    }
+    var all = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
+    var items = all.filter(function (m) {
+      return (albumFilter !== 'favorite' || m.favorite) && (!albumQuery || String(m.caption || '').toLowerCase().indexOf(albumQuery.toLowerCase()) >= 0);
+    });
+    var html = '<div class="album-tools"><div class="album-summary"><span class="album-total">' + all.length + '</span><span>张共同记忆</span><span class="album-fav-total">♥ ' + all.filter(function (m) { return !!m.favorite; }).length + '</span></div><label class="album-search"><span aria-hidden="true">⌕</span><input id="albumSearch" type="search" maxlength="60" placeholder="找一段照片里的记忆" value="' + esc(albumQuery) + '" aria-label="搜索照片说明"></label><div class="album-filters" role="group" aria-label="相册筛选"><button type="button" data-album-filter="all" class="' + (albumFilter === 'all' ? 'is-on' : '') + '">全部</button><button type="button" data-album-filter="favorite" class="' + (albumFilter === 'favorite' ? 'is-on' : '') + '">♥ 收藏</button></div></div>';
+    html += '<button class="album-add' + (all.length ? '' : ' is-wide') + '" data-add type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>放进一张照片</span></button>';
+    if (!items.length) html += '<div class="album-empty">' + (albumFilter === 'favorite' ? '还没有收藏的照片。遇见喜欢的，点亮它吧。' : (all.length ? '没有找到这段记忆。换个关键词试试？' : '还没有照片。等你把某一天的湖面放进来。')) + '</div>';
+    else html += items.map(function (m) {
+      var idx = memories.indexOf(m);
+      return '<figure class="album-card"><button class="album-open" data-open="' + idx + '" type="button" aria-label="查看照片"><span class="album-photo"><img src="' + esc(m.img) + '" alt="" loading="lazy"></span></button><button class="album-favorite' + (m.favorite ? ' is-on' : '') + '" data-favorite="' + idx + '" type="button" aria-label="' + (m.favorite ? '取消收藏' : '收藏照片') + '">' + (m.favorite ? '♥' : '♡') + '</button><figcaption class="album-meta"><span class="album-cap">' + esc(m.caption || '未命名的瞬间') + '</span><span class="album-date">' + fmtPlain(new Date(m.ts)) + '</span></figcaption></figure>';
+    }).join('');
     grid.innerHTML = html;
+    var search = $('albumSearch');
+    if (search) search.addEventListener('input', function () {
+      var pos = this.selectionStart; albumQuery = this.value; renderAlbum();
+      var next = $('albumSearch'); if (next) { next.focus(); next.setSelectionRange(pos, pos); }
+    });
   }
   function openAddMemory() {
     openSheet('<div class="panel-head"><h2 class="panel-title">放进一张照片</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div>' +
@@ -1706,32 +1708,25 @@
   }
   $('addMemory').addEventListener('click', openAddMemory);
   $('albumGrid').addEventListener('click', function (e) {
+    var filter = e.target.closest('[data-album-filter]');
+    if (filter) { albumFilter = filter.getAttribute('data-album-filter'); renderAlbum(); return; }
     var add = e.target.closest('[data-add]');
     if (add) { openAddMemory(); return; }
-    var del = e.target.closest('[data-del]');
-    if (del) {
-      e.stopPropagation();
-      var list = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
-      var t = list[Number(del.getAttribute('data-del'))];
-      if (!t) return;
-      var previousMemories = memories;
-      memories = memories.filter(function (m) { return m.ts !== t.ts; });
-      if (!saveMemories()) memories = previousMemories;
-      renderAlbum(); renderJournal();
-      if (memories === previousMemories) return;
-      toast('删掉了这一张');
-      return;
+    var fav = e.target.closest('[data-favorite]');
+    if (fav) {
+      var fi = Number(fav.getAttribute('data-favorite')), fm = memories[fi]; if (!fm) return;
+      var oldFavorite = !!fm.favorite; fm.favorite = !oldFavorite;
+      if (!saveMemories()) { fm.favorite = oldFavorite; return; }
+      renderAlbum(); toast(fm.favorite ? '这张照片收藏好啦' : '已取消收藏'); return;
     }
-    var card = e.target.closest('.album-card');
-    if (card) {
-      var arr = memories.slice().sort(function (a, b) { return b.ts - a.ts; });
-      var m = arr[Number(card.getAttribute('data-idx'))];
-      if (!m) return;
-      $('lbImg').src = m.img;
-      $('lbCap').textContent = m.caption || '';
+    var open = e.target.closest('[data-open]');
+    if (open) {
+      var m = memories[Number(open.getAttribute('data-open'))]; if (!m) return;
+      activeAlbumPhoto = memories.indexOf(m);
+      $('lbFavorite').textContent = m.favorite ? '♥ 已收藏' : '♡ 收藏';
+      $('lbImg').src = m.img; $('lbCap').textContent = m.caption || '';
       $('lbDate').textContent = fmtPlain(new Date(m.ts));
-      $('lightbox').classList.add('is-open');
-      $('lightbox').setAttribute('aria-hidden', 'false');
+      $('lightbox').classList.add('is-open'); $('lightbox').setAttribute('aria-hidden', 'false');
     }
   });
   (function () {
@@ -1745,9 +1740,35 @@
       $('albumGrid').addEventListener(ev, function () { clearTimeout(t); });
     });
   })();
-  $('lightbox').addEventListener('click', function () {
-    this.classList.remove('is-open');
-    this.setAttribute('aria-hidden', 'true');
+  var activeAlbumPhoto = null;
+  $('lbFavorite').addEventListener('click', function (e) {
+    e.stopPropagation(); if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
+    var m = memories[activeAlbumPhoto], old = !!m.favorite; m.favorite = !old;
+    if (!saveMemories()) { m.favorite = old; return; }
+    $('lbFavorite').textContent = m.favorite ? '♥ 已收藏' : '♡ 收藏'; renderAlbum();
+  });
+  $('lbEdit').addEventListener('click', function (e) {
+    e.stopPropagation(); if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
+    var m = memories[activeAlbumPhoto], before = m.caption || '';
+    openSheet('<div class="panel-head"><h2 class="panel-title">给这一刻写一句话</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div><label class="field"><span class="field-label">照片注记</span><input id="albumCaptionEdit" type="text" maxlength="80" value="' + esc(before) + '" placeholder="那天的风很大"></label><div class="panel-actions"><button class="btn-primary" id="albumCaptionSave" type="button">保存注记</button></div>', function (ov, close) {
+      ov.querySelector('#albumCaptionSave').addEventListener('click', function () {
+        var old = m.caption; m.caption = ov.querySelector('#albumCaptionEdit').value.trim();
+        if (!saveMemories()) { m.caption = old; return; }
+        $('lbCap').textContent = m.caption; renderAlbum(); renderJournal(); close(); toast('照片注记更新啦');
+      });
+    });
+  });
+  $('lbDelete').addEventListener('click', function (e) {
+    e.stopPropagation(); if (activeAlbumPhoto === null || !memories[activeAlbumPhoto]) return;
+    var m = memories[activeAlbumPhoto], previous = memories;
+    memories = memories.filter(function (item) { return item !== m; });
+    if (!saveMemories()) { memories = previous; return; }
+    $('lightbox').classList.remove('is-open'); $('lightbox').setAttribute('aria-hidden', 'true');
+    activeAlbumPhoto = null; renderAlbum(); renderJournal(); toast('照片已从相册移除');
+  });
+  $('lightbox').addEventListener('click', function (e) {
+    if (e.target !== this) return;
+    this.classList.remove('is-open'); this.setAttribute('aria-hidden', 'true'); activeAlbumPhoto = null;
   });
 
   /* ================= 手帐 ================= */
