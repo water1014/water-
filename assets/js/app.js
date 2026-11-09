@@ -195,6 +195,7 @@
       shell: raw.shell !== false,
       greeting: typeof raw.greeting === 'string' ? raw.greeting : '',
       statusLine: typeof raw.statusLine === 'string' && raw.statusLine.trim() ? raw.statusLine : '想你',
+      musicUrl: typeof raw.musicUrl === 'string' ? raw.musicUrl.trim() : '',
       relation: raw.relation && typeof raw.relation === 'object' ? raw.relation : { word: '唯一的、确定的、我的人', since: '' }
     };
   }
@@ -335,7 +336,7 @@
   function openApp(name, originEl, pane) {
     if (!name) return;
     if (name === 'settings') { openSettings(); return; }
-    if (name === 'music') { openPlaylist(); return; }
+    if (name === 'music') { openMusic(); return; }
     var appName = name === 'stars' ? 'archive' : name;
     var el = document.getElementById('view-' + appName);
     if (!el) return;
@@ -380,6 +381,39 @@
       renderChat();
       requestAnimationFrame(function () { chatScroll.scrollTop = chatScroll.scrollHeight; });
     }
+  }
+
+
+  /* ================= 原版网易云播放器 ================= */
+  function openMusic() {
+    if (!config.musicUrl) {
+      openSheet('<div class="panel-head"><h2 class="panel-title">连接音乐服务</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div>' +
+        '<p class="field-hint">这里接入 Anko3o/Music-Mcp-Netease 原版播放器。需要先部署它的 Python 服务，GitHub Pages 只负责展示界面，不能运行音乐后端。</p>' +
+        '<label class="field"><span class="field-label">播放器服务地址 · HTTPS</span><input id="musicServerUrl" type="url" spellcheck="false" placeholder="https://你的音乐服务地址"></label>' +
+        '<div class="panel-actions"><button class="btn-primary" id="musicConnect" type="button">连接播放器</button></div>',
+        function (ov, close) {
+          ov.querySelector('#musicConnect').addEventListener('click', function () {
+            var url = ov.querySelector('#musicServerUrl').value.trim().replace(/\\/$/, '');
+            if (!/^https:\\/\\//i.test(url) && !/^http:\\/\\/localhost(?::\\d+)?$/i.test(url)) {
+              toast('请输入有效的 HTTPS 服务地址'); return;
+            }
+            config.musicUrl = url;
+            saveConfig();
+            close();
+            openMusic();
+          });
+        });
+      return;
+    }
+    var old = document.getElementById('musicHostOverlay');
+    if (old) old.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'musicHostOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:1200;background:var(--paper);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);';
+    overlay.innerHTML = '<div style="height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--paper);border-bottom:1px solid var(--line);"><span style="font-family:var(--serif);font-size:16px;color:var(--ink)">MUSIC · 一起听</span><button type="button" id="musicHostClose" aria-label="关闭" style="border:0;background:transparent;color:var(--ink);font-size:24px;padding:0 8px">×</button></div><iframe title="网易云音乐播放器" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer" style="border:0;width:100%;height:calc(100% - 44px);flex:1;background:transparent"></iframe>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('iframe').src = config.musicUrl + '/';
+    overlay.querySelector('#musicHostClose').addEventListener('click', function () { overlay.remove(); });
   }
 
   function closeApp() {
@@ -2028,6 +2062,7 @@
     $('setSystem').value = config.system;
     $('setGreeting').value = config.greeting || '';
     $('setStatusLine').value = config.statusLine || '想你';
+    if ($('setMusicUrl')) $('setMusicUrl').value = config.musicUrl || '';
     if ($('setShell')) $('setShell').checked = config.shell !== false;
     pendingTheme = theme;
     applyTheme(theme);
@@ -2055,6 +2090,7 @@
       shell: config.shell,
       greeting: $('setGreeting').value.trim(),
       statusLine: $('setStatusLine').value.trim() || '想你',
+      musicUrl: $('setMusicUrl') ? $('setMusicUrl').value.trim().replace(/\\/$/, '') : (config.musicUrl || ''),
       relation: config.relation
     };
     saveConfig();
