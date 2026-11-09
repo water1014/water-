@@ -1754,6 +1754,8 @@
       $('lbFavorite').textContent = m.favorite ? '♥ 已收藏' : '♡ 收藏';
       $('lbImg').src = m.img; $('lbCap').textContent = m.caption || '';
       $('lbDate').textContent = fmtPlain(new Date(m.ts));
+      $('lbSource').textContent = m.source && m.source.kind === 'chat' ? ('来自聊天 · ' + (m.source.role === 'user' ? '我' : 'TA')) : '手动添加';
+      $('lbSource').hidden = false;
       $('lightbox').classList.add('is-open'); $('lightbox').setAttribute('aria-hidden', 'false');
     }
   });
