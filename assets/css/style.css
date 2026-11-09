@@ -1120,3 +1120,38 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .more-backup-actions button:active{transform:scale(.97);background:rgba(127,212,232,.2)}
 [data-theme="night"] .more-backup{background:linear-gradient(145deg,rgba(53,67,78,.92),rgba(39,54,66,.82))}
 [data-theme="night"] .more-backup-actions button{background:rgba(255,255,255,.07);color:var(--ink)}
+
+
+/* —— 设置页：分区、密钥可读性与移动端节奏 —— */
+.settings-section-title{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:8px 0 14px;padding:0 0 9px;
+  border-bottom:1px solid var(--line);
+  color:var(--ink);font-size:14px;font-weight:600;letter-spacing:.04em;
+}
+.settings-section-title small{
+  color:var(--ink-sub);font-family:var(--mono);font-size:9px;
+  font-weight:400;letter-spacing:.16em;opacity:.72;
+}
+.field-hint{
+  display:block;margin:8px 2px 0;color:var(--ink-sub);
+  font-size:11px;line-height:1.7;letter-spacing:0;
+  text-transform:none;opacity:.88;
+}
+.key-field-row{display:flex;align-items:stretch;gap:8px;min-width:0}
+.key-field-row input{flex:1 1 auto;min-width:0;width:0}
+.key-field-row button{
+  flex:0 0 64px;min-height:44px;padding:8px 10px;
+  border-radius:14px;font-size:12px;letter-spacing:.04em;
+}
+.settings-body{scrollbar-width:thin;scrollbar-color:rgba(107,138,150,.28) transparent}
+.settings-body::-webkit-scrollbar{width:4px}
+.settings-body::-webkit-scrollbar-thumb{border-radius:4px;background:rgba(107,138,150,.24)}
+.settings-section-title:not(:first-child){margin-top:22px}
+[data-theme="night"] .settings-section-title{border-bottom-color:rgba(255,255,255,.1)}
+[data-theme="night"] .field-hint{color:#A6B8C0}
+@media(max-width:600px){
+  .settings-panel .panel-head{padding:20px 20px 0}
+  .settings-body{padding:0 20px}
+  .settings-section-title{margin-top:4px}
+}
