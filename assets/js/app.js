@@ -3039,14 +3039,41 @@
       archive.forEach(function (m) { if (m.id === id) item = m; });
       if (!item) return;
       openSheet('<div class="panel-head"><h2 class="panel-title">一条碎片</h2><button class="icon-btn" data-close type="button" aria-label="关闭">' + X + '</button></div>' +
-        '<p style="font-size:14px;line-height:24px;color:var(--ink)">' + esc(item.text) + '</p>' +
-        '<p class="arc-stat" style="margin-top:8px">' + fmtPlain(new Date(item.ts)) + ' · heat ' + item.heat + (item.pinned ? ' · 锚点' : '') + '</p>' +
-        '<div class="panel-actions"><button class="btn-ghost" id="fragPin" type="button">' + (item.pinned ? '取消锚点' : '设为锚点') + '</button>' +
+        '<p class="arc-stat" style="margin-bottom:8px">' + fmtPlain(new Date(item.ts)) + ' · heat ' + item.heat + (item.pinned ? ' · 锚点' : '') + '</p>' +
+        '<p id="fragText" class="frag-detail-text">' + esc(item.text) + '</p>' +
+        '<textarea id="fragEditor" class="frag-editor" maxlength="4000" aria-label="编辑记忆内容" hidden></textarea>' +
+        '<div class="panel-actions frag-actions"><button class="btn-ghost" id="fragEdit" type="button">编辑内容</button>' +
+        '<button class="btn-ghost" id="fragPin" type="button">' + (item.pinned ? '取消锚点' : '设为锚点') + '</button>' +
         '<button class="btn-primary" id="fragLift" type="button">提起</button></div>',
         function (ov, close) {
+          var textNode = ov.querySelector('#fragText');
+          var editor = ov.querySelector('#fragEditor');
+          var editBtn = ov.querySelector('#fragEdit');
+          editBtn.addEventListener('click', function () {
+            if (editor.hidden) {
+              editor.value = item.text;
+              editor.hidden = false;
+              textNode.hidden = true;
+              editBtn.textContent = '保存修改';
+              editor.focus();
+              return;
+            }
+            var next = editor.value.trim();
+            if (!next) { toast('记忆内容不能为空'); return; }
+            var duplicate = archive.some(function (m) { return m !== item && m.text === next; });
+            if (duplicate) { toast('已经有一条相同的记忆啦'); return; }
+            var previous = item.text;
+            item.text = next;
+            if (!saveArchive()) { item.text = previous; return; }
+            renderArchive();
+            close();
+            toast('记忆更新好了');
+          });
           ov.querySelector('#fragPin').addEventListener('click', function () {
+            var previous = item.pinned;
             item.pinned = !item.pinned;
-            saveArchive(); renderArchive(); close();
+            if (!saveArchive()) { item.pinned = previous; return; }
+            renderArchive(); close();
             toast(item.pinned ? '设成锚点了' : '取消锚点了');
           });
           ov.querySelector('#fragLift').addEventListener('click', function () { close(); liftOne(id); });
