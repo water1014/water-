@@ -155,3 +155,10 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 - 在线请求优先返回网络内容，并将成功的同源 GET 响应写入当前缓存。
 - 离线时仅页面导航回退到缓存首页；缺失的 CSS、JS 或其他资源返回明确的 503 文本响应，不再把 HTML 误当作脚本或样式表。
 - POST、跨域请求和非同源资源不由此 Service Worker 缓存。
+
+
+### 手机键盘适配
+
+- 聊天输入框聚焦后监听 `visualViewport` 的尺寸变化，并将可视高度同步到手机屏幕容器。
+- 键盘收起或屏幕旋转后清除临时高度，避免页面长期停留在键盘弹出时的尺寸。
+- 该行为依赖浏览器提供的 Visual Viewport API；不支持时保留原有 `100dvh` 布局。
