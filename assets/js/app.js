@@ -2072,6 +2072,11 @@
     openOverlay(settingsOverlay);
   }
 
+  function stripTrailingSlash(value) {
+    var s = String(value || '').trim();
+    return s.charAt(s.length - 1) === '/' ? s.slice(0, -1) : s;
+  }
+
   function saveSettings() {
     var headers = [];
     forEach(headerRows.querySelectorAll('.header-row'), function (row) {
@@ -2090,7 +2095,7 @@
       shell: config.shell,
       greeting: $('setGreeting').value.trim(),
       statusLine: $('setStatusLine').value.trim() || '想你',
-      musicUrl: $('setMusicUrl') ? $('setMusicUrl').value.trim().replace(/\\/$/, '') : (config.musicUrl || ''),
+      musicUrl: $('setMusicUrl') ? stripTrailingSlash($('setMusicUrl').value) : (config.musicUrl || ''),
       relation: config.relation
     };
     saveConfig();
