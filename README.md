@@ -137,6 +137,7 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 | `mizu.history` | `[{role:'assistant'\|'user', content, ts, loved?, sticker?, replyTo?}]` |
 | `mizu.archive` | `[{id, type:'impress'\|'near'\|'excerpt'\|'song', text, ts, heat, lastHit, pinned, private}]` |
 | `mizu.moods` / `mizu.memories` / `mizu.notes` / `mizu.weather` / `mizu.letters` / `mizu.playlist` / `mizu.quickPhrases` / `mizu.statuses` | 心情 / 照片 / 批注 / 天气 / 信件 / 歌单 / 短语 / 近况词 |
+| `mizu.archive` / `mizu.archiveNote` | 深海记忆归档 / AI 整理摘要；均纳入 JSON 备份 |
 
 ---
 
