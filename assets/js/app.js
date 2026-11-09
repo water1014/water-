@@ -2190,7 +2190,23 @@
         if (d.config) {
           var cur = {};
           try { cur = JSON.parse(localStorage.getItem('mizu.config') || '{}') || {}; } catch (e3) { cur = {}; }
-          for (var ck in d.config) if (Object.prototype.hasOwnProperty.call(d.config, ck)) cur[ck] = d.config[ck];
+          // 导入备份只恢复普通设置，不允许覆盖本机 API Key 或注入敏感请求头。
+          for (var ck in d.config) {
+            if (!Object.prototype.hasOwnProperty.call(d.config, ck) || ck === 'apiKey') continue;
+            if (ck === 'headers') {
+              if (!Array.isArray(d.config.headers)) {
+                toast('备份里的请求头格式不正确'); return;
+              }
+              cur.headers = d.config.headers.filter(function (h) {
+                var name = String(h && h.key || '').trim();
+                return name && !/(authorization|cookie|api[-_]?key|token|secret|credential|password)/i.test(name);
+              }).map(function (h) {
+                return { key: String(h.key), value: String(h.value == null ? '' : h.value) };
+              });
+              continue;
+            }
+            cur[ck] = d.config[ck];
+          }
           updates.push({ key: 'mizu.config', value: JSON.stringify(cur) });
         }
 
