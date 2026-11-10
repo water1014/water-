@@ -1807,3 +1807,101 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(prefers-reduced-motion:reduce){
   .hp-ecg .ecg-pulse{animation:none;stroke-dasharray:none;opacity:.45}
 }
+
+
+/* ============================================================
+   18 · HOME PAGE MOTION & DEPTH
+   ============================================================ */
+.pages{
+  transition:transform 310ms cubic-bezier(.22,.76,.18,1);
+}
+.pages.is-drag{transition:none}
+.hpage > *{
+  opacity:.78;
+  transform:translate3d(0,7px,0) scale(.992);
+  transition:
+    opacity 260ms ease,
+    transform 360ms cubic-bezier(.2,.72,.2,1);
+  transition-delay:0ms;
+}
+.hpage.is-current > *{
+  opacity:1;
+  transform:translate3d(0,0,0) scale(1);
+}
+.hpage.is-current > :nth-child(1){transition-delay:15ms}
+.hpage.is-current > :nth-child(2){transition-delay:35ms}
+.hpage.is-current > :nth-child(3){transition-delay:55ms}
+.hpage.is-current > :nth-child(4){transition-delay:75ms}
+.hpage.is-current > :nth-child(5){transition-delay:95ms}
+.hpage.is-current > :nth-child(6){transition-delay:115ms}
+.pages.is-drag .hpage > *{transition:none}
+.app-icon{
+  -webkit-tap-highlight-color:transparent;
+  transform:translateZ(0);
+  transition:
+    transform 180ms cubic-bezier(.2,.75,.25,1),
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+.app-icon:active{
+  transform:translateY(1px) scale(.92);
+  box-shadow:0 3px 9px rgba(48,107,127,.12),inset 0 1px 2px rgba(48,107,127,.08);
+}
+.dock-btn{
+  -webkit-tap-highlight-color:transparent;
+  transition:
+    transform 180ms cubic-bezier(.2,.75,.25,1),
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+.dock-btn:active{transform:scale(.91)}
+.dock-btn.is-on{position:relative}
+.dock-btn.is-on:after{
+  content:"";
+  position:absolute;
+  bottom:2px;
+  width:4px;height:4px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.68;
+}
+.wcard,.hp-now,.hp-space,.hp-diary{
+  -webkit-tap-highlight-color:transparent;
+  transition:
+    transform 180ms cubic-bezier(.2,.75,.25,1),
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+.wcard:active,.hp-now:active{transform:scale(.975)}
+.dots{pointer-events:none;user-select:none}
+@media(max-height:700px){
+  .hpage{gap:12px;padding-bottom:calc(116px + env(safe-area-inset-bottom))}
+  .hp1-top{padding-top:3px;padding-bottom:1px}
+  .hp-pair .avatar{width:50px;height:50px}
+  .hp-days{min-height:130px;padding:14px}
+  .hp-days-num b{font-size:40px;line-height:44px}
+  .hp-clock{min-height:84px;padding:12px 16px}
+  .hp-clock .hp-time{font-size:31px;line-height:35px}
+  .hpage-apps{padding-top:calc(58px + env(safe-area-inset-top))}
+  .app-grid{gap:18px 10px;padding-top:6px}
+  .app-icon{width:52px;height:52px;border-radius:17px}
+  .hp-widgets{gap:11px}
+  .hpage .wcard{min-height:98px;padding:12px}
+}
+@media(max-height:620px){
+  .hp-days{min-height:116px}
+  .hp-days-cap{margin-top:-3px}
+  .hp-clock{min-height:74px}
+  .hpage-apps{padding-top:calc(48px + env(safe-area-inset-top))}
+  .app-grid{gap:13px 8px}
+  .app-icon{width:47px;height:47px;border-radius:15px}
+  .app-label{font-size:9px}
+}
+[data-theme="night"] .dock-btn.is-on:after{background:#9AD7E7}
+@media(prefers-reduced-motion:reduce){
+  .pages{transition:none}
+  .hpage > *{opacity:1;transform:none;transition:none}
+  .app-icon,.dock-btn,.wcard,.hp-now{transition:none}
+}
