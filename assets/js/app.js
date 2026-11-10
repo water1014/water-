@@ -924,7 +924,7 @@
         var d = stickerFor(String(name).trim());
         if (d) found.push(d.key);
         return '';
-      }).replace(/\s{2,}/g, ' ').trim();
+      }).replace(/\r\n?/g, '\n').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
       if (clean) {
         var rec = { role: 'assistant', content: clean, ts: Date.now() };
         if (streamReason.trim()) rec.reasoning = streamReason.trim();
@@ -1080,8 +1080,11 @@
       var txt = await res.text();
       try {
         var obj = JSON.parse(txt);
-        var whole = obj.choices && obj.choices[0] && obj.choices[0].message && obj.choices[0].message.content;
-        if (whole) pushDelta(whole);
+        var wholeMessage = obj.choices && obj.choices[0] && obj.choices[0].message;
+        var whole = wholeMessage && wholeMessage.content;
+        var wholeReason = wholeMessage && (wholeMessage.reasoning_content || wholeMessage.reasoning);
+        if (typeof wholeReason === 'string') streamReason += wholeReason;
+        if (typeof whole === 'string' && whole) pushDelta(whole);
       } catch (e3) { handleSSE(txt); }
       streamDone = true; pump();
       return;
