@@ -562,6 +562,21 @@ try{
           <input id="setModel" type="text" spellcheck="false" placeholder="gpt-4o-mini" style="flex:1 1 auto">
           <button class="btn-ghost" id="pullModels" type="button" style="flex:0 0 auto;padding:8px 16px">拉取</button>
         </div></label>
+      <div class="settings-section-title"><span>聊天体验</span><small>CHAT EXPERIENCE</small></div>
+      <label class="field"><span class="field-label">回复气泡排版</span>
+        <select id="setBubbleMode">
+          <option value="split">分割气泡 · 按段落拆开</option>
+          <option value="single">完整气泡 · 保持一整条</option>
+        </select>
+        <span class="field-hint">只调整聊天显示方式，不会改变原始聊天记录或发送给模型的内容。</span>
+      </label>
+      <label class="field"><span class="field-label">思考摘要显示</span>
+        <select id="setReasoningDisplay">
+          <option value="show">显示接口返回的思考摘要</option>
+          <option value="hide">隐藏思考摘要</option>
+        </select>
+        <span class="field-hint">仅显示接口实际返回的 reasoning / reasoning_content 字段。若服务商或模型没有提供，就不会凭空生成。</span>
+      </label>
       <div class="settings-section-title"><span>共同生活</span><small>OUR LIFE</small></div>
       <label class="field"><span class="field-label">在一起的第一天</span>
         <input id="setAnniversary" type="date"></label>
