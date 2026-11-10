@@ -452,6 +452,11 @@
         d.classList.toggle('is-on', k === homeIndex);
       });
     }
+    if (pagesEl) {
+      forEach(pagesEl.querySelectorAll('.hpage'), function (page, k) {
+        page.classList.toggle('is-current', k === homeIndex);
+      });
+    }
   }
 
   function buildDots() {
@@ -460,6 +465,7 @@
     var out = '';
     for (var di = 0; di < HOME_PAGES; di++) out += '<span class="dot-i' + (di === 0 ? ' is-on' : '') + '"></span>';
     dots.innerHTML = out;
+    goPage(homeIndex, false);
   }
 
   /* ---- 解锁 ---- */
