@@ -385,21 +385,28 @@
     if (!item) return;
     var bubble = chatSetting('bubbleMode', config.bubbleMode || 'split');
     var reasoning = chatSetting('showReasoning', config.showReasoning !== false);
+    var times = chatSetting('showTimestamps', true);
     openSheet('<div class="panel-head"><div><p class="chat-settings-kicker">THIS WINDOW · CHAT SETTINGS</p><h2 class="panel-title">当前窗口设置</h2></div><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div>' +
+      '<label class="field"><span class="field-label">窗口名称</span><input id="chatPrefTitle" type="text" maxlength="24" placeholder="给这段聊天取个名字"></label>' +
       '<label class="field"><span class="field-label">回复气泡排版</span><select id="chatPrefBubble"><option value="split">分割气泡 · 按段落拆开</option><option value="single">完整气泡 · 保持一整条</option></select><span class="field-hint">只影响当前聊天窗口，不会改动其他窗口。</span></label>' +
       '<label class="field"><span class="field-label">思考摘要</span><select id="chatPrefReason"><option value="show">显示接口返回的思考摘要</option><option value="hide">隐藏思考摘要</option></select><span class="field-hint">只显示服务商实际返回的 reasoning 摘要，不展示模型隐藏的内部思维链。</span></label>' +
+      '<label class="field"><span class="field-label">消息时间</span><select id="chatPrefTimes"><option value="show">显示每条消息时间</option><option value="hide">隐藏消息时间</option></select></label>' +
       '<button class="btn-primary" id="chatPrefSave" type="button" style="width:100%;margin-top:14px">保存当前窗口设置</button>',
       function (ov, close) {
+        ov.querySelector('#chatPrefTitle').value = item.title || '';
         ov.querySelector('#chatPrefBubble').value = bubble;
         ov.querySelector('#chatPrefReason').value = reasoning ? 'show' : 'hide';
+        ov.querySelector('#chatPrefTimes').value = times ? 'show' : 'hide';
         ov.querySelector('#chatPrefSave').addEventListener('click', function () {
-          var previous = item.settings || {};
+          var previous = item.settings || {}, previousTitle = item.title;
+          item.title = ov.querySelector('#chatPrefTitle').value.trim() || previousTitle;
           item.settings = Object.assign({}, previous, {
             bubbleMode: ov.querySelector('#chatPrefBubble').value,
-            showReasoning: ov.querySelector('#chatPrefReason').value !== 'hide'
+            showReasoning: ov.querySelector('#chatPrefReason').value !== 'hide',
+            showTimestamps: ov.querySelector('#chatPrefTimes').value !== 'hide'
           });
-          if (!saveChatSessions()) { item.settings = previous; return; }
-          renderChat(); close(); toast('当前窗口设置已保存');
+          if (!saveChatSessions()) { item.settings = previous; item.title = previousTitle; return; }
+          renderChatTitle(); renderChatSidebar(); renderChat(); close(); toast('当前窗口设置已保存');
         });
       });
   }
@@ -986,6 +993,7 @@
         var key = dayKey(d);
         if (key !== lastKey) { msgList.appendChild(buildDay(d)); lastKey = key; }
         var node = buildMsg(m, i);
+        if (chatSetting('showTimestamps', true) === false) node.classList.add('hide-time');
         var prev = history[i - 1], next = history[i + 1];
         var sameThread = function (a, b) {
           return !!a && !!b && a.role === b.role &&
@@ -2768,6 +2776,7 @@
         });
         try {
           updates.forEach(function (item) { localStorage.setItem(item.key, item.value); });
+          if (Object.prototype.hasOwnProperty.call(d, 'chats')) localStorage.removeItem('mizu.history');
         } catch (e2) {
           before.forEach(function (item) {
             try {
