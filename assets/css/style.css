@@ -2439,3 +2439,5 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(prefers-reduced-motion:reduce){
   .chat-sidebar-scrim,.chat-sidebar,.chat-session-row{transition:none}
 }
+
+.app-chat .msg.hide-time .msg-time{display:none}
