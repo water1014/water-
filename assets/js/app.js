@@ -809,6 +809,14 @@
         var key = dayKey(d);
         if (key !== lastKey) { msgList.appendChild(buildDay(d)); lastKey = key; }
         var node = buildMsg(m, i);
+        var prev = history[i - 1], next = history[i + 1];
+        var sameThread = function (a, b) {
+          return !!a && !!b && a.role === b.role &&
+            dayKey(new Date(a.ts)) === dayKey(new Date(b.ts)) &&
+            Math.abs(Number(a.ts) - Number(b.ts)) <= 5 * 60 * 1000;
+        };
+        var hasPrev = sameThread(prev, m), hasNext = sameThread(m, next);
+        node.classList.add(hasPrev ? (hasNext ? 'group-middle' : 'group-end') : (hasNext ? 'group-start' : 'group-solo'));
         if (i >= from) node.classList.add('enter');
         if (searchTerm && String(m.content).toLowerCase().indexOf(searchTerm.toLowerCase()) < 0) node.classList.add('is-dim');
         msgList.appendChild(node);
