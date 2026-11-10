@@ -197,6 +197,8 @@
       greeting: typeof raw.greeting === 'string' ? raw.greeting : '',
       statusLine: typeof raw.statusLine === 'string' && raw.statusLine.trim() ? raw.statusLine : '想你',
       musicUrl: typeof raw.musicUrl === 'string' ? raw.musicUrl.trim() : '',
+      bubbleMode: raw.bubbleMode === 'single' ? 'single' : 'split',
+      showReasoning: raw.showReasoning !== false,
       relation: raw.relation && typeof raw.relation === 'object' ? raw.relation : { word: '唯一的、确定的、我的人', since: '' }
     };
   }
@@ -698,9 +700,10 @@
 
   function buildReason(m) {
     if (!m.reasoning) return '';
-    return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考过程">' +
+    if (config.showReasoning === false) return '';
+    return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考摘要">' +
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.4 9.2 3.9 3.9 0 0 1 17 18z"/></svg>' +
-      '<span>思考过程</span>' +
+      '<span>模型思考摘要</span>' +
       '<svg class="reason-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>' +
       '</button><div class="reason-body">' + esc(m.reasoning) + '</div></div>';
   }
@@ -750,8 +753,18 @@
     el.dataset.index = String(i);
     var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' +
       (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
+    var messageBody = highlight(m.content);
+    var bubbleMarkup = '<div class="bubble">' + messageBody + '</div>';
+    if (!isUser && config.bubbleMode === 'split') {
+      var paragraphs = String(m.content).split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+      if (paragraphs.length > 1) {
+        bubbleMarkup = '<div class="bubble-stack">' + paragraphs.map(function (part, index) {
+          return '<div class="bubble bubble-piece" data-piece="' + index + '">' + highlight(part.replace(/\n/g, '\n')) + '</div>';
+        }).join('') + '</div>';
+      }
+    }
     el.innerHTML = buildReason(m) +
-      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + '<div class="bubble">' + highlight(m.content) + '</div>' + actions + '</div>' +
+      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
   }
@@ -2390,6 +2403,8 @@
     if ($('toggleKeyVisibility')) { $('toggleKeyVisibility').textContent = '显示'; $('toggleKeyVisibility').setAttribute('aria-label', '显示 API Key'); $('toggleKeyVisibility').setAttribute('aria-pressed', 'false'); }
     $('setModel').value = config.model;
     $('setAnniversary').value = config.anniversary || '';
+    if ($('setBubbleMode')) $('setBubbleMode').value = config.bubbleMode || 'split';
+    if ($('setReasoningDisplay')) $('setReasoningDisplay').value = config.showReasoning === false ? 'hide' : 'show';
     $('setSystem').value = config.system;
     $('setGreeting').value = config.greeting || '';
     $('setStatusLine').value = config.statusLine || '想你';
@@ -2428,6 +2443,8 @@
       greeting: $('setGreeting').value.trim(),
       statusLine: $('setStatusLine').value.trim() || '想你',
       musicUrl: $('setMusicUrl') ? stripTrailingSlash($('setMusicUrl').value) : (config.musicUrl || ''),
+      bubbleMode: $('setBubbleMode') ? $('setBubbleMode').value : (config.bubbleMode || 'split'),
+      showReasoning: $('setReasoningDisplay') ? $('setReasoningDisplay').value !== 'hide' : config.showReasoning !== false,
       relation: config.relation
     };
     if (!saveConfig()) {
