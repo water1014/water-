@@ -303,7 +303,7 @@
     var sorted = chatSessions.slice().sort(function (a, b) { return b.updatedAt - a.updatedAt; });
     host.innerHTML = sorted.map(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + '">' +
         '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
         '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small></span>' +
