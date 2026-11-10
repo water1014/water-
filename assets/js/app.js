@@ -3877,7 +3877,7 @@
         '<button class="hub-row" data-act="heat" type="button" style="margin-bottom:8px"><span class="hub-row-txt">我们聊过的每一天</span></button>' +
         '<button class="hub-row" data-act="profile" type="button" style="margin-bottom:8px"><span class="hub-row-txt">恋人资料卡</span></button>' +
         '<button class="hub-row" data-act="settings" type="button" style="margin-bottom:8px"><span class="hub-row-txt">当前窗口设置</span></button>' +
-        '<button class="hub-row" data-act="clear" type="button"><span class="hub-row-txt" style="color:#A8545C">清空聊天记录</span></button>',
+        '<button class="hub-row" data-act="clear" type="button"><span class="hub-row-txt" style="color:#A8545C">清空当前窗口记录</span></button>',
         function (ov, close) {
           ov.addEventListener('click', function (e) {
             var b = e.target.closest('[data-act]');
