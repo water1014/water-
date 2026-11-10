@@ -4,6 +4,8 @@
   /* ================= 常量 ================= */
   var LS_CFG = 'mizu.config';
   var LS_HIS = 'mizu.history';
+  var LS_CHATS = 'mizu.chats';
+  var LS_ACTIVE_CHAT = 'mizu.activeChat';
   var SS_SPLASH = 'mizu.splashShown';
 
   var DEF_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
@@ -161,7 +163,10 @@
 
   /* ================= 状态 ================= */
   var config = loadConfig();
-  var history = loadHistory();
+  var chatSessions = loadChatSessions();
+  var activeChatId = read(LS_ACTIVE_CHAT, chatSessions[0] ? chatSessions[0].id : 'chat-main');
+  if (!chatSessions.some(function (item) { return item.id === activeChatId; })) activeChatId = chatSessions[0] ? chatSessions[0].id : 'chat-main';
+  var history = loadActiveHistory();
   var pendingQuote = null, activeQuote = null, retryQuote = null;
   var moods = read('mizu.moods', []) || [];
   var memories = read('mizu.memories', []) || [];
@@ -203,15 +208,7 @@
     };
   }
 
-  function loadHistory() {
-    var raw;
-    try { raw = localStorage.getItem(LS_HIS); } catch (e) { raw = null; }
-    if (raw === null) {
-      var seed = [{ role: 'assistant', content: WELCOME, ts: Date.now() }];
-      write(LS_HIS, seed);
-      return seed;
-    }
-    var arr = read(LS_HIS, []);
+  function normalizeHistory(arr) {
     if (!Array.isArray(arr)) return [];
     return arr.filter(function (m) {
       return m && typeof m.content === 'string' && (m.role === 'user' || m.role === 'assistant');
@@ -226,7 +223,182 @@
       return o;
     });
   }
-  function saveHistory() { write(LS_HIS, history); }
+  function loadHistory() {
+    var raw;
+    try { raw = localStorage.getItem(LS_HIS); } catch (e) { raw = null; }
+    if (raw === null) return [{ role: 'assistant', content: WELCOME, ts: Date.now() }];
+    return normalizeHistory(read(LS_HIS, []));
+  }
+  function loadChatSessions() {
+    var saved = read(LS_CHATS, null);
+    if (Array.isArray(saved) && saved.length) {
+      var valid = saved.filter(function (item) {
+        return item && typeof item.id === 'string' && Array.isArray(item.messages);
+      }).map(function (item) {
+        return {
+          id: item.id,
+          title: String(item.title || '新的聊天'),
+          createdAt: Number(item.createdAt) || Date.now(),
+          updatedAt: Number(item.updatedAt) || Number(item.createdAt) || Date.now(),
+          messages: normalizeHistory(item.messages),
+          settings: item.settings && typeof item.settings === 'object' ? item.settings : {}
+        };
+      });
+      if (valid.length) return valid;
+    }
+    var legacy = loadHistory();
+    var migrated = [{ id: 'chat-main', title: '我们的聊天', createdAt: legacy[0] ? legacy[0].ts : Date.now(), updatedAt: Date.now(), messages: legacy, settings: {} }];
+    try {
+      localStorage.setItem(LS_CHATS, JSON.stringify(migrated));
+      localStorage.setItem(LS_ACTIVE_CHAT, 'chat-main');
+      localStorage.removeItem(LS_HIS);
+    } catch (e) { /* 迁移失败时保留旧记录 */ }
+    return migrated;
+  }
+  function activeChatSession() {
+    for (var i = 0; i < chatSessions.length; i++) if (chatSessions[i].id === activeChatId) return chatSessions[i];
+    return chatSessions[0] || null;
+  }
+  function loadActiveHistory() {
+    var item = activeChatSession();
+    return item ? normalizeHistory(item.messages) : [];
+  }
+  function saveChatSessions() {
+    try {
+      localStorage.setItem(LS_CHATS, JSON.stringify(chatSessions));
+      localStorage.setItem(LS_ACTIVE_CHAT, activeChatId);
+      return true;
+    } catch (e) {
+      toast('聊天窗口没有保存成功，请先导出本地备份并释放空间');
+      return false;
+    }
+  }
+  function saveHistory() {
+    var item = activeChatSession();
+    if (!item) return false;
+    var previous = item.messages;
+    item.messages = history;
+    item.updatedAt = Date.now();
+    var firstUser = history.filter(function (m) { return m.role === 'user' && m.content; })[0];
+    if (firstUser && (item.title === '我们的聊天' || item.title === '新的聊天')) {
+      item.title = String(firstUser.content).replace(/\\s+/g, ' ').slice(0, 18) || '新的聊天';
+    }
+    if (!saveChatSessions()) { item.messages = previous; return false; }
+    return true;
+  }
+  function chatSetting(key, fallback) {
+    var item = activeChatSession();
+    return item && item.settings && Object.prototype.hasOwnProperty.call(item.settings, key) ? item.settings[key] : fallback;
+  }
+  function renderChatTitle() {
+    var name = document.querySelector('#chatTitleBtn .chat-title-name');
+    if (name) name.textContent = activeChatSession() ? activeChatSession().title : '我们的聊天';
+  }
+  function renderChatSidebar() {
+    var host = $('chatSessionList');
+    if (!host) return;
+    var sorted = chatSessions.slice().sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+    host.innerHTML = sorted.map(function (item) {
+      var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + '">' +
+        '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
+        '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small></span>' +
+        '<time>' + hhmm(item.updatedAt) + '</time></button>' +
+        (chatSessions.length > 1 ? '<button class="chat-session-delete" type="button" data-chat-delete="' + esc(item.id) + '" aria-label="删除' + esc(item.title) + '">×</button>' : '') +
+        '</div>';
+    }).join('');
+    var count = $('chatSessionCount');
+    if (count) count.textContent = String(chatSessions.length).padStart(2, '0') + ' WINDOWS';
+  }
+  function openChatSidebar() {
+    var scrim = $('chatSidebarScrim');
+    if (!scrim) return;
+    renderChatSidebar();
+    scrim.hidden = false;
+    requestAnimationFrame(function () { scrim.classList.add('is-open'); });
+    $('chatMenu').setAttribute('aria-expanded', 'true');
+  }
+  function closeChatSidebar() {
+    var scrim = $('chatSidebarScrim');
+    if (!scrim) return;
+    scrim.classList.remove('is-open');
+    scrim.hidden = true;
+    $('chatMenu').setAttribute('aria-expanded', 'false');
+  }
+  function createChatSession() {
+    if (sending) { toast('等这条消息发送完成，再开启新窗口吧'); return; }
+    if (!saveHistory()) return;
+    var id = 'chat-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    var item = { id: id, title: '新的聊天', createdAt: Date.now(), updatedAt: Date.now(), messages: [], settings: {} };
+    chatSessions.push(item);
+    var previous = activeChatId;
+    activeChatId = id;
+    if (!saveChatSessions()) {
+      chatSessions.pop();
+      activeChatId = previous;
+      return;
+    }
+    history = [];
+    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
+    closeChatSidebar();
+    renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
+    toast('新聊天窗口已打开');
+  }
+  function switchChatSession(id) {
+    if (sending) { toast('请等当前回复结束后再切换窗口'); return; }
+    var target = chatSessions.filter(function (item) { return item.id === id; })[0];
+    if (!target || target.id === activeChatId) { closeChatSidebar(); return; }
+    if (!saveHistory()) return;
+    activeChatId = id;
+    history = normalizeHistory(target.messages);
+    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
+    if (!saveChatSessions()) return;
+    closeChatSidebar();
+    renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
+    updateStatus();
+  }
+  function deleteChatSession(id) {
+    if (chatSessions.length < 2) { toast('至少保留一个聊天窗口'); return; }
+    if (!window.confirm('删除这个聊天窗口？其中的消息记录也会一起删除。')) return;
+    var index = chatSessions.findIndex(function (item) { return item.id === id; });
+    if (index < 0) return;
+    var oldSessions = chatSessions.slice(), oldId = activeChatId, oldHistory = history;
+    var wasActive = id === activeChatId;
+    chatSessions.splice(index, 1);
+    if (wasActive) {
+      var next = chatSessions[0];
+      activeChatId = next.id;
+      history = normalizeHistory(next.messages);
+      pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
+    }
+    if (!saveChatSessions()) { chatSessions = oldSessions; activeChatId = oldId; history = oldHistory; return; }
+    renderChatSidebar(); renderChatTitle(); renderChat(); renderHome();
+    toast('聊天窗口已删除');
+  }
+  function openChatSettings() {
+    var item = activeChatSession();
+    if (!item) return;
+    var bubble = chatSetting('bubbleMode', config.bubbleMode || 'split');
+    var reasoning = chatSetting('showReasoning', config.showReasoning !== false);
+    openSheet('<div class="panel-head"><div><p class="chat-settings-kicker">THIS WINDOW · CHAT SETTINGS</p><h2 class="panel-title">当前窗口设置</h2></div><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div>' +
+      '<label class="field"><span class="field-label">回复气泡排版</span><select id="chatPrefBubble"><option value="split">分割气泡 · 按段落拆开</option><option value="single">完整气泡 · 保持一整条</option></select><span class="field-hint">只影响当前聊天窗口，不会改动其他窗口。</span></label>' +
+      '<label class="field"><span class="field-label">思考摘要</span><select id="chatPrefReason"><option value="show">显示接口返回的思考摘要</option><option value="hide">隐藏思考摘要</option></select><span class="field-hint">只显示服务商实际返回的 reasoning 摘要，不展示模型隐藏的内部思维链。</span></label>' +
+      '<button class="btn-primary" id="chatPrefSave" type="button" style="width:100%;margin-top:14px">保存当前窗口设置</button>',
+      function (ov, close) {
+        ov.querySelector('#chatPrefBubble').value = bubble;
+        ov.querySelector('#chatPrefReason').value = reasoning ? 'show' : 'hide';
+        ov.querySelector('#chatPrefSave').addEventListener('click', function () {
+          var previous = item.settings || {};
+          item.settings = Object.assign({}, previous, {
+            bubbleMode: ov.querySelector('#chatPrefBubble').value,
+            showReasoning: ov.querySelector('#chatPrefReason').value !== 'hide'
+          });
+          if (!saveChatSessions()) { item.settings = previous; return; }
+          renderChat(); close(); toast('当前窗口设置已保存');
+        });
+      });
+  }
   function saveConfig() {
     try { localStorage.setItem(LS_CFG, JSON.stringify(config)); return true; }
     catch (e) {
@@ -700,7 +872,7 @@
 
   function buildReason(m) {
     if (!m.reasoning) return '';
-    if (config.showReasoning === false) return '';
+    if (chatSetting('showReasoning', config.showReasoning !== false) === false) return '';
     return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考摘要">' +
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.4 9.2 3.9 3.9 0 0 1 17 18z"/></svg>' +
       '<span>模型思考摘要</span>' +
@@ -755,7 +927,7 @@
       (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     var messageBody = highlight(m.content);
     var bubbleMarkup = '<div class="bubble">' + messageBody + '</div>';
-    if (!isUser && config.bubbleMode === 'split') {
+    if (!isUser && chatSetting('bubbleMode', config.bubbleMode || 'split') === 'split') {
       var paragraphs = String(m.content).split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
       if (paragraphs.length > 1) {
         bubbleMarkup = '<div class="bubble-stack">' + paragraphs.map(function (part, index) {
@@ -791,6 +963,7 @@
   }
 
   function renderChat() {
+    renderChatTitle();
     var atBottom = isNearBottom();
     var from = renderedCount;
     msgList.innerHTML = '';
@@ -2524,7 +2697,7 @@
           toast('不是水色物语的备份'); return;
         }
 
-        var arrayFields = ['history', 'moods', 'memories', 'letters', 'playlist', 'quickPhrases', 'statuses', 'archive'];
+        var arrayFields = ['history', 'chats', 'moods', 'memories', 'letters', 'playlist', 'quickPhrases', 'statuses', 'archive'];
         for (var ai = 0; ai < arrayFields.length; ai++) {
           var field = arrayFields[ai];
           if (Object.prototype.hasOwnProperty.call(d, field) && !Array.isArray(d[field])) {
@@ -2545,7 +2718,7 @@
 
         var updates = [];
         var importMap = {
-          history: 'mizu.history', moods: 'mizu.moods', memories: 'mizu.memories',
+          history: 'mizu.history', chats: 'mizu.chats', moods: 'mizu.moods', memories: 'mizu.memories',
           notes: 'mizu.notes', weather: 'mizu.weather', letters: 'mizu.letters',
           playlist: 'mizu.playlist', quickPhrases: 'mizu.quickPhrases',
           statuses: 'mizu.statuses', archive: 'mizu.archive'
@@ -2554,6 +2727,11 @@
           if (Object.prototype.hasOwnProperty.call(d, dataKey)) {
             updates.push({ key: importMap[dataKey], value: JSON.stringify(d[dataKey]) });
           }
+        }
+        if (Object.prototype.hasOwnProperty.call(d, 'activeChatId') && typeof d.activeChatId === 'string') {
+          updates.push({ key: 'mizu.activeChat', value: d.activeChatId });
+        } else if (Object.prototype.hasOwnProperty.call(d, 'history') && !Object.prototype.hasOwnProperty.call(d, 'chats')) {
+          updates.push({ key: 'mizu.chats', value: '[]' });
         }
         if (Object.prototype.hasOwnProperty.call(d, 'archiveNote')) {
           updates.push({ key: 'mizu.archiveNote', value: d.archiveNote });
@@ -2672,8 +2850,8 @@
       cfg[k] = config[k];
     }
     var payload = {
-      app: 'mizu-iro', version: 2, exportedAt: new Date().toISOString(),
-      config: cfg, history: history, moods: moods, memories: memories,
+      app: 'mizu-iro', version: 3, exportedAt: new Date().toISOString(),
+      config: cfg, history: history, chats: chatSessions, activeChatId: activeChatId, moods: moods, memories: memories,
       notes: notes, weather: weather, letters: letters, playlist: playlist,
       quickPhrases: phrases, statuses: statuses, archive: archive,
       archiveNote: read(K_ARCNOTE, '')
@@ -2726,10 +2904,23 @@
       });
     }
   }
-  $('chatMenu').addEventListener('click', function () {
-    closeApp();
-    return;
-    if (drawer) { drawer.remove(); drawer = null; } else openDrawer();
+  $('chatMenu').addEventListener('click', openChatSidebar);
+  if ($('chatSidebarClose')) $('chatSidebarClose').addEventListener('click', closeChatSidebar);
+  if ($('chatSidebarScrim')) $('chatSidebarScrim').addEventListener('click', function (e) {
+    if (e.target === this) closeChatSidebar();
+  });
+  if ($('chatNewWindow')) $('chatNewWindow').addEventListener('click', createChatSession);
+  if ($('chatSidebarSettings')) $('chatSidebarSettings').addEventListener('click', function () {
+    closeChatSidebar(); openChatSettings();
+  });
+  if ($('chatSidebarHome')) $('chatSidebarHome').addEventListener('click', function () {
+    closeChatSidebar(); closeApp();
+  });
+  if ($('chatSessionList')) $('chatSessionList').addEventListener('click', function (e) {
+    var del = e.target.closest('[data-chat-delete]');
+    if (del) { deleteChatSession(del.getAttribute('data-chat-delete')); return; }
+    var pick = e.target.closest('[data-chat-switch]');
+    if (pick) switchChatSession(pick.getAttribute('data-chat-switch'));
   });
 
   /* ================= 手机绑定 ================= */
@@ -3672,7 +3863,7 @@
         '<button class="hub-row" data-act="search" type="button" style="margin-bottom:8px"><span class="hub-row-txt">搜索记录</span></button>' +
         '<button class="hub-row" data-act="heat" type="button" style="margin-bottom:8px"><span class="hub-row-txt">我们聊过的每一天</span></button>' +
         '<button class="hub-row" data-act="profile" type="button" style="margin-bottom:8px"><span class="hub-row-txt">恋人资料卡</span></button>' +
-        '<button class="hub-row" data-act="settings" type="button" style="margin-bottom:8px"><span class="hub-row-txt">设置</span></button>' +
+        '<button class="hub-row" data-act="settings" type="button" style="margin-bottom:8px"><span class="hub-row-txt">当前窗口设置</span></button>' +
         '<button class="hub-row" data-act="clear" type="button"><span class="hub-row-txt" style="color:#A8545C">清空聊天记录</span></button>',
         function (ov, close) {
           ov.addEventListener('click', function (e) {
@@ -3684,7 +3875,7 @@
               if (act === 'search') { if (!searchOpen) setSearch(true); }
               else if (act === 'heat') openHeat();
               else if (act === 'profile') openProfile();
-              else if (act === 'settings') openSettings();
+              else if (act === 'settings') openChatSettings();
               else if (act === 'clear') {
                 history = [];
                 saveHistory();
@@ -3708,6 +3899,7 @@
 
   function boot() {
     applyTheme(theme);
+    renderChatTitle();
     if (screenEl) screenEl.classList.add('is-locked');
     applyShell();
     applyWallpaper();
