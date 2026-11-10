@@ -276,14 +276,17 @@
   function saveHistory() {
     var item = activeChatSession();
     if (!item) return false;
-    var previous = item.messages;
+    var previous = item.messages, previousUpdated = item.updatedAt, previousTitle = item.title;
     item.messages = history;
     item.updatedAt = Date.now();
     var firstUser = history.filter(function (m) { return m.role === 'user' && m.content; })[0];
     if (firstUser && (item.title === '我们的聊天' || item.title === '新的聊天')) {
-      item.title = String(firstUser.content).replace(/\\s+/g, ' ').slice(0, 18) || '新的聊天';
+      item.title = String(firstUser.content).replace(/\s+/g, ' ').slice(0, 18) || '新的聊天';
     }
-    if (!saveChatSessions()) { item.messages = previous; return false; }
+    if (!saveChatSessions()) {
+      item.messages = previous; item.updatedAt = previousUpdated; item.title = previousTitle;
+      return false;
+    }
     return true;
   }
   function chatSetting(key, fallback) {
@@ -350,10 +353,11 @@
     var target = chatSessions.filter(function (item) { return item.id === id; })[0];
     if (!target || target.id === activeChatId) { closeChatSidebar(); return; }
     if (!saveHistory()) return;
+    var previousId = activeChatId, previousHistory = history;
     activeChatId = id;
     history = normalizeHistory(target.messages);
     pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
-    if (!saveChatSessions()) return;
+    if (!saveChatSessions()) { activeChatId = previousId; history = previousHistory; return; }
     closeChatSidebar();
     renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
     updateStatus();
