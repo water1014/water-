@@ -205,9 +205,24 @@ try{
 
 <!-- ================= 聊天 ================= -->
     <section id="view-chat" class="view app app-chat" data-app="chat" aria-label="聊天">
+      <div class="chat-sidebar-scrim" id="chatSidebarScrim" hidden>
+        <aside class="chat-sidebar" id="chatSidebar" role="dialog" aria-modal="true" aria-label="聊天窗口">
+          <div class="chat-sidebar-top">
+            <div><span class="chat-sidebar-kicker">MESSAGES · WINDOWS</span><h2>聊天窗口</h2><p>把每一段对话，放在自己的小窗里</p></div>
+            <button class="icon-btn" id="chatSidebarClose" type="button" aria-label="关闭侧栏">×</button>
+          </div>
+          <button class="chat-new-window" id="chatNewWindow" type="button"><span>＋</span><span><b>开启新窗口</b><small>一段新的聊天，从这里开始</small></span></button>
+          <div class="chat-session-caption"><span>最近的对话</span><small id="chatSessionCount">01 WINDOW</small></div>
+          <div class="chat-session-list" id="chatSessionList"></div>
+          <div class="chat-sidebar-bottom">
+            <button type="button" id="chatSidebarSettings"><span>⚙</span> 当前窗口设置</button>
+            <button type="button" id="chatSidebarHome"><span>⌂</span> 返回主屏</button>
+          </div>
+        </aside>
+      </div>
       <header class="chat-head">
-        <button class="icon-btn chat-back" id="chatMenu" type="button" aria-label="返回主屏">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        <button class="icon-btn chat-back" id="chatMenu" type="button" aria-label="打开聊天窗口侧栏" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
         </button>
         <button class="chat-title" id="chatTitleBtn" type="button" aria-label="恋人资料卡">
           <span class="chat-title-name">小沢</span>
