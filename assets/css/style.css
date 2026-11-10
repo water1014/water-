@@ -2362,7 +2362,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   -webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);
   transition:opacity .24s ease,backdrop-filter .24s ease;
 }
-.chat-sidebar-scrim[hidden]{display:none}
+.chat-sidebar-scrim[hidden]{display:none!important}
 .chat-sidebar-scrim.is-open{
   opacity:1;pointer-events:auto;
   -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
