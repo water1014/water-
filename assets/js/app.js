@@ -250,7 +250,7 @@
     var migrated = [{ id: 'chat-main', title: '我们的聊天', createdAt: legacy[0] ? legacy[0].ts : Date.now(), updatedAt: Date.now(), messages: legacy, settings: {} }];
     try {
       localStorage.setItem(LS_CHATS, JSON.stringify(migrated));
-      localStorage.setItem(LS_ACTIVE_CHAT, 'chat-main');
+      localStorage.setItem(LS_ACTIVE_CHAT, JSON.stringify('chat-main'));
       localStorage.removeItem(LS_HIS);
     } catch (e) { /* 迁移失败时保留旧记录 */ }
     return migrated;
@@ -266,7 +266,7 @@
   function saveChatSessions() {
     try {
       localStorage.setItem(LS_CHATS, JSON.stringify(chatSessions));
-      localStorage.setItem(LS_ACTIVE_CHAT, activeChatId);
+      localStorage.setItem(LS_ACTIVE_CHAT, JSON.stringify(activeChatId));
       return true;
     } catch (e) {
       toast('聊天窗口没有保存成功，请先导出本地备份并释放空间');
@@ -2733,7 +2733,7 @@
           }
         }
         if (Object.prototype.hasOwnProperty.call(d, 'activeChatId') && typeof d.activeChatId === 'string') {
-          updates.push({ key: 'mizu.activeChat', value: d.activeChatId });
+          updates.push({ key: 'mizu.activeChat', value: JSON.stringify(d.activeChatId) });
         } else if (Object.prototype.hasOwnProperty.call(d, 'history') && !Object.prototype.hasOwnProperty.call(d, 'chats')) {
           updates.push({ key: 'mizu.chats', value: '[]' });
         }
