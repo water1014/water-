@@ -1567,3 +1567,6 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app .page-head .back-btn,
   .app .page-head .icon-btn{transition:none}
 }
+
+/* Chat keeps its own compact header, with the same device safe-area rhythm. */
+.app-chat .chat-head{margin-top:calc(8px + env(safe-area-inset-top))}
