@@ -4159,3 +4159,11 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .app-chat .chat-avatar-upload{position:relative}
 .app-chat .chat-avatar-image-preview{display:none;width:54px;height:54px;object-fit:cover;border-radius:15px;border:1px solid var(--line);background:var(--surface-soft);margin:2px 0 5px}
 .app-chat .chat-avatar-image-preview[src]{display:block}
+
+
+/* 44 · BUBBLE WALLPAPER PREVIEW · match the chat wallpaper preview */
+.app-chat .chat-bubble-image-preview{
+  width:112px;height:64px;object-fit:cover;border-radius:9px;
+  background:linear-gradient(135deg,#d7e9ef,#f4f7f8);
+  border:1px solid var(--line,rgba(120,145,158,.16));
+}
