@@ -890,6 +890,7 @@
   var renderedCount = 0;
   var searchTerm = '';
   var searchOpen = false;
+  var searchCursor = -1;
 
   function isNearBottom() {
     return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 96;
@@ -1982,6 +1983,7 @@
     if (open) setTimeout(function () { $('searchInput').focus(); }, 60);
     else {
       searchTerm = '';
+      searchCursor = -1;
       $('searchInput').value = '';
       $('searchCount').textContent = '';
       renderChat();
@@ -1989,18 +1991,42 @@
   }
   function runSearch(v) {
     searchTerm = String(v || '').trim();
+    searchCursor = -1;
     renderChat();
     var n = 0;
     if (searchTerm) {
       var low = searchTerm.toLowerCase();
-      history.forEach(function (m) { if (String(m.content).toLowerCase().indexOf(low) >= 0) n++; });
+      history.forEach(function (m) { if (String(m.content || '').toLowerCase().indexOf(low) >= 0) n++; });
     }
-    $('searchCount').textContent = searchTerm ? (n ? n + ' 条' : '没有') : '';
+    $('searchCount').textContent = searchTerm ? (n ? n + ' 条 · 回车跳转' : '没有') : '';
+  }
+  function cycleSearchMatch(direction) {
+    if (!searchTerm) return;
+    var low = searchTerm.toLowerCase(), matches = [];
+    history.forEach(function (m, index) {
+      if (String(m.content || '').toLowerCase().indexOf(low) >= 0) matches.push(index);
+    });
+    if (!matches.length) return;
+    searchCursor = (searchCursor + (direction < 0 ? -1 : 1) + matches.length) % matches.length;
+    var targetIndex = matches[searchCursor];
+    var nodes = msgList.querySelectorAll('.msg[data-index]');
+    Array.prototype.forEach.call(nodes, function (node) {
+      node.classList.toggle('search-current', Number(node.dataset.index) === targetIndex);
+    });
+    var target = msgList.querySelector('.msg[data-index="' + targetIndex + '"]');
+    if (target) {
+      var top = target.offsetTop - Math.max(24, chatScroll.clientHeight * 0.28);
+      chatScroll.scrollTo ? chatScroll.scrollTo({ top: top, behavior: REDUCE ? 'auto' : 'smooth' }) : (chatScroll.scrollTop = top);
+    }
+    $('searchCount').textContent = (searchCursor + 1) + ' / ' + matches.length;
   }
   if ($('chatSearch')) $('chatSearch').addEventListener('click', function () { setSearch(!searchOpen); });
   $('searchClose').addEventListener('click', function () { setSearch(false); });
   $('searchInput').addEventListener('input', function () { runSearch(this.value); });
-  $('searchInput').addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); setSearch(false); } });
+  $('searchInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); setSearch(false); }
+    else if (e.key === 'Enter') { e.preventDefault(); cycleSearchMatch(e.shiftKey ? -1 : 1); }
+  });
 
   /* ================= 贴纸 ================= */
   var stickerTray = null;
