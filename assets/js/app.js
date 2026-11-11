@@ -931,6 +931,7 @@
 
   var chatScrollSaveTimer = null;
   function captureChatScrollState(persist) {
+    if (persist && chatScrollSaveTimer) { clearTimeout(chatScrollSaveTimer); chatScrollSaveTimer = null; }
     var session = activeChatSession();
     if (!session || !chatScroll) return;
     var atBottom = isNearBottom();
