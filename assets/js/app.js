@@ -1219,7 +1219,7 @@
     el.className = 'msg ' + (isUser ? 'user' : 'ai');
     el.dataset.index = String(i);
     var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' +
-      (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
+      (isUser ? '' : '<button class="msg-regenerate-btn" type="button" aria-label="重新生成这条回复" title="重新生成">重新生成</button><button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     var messageBody = highlight(m.content);
     var bubbleMarkup = m.content ? '<div class="bubble">' + messageBody + '</div>' : '';
     if (!isUser && m.content && chatSetting('bubbleMode', config.bubbleMode || 'split') === 'split') {
@@ -1816,6 +1816,29 @@
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(copyText).then(copied).catch(function () { fallbackCopy(copyText, copied); });
       } else fallbackCopy(copyText, copied);
+      return;
+    }
+    var regenBtn = e.target.closest('.msg-regenerate-btn');
+    if (regenBtn) {
+      e.preventDefault();
+      if (sending) { toast('等当前回复结束后再重新生成'); return; }
+      var regenRow = regenBtn.closest('.msg');
+      var regenIndex = regenRow ? Number(regenRow.dataset.index) : -1;
+      var regenMessage = history[regenIndex];
+      if (!regenMessage || regenMessage.role !== 'assistant' || regenIndex !== history.length - 1) {
+        toast('目前只能重新生成对话中最新的一条回复');
+        return;
+      }
+      var promptIndex = regenIndex - 1;
+      while (promptIndex >= 0 && history[promptIndex].role !== 'user') promptIndex--;
+      var originalPrompt = promptIndex >= 0 ? String(history[promptIndex].content || '').trim() : '';
+      if (!originalPrompt) { toast('没有找到对应的用户消息'); return; }
+      if (!window.confirm('重新生成这条回复？当前回复会被替换，之前的聊天记录会保留。')) return;
+      var previousHistory = history.slice();
+      history.splice(regenIndex);
+      if (!saveHistory()) { history = previousHistory; return; }
+      renderChat();
+      sendText(originalPrompt, true, true, null);
       return;
     }
     var quoteBtn = e.target.closest('.msg-quote-btn');
