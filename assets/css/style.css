@@ -2580,3 +2580,77 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(prefers-reduced-motion:reduce){
   .chat-sidebar,.chat-sidebar-scrim{transition:none!important}
 }
+
+
+/* ============================================================
+   23 · CHAT READING COMFORT · reference-inspired bubble rhythm
+   ============================================================ */
+.app-chat .chat-scroll{padding:13px 0 20px}
+.app-chat .msg{gap:5px;margin-bottom:11px}
+.app-chat .msg-day{margin:23px 0 13px;gap:5px}
+.app-chat .msg-day .day-whisper{display:none}
+.app-chat .row{width:100%;max-width:84%}
+.app-chat .msg.user .row{max-width:84%}
+.app-chat .bubble{
+  width:100%;max-width:100%;
+  padding:10px 14px;
+  border-radius:18px;
+  font-size:14px;
+  line-height:1.58;
+  letter-spacing:.005em;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.app-chat .bubble-stack{gap:6px;width:100%;max-width:100%}
+.app-chat .bubble-stack .bubble{
+  padding:10px 14px;
+  border-radius:17px;
+  font-size:14px;line-height:1.58;
+}
+.app-chat .msg.ai.group-middle .bubble-stack .bubble-piece,
+.app-chat .msg.ai.group-end .bubble-stack .bubble-piece{border-top-left-radius:9px}
+.app-chat .msg.user.group-middle .bubble,
+.app-chat .msg.user.group-end .bubble{border-top-right-radius:9px}
+.app-chat .msg-time{margin-top:-1px;font-size:9px;line-height:13px;opacity:.58}
+.app-chat .reason{
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:5px;margin:0 0 4px 2px;max-width:84%;
+}
+.app-chat .reason-bar{
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:25px;padding:3px 8px;
+  border:0;border-radius:999px;
+  background:rgba(119,166,184,.09);
+  color:var(--ink-sub);font-size:10px;
+  letter-spacing:.035em;
+}
+.app-chat .reason-bar .reason-caret{transition:transform .18s ease}
+.app-chat .reason.is-open .reason-caret{transform:rotate(90deg)}
+.app-chat .reason-body{
+  display:none;max-width:100%;
+  padding:9px 11px;border-radius:12px;
+  font-size:11px;line-height:1.65;
+  background:rgba(119,166,184,.075);
+}
+.app-chat .reason.is-open .reason-body{display:block}
+.app-chat .msg-actions{gap:4px;margin-left:4px;align-self:flex-end}
+.app-chat .msg-actions button{font-size:9px;min-height:23px;padding:2px 7px}
+.app-chat .chat-composer{padding-top:6px}
+[data-theme="rose"] .app-chat .reason-bar{color:#b97894;background:rgba(217,158,188,.13)}
+[data-theme="rose"] .app-chat .reason-body{color:#91677c;background:rgba(255,244,249,.86);border-color:rgba(217,158,188,.16)}
+[data-theme="rose"] .app-chat .msg.ai .bubble,
+[data-theme="rose"] .app-chat .msg.ai .bubble-stack .bubble-piece{
+  color:#81596c;background:linear-gradient(145deg,rgba(255,250,252,.96),rgba(250,229,238,.92));
+  border:1px solid rgba(255,255,255,.72);
+}
+[data-theme="rose"] .app-chat .msg.user .bubble{
+  color:#fff;background:linear-gradient(145deg,#e9b5cb,#df9fbd);
+  border:1px solid rgba(255,255,255,.48);
+}
+@media(max-width:380px){
+  .app-chat .row,.app-chat .msg.user .row{max-width:88%}
+  .app-chat .bubble,.app-chat .bubble-stack .bubble{font-size:13.5px;padding:9px 12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-chat .reason-bar .reason-caret{transition:none}
+}
