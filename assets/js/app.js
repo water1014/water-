@@ -919,14 +919,79 @@
   }
 
   function highlight(text) {
-    var safe = esc(text);
-    if (!searchTerm) return safe;
-    try {
-      var re = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-      return safe.replace(re, '<mark class="mark-hit">$1</mark>');
-    } catch (e) { return safe; }
+    var source = String(text || '');
+    var marks = [];
+    if (searchTerm) {
+      try {
+        var re = new RegExp(searchTerm.replace(/[{}.*+?^$()|[\]\\]/g, '\\$&'), 'gi');
+        source = source.replace(re, function (match) {
+          var token = '\u0000MIZUMARK' + marks.length + '\u0000';
+          marks.push(match);
+          return token;
+        });
+      } catch (e) { /* keep the original text if the search expression is invalid */ }
+    }
+    function inline(value) {
+      var safe = esc(value);
+      safe = safe.replace(new RegExp('\\x60([^\\x60\\n]+)\\x60', 'g'), '<code>$1</code>');
+      safe = safe.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+      safe = safe.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+      safe = safe.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+      safe = safe.replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      safe = safe.replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+      return safe;
+    }
+    var lines = source.replace(/\r/g, '').split('\n');
+    var out = [], paragraph = [], listType = '', inCode = false, fence = '', code = [];
+    function flushParagraph() {
+      if (!paragraph.length) return;
+      out.push('<p>' + inline(paragraph.join('\n')).replace(/\n/g, '<br>') + '</p>');
+      paragraph = [];
+    }
+    function closeList() {
+      if (listType) { out.push('</' + listType + '>'); listType = ''; }
+    }
+    function closeCode() {
+      out.push('<pre><code>' + esc(code.join('\n')) + '</code></pre>');
+      code = []; inCode = false; fence = '';
+    }
+    lines.forEach(function (line) {
+      var fenceMatch = line.match(/^\s{0,3}([\x60]{3,}|~{3,})/);
+      if (inCode) {
+        if (fenceMatch && fenceMatch[1].charAt(0) === fence.charAt(0) && fenceMatch[1].length >= fence.length) closeCode();
+        else code.push(line);
+        return;
+      }
+      if (fenceMatch) { flushParagraph(); closeList(); inCode = true; fence = fenceMatch[1]; code = []; return; }
+      if (!line.trim()) { flushParagraph(); closeList(); return; }
+      var heading = line.match(/^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$/);
+      if (heading) {
+        flushParagraph(); closeList();
+        var level = heading[1].length;
+        out.push('<h' + level + '>' + inline(heading[2]) + '</h' + level + '>');
+        return;
+      }
+      var quote = line.match(/^\s{0,3}>\s?(.*)$/);
+      if (quote) { flushParagraph(); closeList(); out.push('<blockquote>' + inline(quote[1]) + '</blockquote>'); return; }
+      var item = line.match(/^\s*(?:[-*+]\s+)(.*)$/);
+      var numbered = line.match(/^\s*\d+[.)、]\s+(.*)$/);
+      if (item || numbered) {
+        flushParagraph();
+        var wanted = numbered ? 'ol' : 'ul';
+        if (listType !== wanted) { closeList(); out.push('<' + wanted + '>'); listType = wanted; }
+        out.push('<li>' + inline((item || numbered)[1]) + '</li>');
+        return;
+      }
+      closeList(); paragraph.push(line);
+    });
+    flushParagraph(); closeList();
+    if (inCode) closeCode();
+    var html = out.join('');
+    marks.forEach(function (match, index) {
+      html = html.replace('\u0000MIZUMARK' + index + '\u0000', '<mark class="mark-hit">' + esc(match) + '</mark>');
+    });
+    return html;
   }
-
   function buildDay(date) {
     var el = document.createElement('div');
     el.className = 'msg-day';
