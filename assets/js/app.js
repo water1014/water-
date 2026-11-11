@@ -747,27 +747,21 @@
   var dockEl = $('dock');
   var pagesEl = $('pages');
 
-  var APPS = [
-    { k: 'album', label: '相册', svg: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M4 16l4.4-4.4a2 2 0 0 1 2.8 0L15 15l1.8-1.8a2 2 0 0 1 2.8 0L20.5 15"/><circle cx="9" cy="9.5" r="1.2"/>' },
-    { k: 'journal', label: '手帐', svg: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H12v16h6.5A1.5 1.5 0 0 0 20 18.5z"/>' },
-    { k: 'letters', label: '信件', svg: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4 7.5l8 5.5 8-5.5"/>' },
+  var ROOM_APPS = [
+    { k: 'chat', label: '说说话', svg: '<path d="M20.4 12.2c0 4-3.8 7.1-8.4 7.1-1 0-2-.1-2.9-.4L4.2 21l1.4-3.7c-1.2-1.3-2-3-2-4.9 0-4 3.8-7.1 8.4-7.1s8.4 3.1 8.4 6.9z"/>' },
     { k: 'archive', label: '记忆库', svg: '<path d="M12 4.2c3.6 4.2 5.6 7.2 5.6 9.6a5.6 5.6 0 1 1-11.2 0c0-2.4 2-5.4 5.6-9.6z"/>' },
-    { k: 'stars', label: '星河', svg: '<path d="M12 3.5l2.3 5.9 6.2 1.4-5.5 3.4.6 6.3-5.6-3.6-5.6 3.6.6-6.3-5.5-3.4 6.2-1.4z" transform="translate(2.6 1.2) scale(.78)"/>' },
-    { k: 'music', label: '音乐', svg: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>' },
-    { k: 'settings', label: '设置', svg: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6M6 6l1.9 1.9M16.1 16.1L18 18M18 6l-1.9 1.9M7.9 16.1L6 18"/>' },
-    { k: 'more', label: '更多', svg: '<circle cx="6" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="18" cy="12" r="1.2" fill="currentColor"/>' }
+    { k: 'music', label: '一起听', svg: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>' }
   ];
 
-  var APP_TITLE = { album: '相册', journal: '手帐', letters: '信件', archive: '记忆库', more: '更多', chat: '聊天' };
-
+  var APP_TITLE = { album: '相册', journal: '手帐', letters: '信件', archive: '记忆库', more: '更多', chat: '说说话', music: '一起听' };
   function renderAppGrid() {
     var grid = $('appGrid');
     if (!grid) return;
-    grid.innerHTML = APPS.map(function (a) {
+    grid.innerHTML = ROOM_APPS.map(function (a) {
       return '<div class="app-cell"><button class="app-icon" data-app="' + a.k + '" type="button" aria-label="' + a.label + '">' +
-        '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + a.svg + '</svg>' +
+        '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + a.svg + '</svg>' +
         '</button><span class="app-label">' + a.label + '</span></div>';
-    }).join('');
+    }).join('') + '<div class="app-cell room-empty" aria-hidden="true"><span class="room-empty-mark">＋</span><span class="app-label">留一处空白</span></div>';
   }
 
   function setDock(app) {
@@ -923,6 +917,21 @@
     }
     if (homeEl) homeEl.classList.add('is-on');
     if (screenEl) screenEl.classList.remove('is-locked');
+    goPage(0, false);
+  }
+
+  function lockAgain() {
+    if (locked) return;
+    if (currentView !== 'home') closeApp();
+    locked = true;
+    if (appsEl) appsEl.classList.remove('is-open', 'is-closing');
+    if (screenEl) screenEl.classList.add('is-locked');
+    if (homeEl) homeEl.classList.remove('is-on');
+    if (lockEl) {
+      lockEl.style.display = 'flex';
+      lockEl.classList.remove('is-out');
+    }
+    setDock('');
     goPage(0, false);
   }
 
@@ -2560,10 +2569,21 @@
     });
   }
 
-  /* ================= 骰子 ================= */
+  /* ================= 今日话题 ================= */
   var diceIdx = 0;
+  function dailyTopicIndex() {
+    var today = isoOf();
+    var saved = read('mizu.dailyTopic', null);
+    if (saved && saved.date === today && typeof saved.topic === 'string') {
+      var existing = TOPICS.indexOf(saved.topic);
+      if (existing >= 0) return existing;
+    }
+    var next = Math.floor(Math.random() * TOPICS.length);
+    write('mizu.dailyTopic', { date: today, topic: TOPICS[next] });
+    return next;
+  }
   function openDice() {
-    diceIdx = Math.floor(Math.random() * TOPICS.length);
+    diceIdx = dailyTopicIndex();
     $('diceQ').textContent = TOPICS[diceIdx];
     $('dicePop').classList.add('show');
   }
@@ -2572,17 +2592,13 @@
     e.stopPropagation();
     if ($('dicePop').classList.contains('show')) closeDice(); else openDice();
   });
-  $('diceAgain').addEventListener('click', function () {
-    diceIdx = (diceIdx + 1 + Math.floor(Math.random() * (TOPICS.length - 1))) % TOPICS.length;
-    $('diceQ').textContent = TOPICS[diceIdx];
-  });
   $('diceAsk').addEventListener('click', function () {
     var t = TOPICS[diceIdx];
     closeDice();
+    if (currentView !== 'chat') switchView('chat');
     msgInput.value = t;
     autoGrow();
-    if (currentView !== 'chat') switchView('chat');
-    setTimeout(sendMessage, 140);
+    setTimeout(function () { msgInput.focus(); }, 160);
   });
 
   /* ================= 模型 ================= */
@@ -3964,6 +3980,37 @@
     lockEl.addEventListener('click', function (e) {
       if (e.target.closest('.sprite')) return;
       unlock();
+    });
+  }
+
+  if ($('homeSettings')) $('homeSettings').addEventListener('click', function (e) {
+    e.stopPropagation();
+    openSettings();
+  });
+
+  /* 主屏下滑返回锁屏，双击空白桌面也可锁定 */
+  if (homeEl) {
+    var relockStartY = 0, lastBlankTap = 0;
+    homeEl.addEventListener('touchstart', function (e) {
+      if (!e.touches || e.touches.length !== 1) return;
+      relockStartY = e.touches[0].clientY;
+    }, { passive: true });
+    homeEl.addEventListener('touchend', function (e) {
+      if (!relockStartY || !e.changedTouches || !e.changedTouches.length) return;
+      var dy = e.changedTouches[0].clientY - relockStartY;
+      var startY = relockStartY;
+      relockStartY = 0;
+      if (dy > 92 && startY < 110 && !e.target.closest('button,a,input,textarea,select,[data-no-swipe]')) lockAgain();
+    }, { passive: true });
+    homeEl.addEventListener('click', function (e) {
+      if (e.target.closest('button,a,input,textarea,select,.hcard,.wcard,.app-cell,[data-no-swipe]')) return;
+      var blank = e.target === homeEl || e.target === pagesEl || (e.target.classList && e.target.classList.contains('hpage'));
+      if (!blank) return;
+      var now = Date.now();
+      if (now - lastBlankTap < 340) {
+        lastBlankTap = 0;
+        lockAgain();
+      } else lastBlankTap = now;
     });
   }
 
