@@ -216,6 +216,7 @@
       var o = { role: m.role, content: m.content, ts: Number(m.ts) || Date.now() };
       if (m.loved) o.loved = true;
       if (m.reasoning) o.reasoning = String(m.reasoning);
+      if (Array.isArray(m.toolCalls)) o.toolCalls = m.toolCalls.map(function (t) { return { name: String(t.name || 'tool'), arguments: String(t.arguments || ''), status: String(t.status || 'returned') }; });
       if (m.image) o.image = String(m.image);
       if (m.voice) o.voice = { dur: Number(m.voice.dur) || 3 };
       if (m.sticker) o.sticker = String(m.sticker);
@@ -895,6 +896,16 @@
     return el;
   }
 
+  function buildToolCalls(m) {
+    if (!Array.isArray(m.toolCalls) || !m.toolCalls.length) return '';
+    var rows = m.toolCalls.map(function (tool) {
+      var args = String(tool.arguments || '');
+      var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
+      return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>接口返回</em></div>';
+    }).join('');
+    return '<section class="tool-call-group"><button class="tool-call-toggle" type="button" aria-expanded="false"><span>⌘</span><b>工具调用 · ' + m.toolCalls.length + '</b><small>查看记录</small><i>›</i></button><div class="tool-call-details">' + rows + '</div></section>';
+  }
+
   function buildReason(m) {
     if (!m.reasoning) return '';
     if (chatSetting('showReasoning', config.showReasoning !== false) === false) return '';
@@ -960,8 +971,8 @@
         }).join('') + '</div>';
       }
     }
-    el.innerHTML = buildReason(m) +
-      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
+    el.innerHTML = buildReason(m) + buildToolCalls(m) +
+      '<div class="row"> + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
   }
@@ -1135,6 +1146,7 @@
       if (clean) {
         var rec = { role: 'assistant', content: clean, ts: Date.now() };
         if (streamReason.trim()) rec.reasoning = streamReason.trim();
+        if (streamToolCalls.length) rec.toolCalls = streamToolCalls.slice();
         history.push(rec);
         saveHistory();
       }
@@ -1144,6 +1156,9 @@
       });
       if (found.length) saveHistory();
       text = clean;
+    } else if (streamToolCalls.length) {
+      history.push({ role: 'assistant', content: '', ts: Date.now(), toolCalls: streamToolCalls.slice() });
+      saveHistory();
     }
 
     renderChat();
@@ -1221,6 +1236,19 @@
     pump();
   }
 
+  var streamToolCalls = [];
+  function mergeStreamToolCalls(incoming) {
+    if (!Array.isArray(incoming)) return;
+    incoming.forEach(function (part) {
+      var index = Number(part.index) || 0;
+      var item = streamToolCalls[index] || { id: '', name: '', arguments: '', status: 'returned' };
+      if (part.id) item.id = part.id;
+      if (part.function && part.function.name) item.name += part.function.name;
+      if (part.function && typeof part.function.arguments === 'string') item.arguments += part.function.arguments;
+      streamToolCalls[index] = item;
+    });
+  }
+
   function handleSSE(block) {
     var lines = block.split('\n');
     for (var i = 0; i < lines.length; i++) {
@@ -1234,6 +1262,7 @@
       if (!json || !json.choices || !json.choices[0]) continue;
       var delta = json.choices[0].delta;
       if (delta) {
+        if (delta.tool_calls) mergeStreamToolCalls(delta.tool_calls);
         var rz = typeof delta.reasoning_content === 'string' ? delta.reasoning_content : (typeof delta.reasoning === 'string' ? delta.reasoning : '');
         if (rz) streamReason += rz;
       }
@@ -1248,7 +1277,7 @@
   }
 
   async function runStream() {
-    streamText = ''; queue = []; streamDone = false; streamEl = null; streamBody = null; streamReason = '';
+    streamText = ''; queue = []; streamDone = false; streamEl = null; streamBody = null; streamReason = ''; streamToolCalls = [];
     ensureTyping();
     setTyping(true);
 
@@ -1290,6 +1319,7 @@
         var wholeMessage = obj.choices && obj.choices[0] && obj.choices[0].message;
         var whole = wholeMessage && wholeMessage.content;
         var wholeReason = wholeMessage && (wholeMessage.reasoning_content || wholeMessage.reasoning);
+        if (wholeMessage && Array.isArray(wholeMessage.tool_calls)) streamToolCalls = wholeMessage.tool_calls.map(function (t) { return { id: t.id || '', name: t.function && t.function.name || 'tool', arguments: t.function && t.function.arguments || '', status: 'returned' }; });
         if (typeof wholeReason === 'string') streamReason += wholeReason;
         if (typeof whole === 'string' && whole) pushDelta(whole);
       } catch (e3) { handleSSE(txt); }
@@ -1434,6 +1464,13 @@
   });
 
   msgList.addEventListener('click', function (e) {
+    var toolToggle = e.target.closest('.tool-call-toggle');
+    if (toolToggle) {
+      var toolGroup = toolToggle.closest('.tool-call-group');
+      var toolExpanded = toolGroup.classList.toggle('is-open');
+      toolToggle.setAttribute('aria-expanded', toolExpanded ? 'true' : 'false');
+      return;
+    }
     var reasonToggle = e.target.closest('.reason-bar');
     if (reasonToggle) {
       var reasonPanel = reasonToggle.closest('.reason');
