@@ -3255,3 +3255,23 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .reason-body{max-height:30vh;padding:8px 10px}
   .app-chat .tool-call-details{max-height:34vh}
 }
+
+
+/* 33 · TRACE READABILITY · preserve argument structure without widening the chat */
+.app-chat .tool-call-copy{min-width:0;display:block}
+.app-chat .tool-call-copy>b{display:block;margin-bottom:4px}
+.app-chat .tool-call-arguments{
+  display:block;max-width:100%;max-height:180px;margin:0;padding:7px 9px;
+  overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;
+  border:1px solid rgba(108,163,181,.12);border-radius:8px;
+  background:rgba(35,65,77,.035);color:var(--ink-sub);
+  font:9px/1.55 var(--mono);-webkit-overflow-scrolling:touch
+}
+.app-chat .tool-call-arguments code{font:inherit;white-space:inherit;overflow-wrap:inherit}
+.app-chat .reason-body{white-space:normal;line-height:1.72;overflow-wrap:anywhere}
+.app-chat .reason-body p{margin:0 0 7px}
+.app-chat .reason-body p:last-child{margin-bottom:0}
+.app-chat .reason-body strong{color:var(--ink);font-weight:700}
+[data-theme="night"] .app-chat .tool-call-arguments{background:rgba(0,0,0,.14);border-color:rgba(185,220,232,.12)}
+[data-theme="rose"] .app-chat .tool-call-arguments{background:rgba(217,158,188,.045);border-color:rgba(217,158,188,.13)}
+@media(max-width:380px){.app-chat .tool-call-arguments{max-height:140px;padding:6px 7px;font-size:8px}}
