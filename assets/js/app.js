@@ -168,6 +168,7 @@
   if (!chatSessions.some(function (item) { return item.id === activeChatId; })) activeChatId = chatSessions[0] ? chatSessions[0].id : 'chat-main';
   var history = loadActiveHistory();
   var pendingQuote = null, activeQuote = null, retryQuote = null, editingMessageIndex = -1;
+  var messageSelectMode = false, selectedMessageIndices = Object.create(null);
   var moods = read('mizu.moods', []) || [];
   var memories = read('mizu.memories', []) || [];
   var notes = read('mizu.notes', {}) || {};
@@ -1249,6 +1250,12 @@
         buildReason(m, i) + buildToolCalls(m, i) + messageRow + timeMarkup +
         '</div>';
     }
+    if (messageSelectMode) {
+      el.classList.add('selectable-message');
+      var selected = !!selectedMessageIndices[i];
+      el.classList.toggle('is-selected', selected);
+      el.insertAdjacentHTML('afterbegin', '<button class="msg-select-mark" type="button" data-message-select="' + i + '" aria-label="' + (selected ? '取消选择' : '选择消息') + '" aria-pressed="' + (selected ? 'true' : 'false') + '"><span></span></button>');
+    }
     return el;
   }
 
@@ -1772,7 +1779,93 @@
     });
   });
 
+  var messageSelectBtn = $('chatSelectMessages');
+  var messageBulkBar = document.createElement('div');
+  messageBulkBar.className = 'message-bulk-bar';
+  messageBulkBar.id = 'messageBulkBar';
+  messageBulkBar.hidden = true;
+  messageBulkBar.innerHTML = '<span class="message-bulk-count" id="messageBulkCount">已选 0 条</span><button type="button" data-bulk-action="all">全选</button><button type="button" data-bulk-action="favorite">收藏</button><button type="button" data-bulk-action="delete">删除</button><button type="button" data-bulk-action="cancel">完成</button>';
+  if (chatScroll && chatScroll.parentNode) chatScroll.parentNode.insertBefore(messageBulkBar, chatScroll);
+  function selectedMessageCount() { return Object.keys(selectedMessageIndices).filter(function (key) { return selectedMessageIndices[key]; }).length; }
+  function updateMessageBulkBar() {
+    var count = selectedMessageCount();
+    var countNode = $('messageBulkCount');
+    if (countNode) countNode.textContent = '已选 ' + count + ' 条';
+    var favoriteButton = messageBulkBar.querySelector('[data-bulk-action="favorite"]');
+    if (favoriteButton) favoriteButton.disabled = !history.some(function (m, i) { return !!selectedMessageIndices[i] && m && m.role === 'assistant' && !m.sticker; });
+    if (messageSelectBtn) {
+      messageSelectBtn.textContent = messageSelectMode ? '取消选择' : '选择';
+      messageSelectBtn.setAttribute('aria-pressed', messageSelectMode ? 'true' : 'false');
+    }
+    messageBulkBar.hidden = !messageSelectMode;
+  }
+  function setMessageSelectMode(enabled) {
+    messageSelectMode = !!enabled;
+    if (!messageSelectMode) selectedMessageIndices = Object.create(null);
+    updateMessageBulkBar();
+    renderChat();
+  }
+  if (messageSelectBtn) messageSelectBtn.addEventListener('click', function () {
+    if (sending && !messageSelectMode) { toast('回复进行中，稍后再整理消息'); return; }
+    setMessageSelectMode(!messageSelectMode);
+  });
+  messageBulkBar.addEventListener('click', function (e) {
+    var action = e.target.closest('[data-bulk-action]');
+    if (!action || action.disabled) return;
+    var kind = action.getAttribute('data-bulk-action');
+    if (kind === 'cancel') { setMessageSelectMode(false); return; }
+    if (kind === 'all') {
+      var allSelected = selectedMessageCount() === history.length && history.length > 0;
+      selectedMessageIndices = Object.create(null);
+      if (!allSelected) history.forEach(function (_, index) { selectedMessageIndices[index] = true; });
+      renderChat(); updateMessageBulkBar(); return;
+    }
+    var indices = Object.keys(selectedMessageIndices).filter(function (key) { return selectedMessageIndices[key]; }).map(Number).sort(function (a,b) { return a-b; });
+    if (!indices.length) { toast('先选择要整理的消息'); return; }
+    if (kind === 'favorite') {
+      var snapshot = history.map(function (m) { return Object.assign({}, m); });
+      var changed = 0;
+      indices.forEach(function (index) {
+        var m = history[index];
+        if (m && m.role === 'assistant' && !m.sticker && !m.loved) { m.loved = true; changed++; }
+      });
+      if (!changed) { toast('所选消息已经收藏，或没有可收藏的回复'); return; }
+      if (!saveHistory()) { history = snapshot; renderChat(); return; }
+      setMessageSelectMode(false);
+      renderChat(); renderHome();
+      if (currentView === 'archive') renderGalaxy();
+      toast('已收藏 ' + changed + ' 条回复');
+      return;
+    }
+    if (kind === 'delete') {
+      if (!window.confirm('确定删除选中的 ' + indices.length + ' 条消息吗？此操作无法撤销。')) return;
+      var oldHistory = history;
+      history = history.filter(function (_, index) { return !selectedMessageIndices[index]; });
+      if (!saveHistory()) { history = oldHistory; renderChat(); return; }
+      setMessageSelectMode(false);
+      renderChat();
+      toast('已删除 ' + indices.length + ' 条消息');
+    }
+  });
+
   msgList.addEventListener('click', function (e) {
+    var selectMark = e.target.closest('[data-message-select]');
+    if (selectMark && messageSelectMode) {
+      e.preventDefault();
+      var selectedIndex = Number(selectMark.getAttribute('data-message-select'));
+      if (selectedMessageIndices[selectedIndex]) delete selectedMessageIndices[selectedIndex];
+      else selectedMessageIndices[selectedIndex] = true;
+      var selectedRow = selectMark.closest('.msg');
+      if (selectedRow) {
+        var isSelected = !!selectedMessageIndices[selectedIndex];
+        selectedRow.classList.toggle('is-selected', isSelected);
+        selectMark.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        selectMark.setAttribute('aria-label', isSelected ? '取消选择' : '选择消息');
+      }
+      updateMessageBulkBar();
+      return;
+    }
+    if (messageSelectMode) return;
     var codeCopy = e.target.closest('[data-copy-code]');
     if (codeCopy) {
       e.preventDefault();
