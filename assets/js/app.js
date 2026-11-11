@@ -246,6 +246,7 @@
           settings: item.settings && typeof item.settings === 'object' ? item.settings : {},
           pinned: item.pinned === true,
           archived: item.archived === true,
+          draft: typeof item.draft === 'string' ? item.draft.slice(0, 12000) : '',
           scrollState: item.scrollState && typeof item.scrollState === 'object' ? {
             atBottom: item.scrollState.atBottom === true,
             anchorIndex: Number.isInteger(Number(item.scrollState.anchorIndex)) ? Number(item.scrollState.anchorIndex) : -1,
@@ -282,6 +283,31 @@
       toast('聊天窗口没有保存成功，请先导出本地备份并释放空间');
       return false;
     }
+  }
+  var chatDraftTimer = null;
+  function flushChatDraft(value) {
+    if (chatDraftTimer !== null) { clearTimeout(chatDraftTimer); chatDraftTimer = null; }
+    var item = activeChatSession();
+    if (!item) return false;
+    var next = typeof value === 'string' ? value.slice(0, 12000) : '';
+    if (item.draft === next) return true;
+    item.draft = next;
+    return saveChatSessions();
+  }
+  function scheduleChatDraftSave() {
+    if (chatDraftTimer !== null) clearTimeout(chatDraftTimer);
+    chatDraftTimer = setTimeout(function () {
+      chatDraftTimer = null;
+      var item = activeChatSession();
+      if (!item) return;
+      item.draft = msgInput.value.slice(0, 12000);
+      saveChatSessions();
+    }, 450);
+  }
+  function restoreChatDraft() {
+    var item = activeChatSession();
+    msgInput.value = item && typeof item.draft === 'string' ? item.draft : '';
+    autoGrow();
   }
   function saveHistory() {
     var item = activeChatSession();
@@ -399,9 +425,9 @@
   function createChatSession() {
     if (sending) { toast('等这条消息发送完成，再开启新窗口吧'); return; }
     captureChatScrollState(true);
-    if (!saveHistory()) return;
+    if (!flushChatDraft(msgInput.value) || !saveHistory()) return;
     var id = 'chat-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-    var item = { id: id, title: '新的聊天', createdAt: Date.now(), updatedAt: Date.now(), messages: [], settings: {}, pinned: false, archived: false };
+    var item = { id: id, title: '新的聊天', createdAt: Date.now(), updatedAt: Date.now(), messages: [], settings: {}, pinned: false, archived: false, draft: '' };
     chatSessions.push(item);
     var previous = activeChatId;
     activeChatId = id;
@@ -411,6 +437,7 @@
       return;
     }
     history = [];
+    msgInput.value = ''; autoGrow();
     pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = ''; editingMessageIndex = -1;
     closeChatSidebar();
     renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
@@ -421,12 +448,13 @@
     var target = chatSessions.filter(function (item) { return item.id === id; })[0];
     if (!target || target.id === activeChatId) { closeChatSidebar(); return; }
     captureChatScrollState(true);
-    if (!saveHistory()) return;
-    var previousId = activeChatId, previousHistory = history;
+    if (!flushChatDraft(msgInput.value) || !saveHistory()) return;
+    var previousId = activeChatId, previousHistory = history, previousDraft = msgInput.value;
     activeChatId = id;
     history = normalizeHistory(target.messages);
     pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = ''; editingMessageIndex = -1;
-    if (!saveChatSessions()) { activeChatId = previousId; history = previousHistory; return; }
+    if (!saveChatSessions()) { activeChatId = previousId; history = previousHistory; msgInput.value = previousDraft; autoGrow(); return; }
+    restoreChatDraft();
     closeChatSidebar();
     renderChatTitle(); renderChat(); renderHome(); restoreChatScrollState();
     updateStatus();
@@ -1865,6 +1893,7 @@
       editingMessageIndex = -1;
       pendingQuote = null;
       msgInput.value = '';
+      flushChatDraft('');
       autoGrow();
       renderQuotePreview();
       renderChat();
@@ -1872,6 +1901,7 @@
       return;
     }
     msgInput.value = '';
+    flushChatDraft('');
     autoGrow();
     sendText(t, false, false, quote);
   }
@@ -1899,7 +1929,7 @@
   var composing = false;
   msgInput.addEventListener('compositionstart', function () { composing = true; });
   msgInput.addEventListener('compositionend', function () { composing = false; autoGrow(); });
-  msgInput.addEventListener('input', autoGrow);
+  msgInput.addEventListener('input', function () { autoGrow(); scheduleChatDraftSave(); });
   msgInput.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' || e.shiftKey) return;
     if (composing || e.isComposing || e.keyCode === 229) return;
@@ -2300,7 +2330,10 @@
     else if (e.key === 'Enter') { e.preventDefault(); cycleSearchMatch(e.shiftKey ? -1 : 1); }
   });
 
-  window.addEventListener('pagehide', function () { if (currentView === 'chat') captureChatScrollState(true); });
+  window.addEventListener('pagehide', function () {
+    flushChatDraft(msgInput.value);
+    if (currentView === 'chat') captureChatScrollState(true);
+  });
   /* ================= 贴纸 ================= */
   var stickerTray = null;
   function buildTray() {
