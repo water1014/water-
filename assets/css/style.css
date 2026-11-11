@@ -3757,3 +3757,56 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     transition:outline-color .18s ease,box-shadow .18s ease;
   }
 }
+
+
+/* 39 · MESSAGE SELECTION · compact batch actions for conversation cleanup */
+.app-chat .chat-select-trigger{
+  flex:0 0 auto;min-height:32px;padding:0 10px;
+  border:1px solid var(--line-soft);border-radius:10px;
+  background:var(--surface-soft);color:var(--ink-sub);
+  font:inherit;font-size:10px;line-height:1;
+}
+.app-chat .chat-select-trigger[aria-pressed="true"]{
+  border-color:rgba(100,158,178,.35);background:rgba(100,158,178,.12);color:var(--accent-deep)
+}
+.app-chat .message-bulk-bar{
+  position:relative;z-index:4;display:flex;align-items:center;gap:6px;
+  min-height:42px;padding:5px 12px;
+  border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+  background:var(--surface);color:var(--ink-sub)
+}
+.app-chat .message-bulk-bar[hidden]{display:none!important}
+.app-chat .message-bulk-count{flex:1;min-width:0;font-size:10px;font-variant-numeric:tabular-nums}
+.app-chat .message-bulk-bar button{
+  min-height:30px;padding:0 9px;border:1px solid var(--line-soft);
+  border-radius:9px;background:var(--surface-soft);color:var(--ink-sub);
+  font:inherit;font-size:10px;white-space:nowrap
+}
+.app-chat .message-bulk-bar button:disabled{opacity:.35}
+.app-chat .msg.selectable-message{position:relative}
+.app-chat .msg .msg-select-mark{
+  position:absolute;z-index:3;top:5px;left:2px;
+  display:grid;place-items:center;width:25px;height:25px;padding:0;
+  border:1px solid rgba(100,145,163,.3);border-radius:50%;
+  background:var(--surface);color:var(--accent-deep)
+}
+.app-chat .msg .msg-select-mark span{
+  width:9px;height:9px;border:1px solid currentColor;border-radius:50%
+}
+.app-chat .msg.is-selected .msg-select-mark{
+  border-color:var(--accent);background:var(--accent);color:#fff
+}
+.app-chat .msg.is-selected .msg-select-mark span{
+  width:10px;height:6px;border:0;border-left:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;border-radius:0;transform:rotate(-45deg) translate(1px,-1px)
+}
+.app-chat .msg.selectable-message .assistant-flow,
+.app-chat .msg.selectable-message>.row{padding-left:28px}
+@media(max-width:420px){
+  .app-chat .message-bulk-bar{gap:4px;padding:5px 8px}
+  .app-chat .message-bulk-bar button{padding:0 7px;font-size:9px}
+  .app-chat .msg .msg-select-mark{left:0;width:23px;height:23px}
+  .app-chat .msg.selectable-message .assistant-flow,
+  .app-chat .msg.selectable-message>.row{padding-left:25px}
+}
+[data-theme="night"] .app-chat .message-bulk-bar{background:var(--surface)}
