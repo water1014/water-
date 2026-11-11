@@ -1434,6 +1434,14 @@
   });
 
   msgList.addEventListener('click', function (e) {
+    var reasonToggle = e.target.closest('.reason-bar');
+    if (reasonToggle) {
+      var reasonPanel = reasonToggle.closest('.reason');
+      var expanded = reasonPanel.classList.toggle('is-open');
+      reasonToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      reasonToggle.setAttribute('aria-label', expanded ? '收起思考摘要' : '展开思考摘要');
+      return;
+    }
     var photoSave = e.target.closest('[data-chat-photo]');
     if (photoSave) {
       e.preventDefault();
