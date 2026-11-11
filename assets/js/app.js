@@ -580,7 +580,7 @@
       '<div class="chat-skin-preview" id="chatSkinPreview" data-bubble-skin="' + bubbleSkin + '"><div class="chat-skin-preview-label">实时预览 · 外观不会立即保存</div><div class="chat-skin-preview-line"><span class="chat-skin-preview-avatar">TA</span><span class="chat-skin-preview-bubble ai">今天想和你分享一点小事。</span></div><div class="chat-skin-preview-line mine"><span class="chat-skin-preview-bubble user">好呀，我在听。</span><span class="chat-skin-preview-avatar">我</span></div></div>' +
       '<div class="chat-wallpaper-presets" id="chatWallpaperPresets" data-selected="' + wallpaperPreset + '"><span class="field-label">内置聊天背景</span><div class="chat-wallpaper-preset-grid"><button type="button" data-wallpaper-preset="mist" aria-label="晨雾" class="wallpaper-preset mist"><span>晨雾</span></button><button type="button" data-wallpaper-preset="lake" aria-label="湖光" class="wallpaper-preset lake"><span>湖光</span></button><button type="button" data-wallpaper-preset="petal" aria-label="花汐" class="wallpaper-preset petal"><span>花汐</span></button><button type="button" data-wallpaper-preset="midnight" aria-label="夜航" class="wallpaper-preset midnight"><span>夜航</span></button></div><span class="field-hint">先选一款背景，也可以在下面上传自己的图片。</span></div>' +
       '<div class="chat-image-preview-wrap"><img id="chatWallpaperPreview" class="chat-wallpaper-image-preview" alt="聊天背景预览"><span>自定义背景预览</span></div><label class="field"><span class="field-label">聊天背景图片</span><input id="chatPrefWallpaper" type="file" accept="image/*"><span class="field-hint" id="chatWallpaperHint">' + (hasWallpaper ? '当前窗口已设置背景图' : '选择一张图片，作为当前聊天的背景') + '</span><button class="btn-quiet chat-skin-clear" id="chatWallpaperClear" type="button">清除聊天背景</button></label>' +
-      '<label class="field"><span class="field-label">气泡背景图片</span><input id="chatPrefBubbleWallpaper" type="file" accept="image/*"><span class="field-hint" id="bubbleWallpaperHint">' + (hasBubbleWallpaper ? '当前窗口已设置气泡图片' : '选择图片作为消息气泡纹理') + '</span><button class="btn-quiet chat-skin-clear" id="bubbleWallpaperClear" type="button">清除气泡图片</button></label>' +
+      '<div class="chat-image-preview-wrap"><img id="chatBubbleWallpaperPreview" class="chat-wallpaper-image-preview" alt="气泡背景预览"><span>气泡纹理预览</span></div><label class="field"><span class="field-label">气泡背景图片</span><input id="chatPrefBubbleWallpaper" type="file" accept="image/*"><span class="field-hint" id="bubbleWallpaperHint">' + (hasBubbleWallpaper ? '当前窗口已设置气泡图片' : '选择图片作为消息气泡纹理') + '</span><button class="btn-quiet chat-skin-clear" id="bubbleWallpaperClear" type="button">清除气泡图片</button></label>' +
       '<div class="chat-skin-divider"><span>AVATARS · 头像</span><small>只作用于当前窗口</small></div>' +
       '<label class="field chat-avatar-upload"><span class="field-label">对方头像</span><img id="chatAiAvatarPreview" class="chat-avatar-image-preview" alt="对方头像预览"><input id="chatPrefAiAvatar" type="file" accept="image/*"><span class="field-hint" id="aiAvatarHint">' + (hasAiAvatar ? '当前窗口已设置对方头像' : '上传角色头像，建议正方形图片') + '</span><button class="btn-quiet chat-skin-clear" id="aiAvatarClear" type="button">恢复默认头像</button></label>' +
       '<label class="field chat-avatar-upload"><span class="field-label">我的头像</span><img id="chatUserAvatarPreview" class="chat-avatar-image-preview" alt="我的头像预览"><input id="chatPrefUserAvatar" type="file" accept="image/*"><span class="field-hint" id="userAvatarHint">' + (hasUserAvatar ? '当前窗口已设置我的头像' : '上传自己的头像，建议正方形图片') + '</span><button class="btn-quiet chat-skin-clear" id="userAvatarClear" type="button">恢复默认头像</button></label>' +
@@ -601,9 +601,11 @@
           reader.readAsDataURL(file);
         }
         var wallpaperPreview = ov.querySelector('#chatWallpaperPreview');
+        var bubbleWallpaperPreview = ov.querySelector('#chatBubbleWallpaperPreview');
         var aiAvatarPreview = ov.querySelector('#chatAiAvatarPreview');
         var userAvatarPreview = ov.querySelector('#chatUserAvatarPreview');
         if (wallpaperPreview && item.settings && item.settings.chatWallpaper) wallpaperPreview.src = item.settings.chatWallpaper;
+        if (bubbleWallpaperPreview && item.settings && item.settings.bubbleWallpaper) bubbleWallpaperPreview.src = item.settings.bubbleWallpaper;
         if (aiAvatarPreview && item.settings && item.settings.aiAvatar) aiAvatarPreview.src = item.settings.aiAvatar;
         if (userAvatarPreview && item.settings && item.settings.userAvatar) userAvatarPreview.src = item.settings.userAvatar;
         var clearWallpaper = false, clearBubbleWallpaper = false, clearAiAvatar = false, clearUserAvatar = false;
@@ -614,7 +616,7 @@
             selectedWallpaperPreset = this.getAttribute('data-wallpaper-preset');
             ov.querySelector('#chatWallpaperPresets').setAttribute('data-selected', selectedWallpaperPreset);
             ov.querySelectorAll('[data-wallpaper-preset]').forEach(function (node) { node.setAttribute('aria-pressed', node === button ? 'true' : 'false'); });
-            clearWallpaper = true; ov.querySelector('#chatPrefWallpaper').value = '';
+            clearWallpaper = true; ov.querySelector('#chatPrefWallpaper').value = ''; if (wallpaperPreview) wallpaperPreview.removeAttribute('src');
             ov.querySelector('#chatWallpaperHint').textContent = '已选择内置背景「' + this.textContent.trim() + '」';
           });
         });
@@ -624,9 +626,9 @@
         ov.querySelector('#chatPrefAiAvatar').addEventListener('change', function () { if (this.files && this.files[0]) { clearAiAvatar = false; ov.querySelector('#aiAvatarHint').textContent = '已选择头像，保存时会自动裁切压缩'; showImagePreview(this.files[0], aiAvatarPreview); } });
         ov.querySelector('#chatPrefUserAvatar').addEventListener('change', function () { if (this.files && this.files[0]) { clearUserAvatar = false; ov.querySelector('#userAvatarHint').textContent = '已选择头像，保存时会自动裁切压缩'; showImagePreview(this.files[0], userAvatarPreview); } });
         ov.querySelector('#chatWallpaperClear').addEventListener('click', function () { clearWallpaper = true; ov.querySelector('#chatPrefWallpaper').value = ''; if (wallpaperPreview) wallpaperPreview.removeAttribute('src'); ov.querySelector('#chatWallpaperHint').textContent = '保存后清除当前聊天背景'; });
-        ov.querySelector('#bubbleWallpaperClear').addEventListener('click', function () { clearBubbleWallpaper = true; ov.querySelector('#chatPrefBubbleWallpaper').value = ''; ov.querySelector('#bubbleWallpaperHint').textContent = '保存后清除当前气泡图片'; });
+        ov.querySelector('#bubbleWallpaperClear').addEventListener('click', function () { clearBubbleWallpaper = true; ov.querySelector('#chatPrefBubbleWallpaper').value = ''; if (bubbleWallpaperPreview) bubbleWallpaperPreview.removeAttribute('src'); ov.querySelector('#bubbleWallpaperHint').textContent = '保存后清除当前气泡图片'; });
         ov.querySelector('#chatPrefWallpaper').addEventListener('change', function () { if (this.files && this.files[0]) { clearWallpaper = false; ov.querySelector('#chatWallpaperHint').textContent = '已选择新背景，保存时会自动压缩'; showImagePreview(this.files[0], wallpaperPreview); } });
-        ov.querySelector('#chatPrefBubbleWallpaper').addEventListener('change', function () { if (this.files && this.files[0]) { clearBubbleWallpaper = false; ov.querySelector('#bubbleWallpaperHint').textContent = '已选择新气泡图片，保存时会自动压缩'; } });
+        ov.querySelector('#chatPrefBubbleWallpaper').addEventListener('change', function () { if (this.files && this.files[0]) { clearBubbleWallpaper = false; ov.querySelector('#bubbleWallpaperHint').textContent = '已选择新气泡图片，保存时会自动压缩'; showImagePreview(this.files[0], bubbleWallpaperPreview); } });
         ov.querySelector('#chatPrefSave').addEventListener('click', async function () {
           var saveBtn = ov.querySelector('#chatPrefSave');
           saveBtn.disabled = true; saveBtn.textContent = '正在保存装扮…';
