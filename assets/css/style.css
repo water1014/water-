@@ -3313,3 +3313,31 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .chat-table-wrap table{font-size:9px}
   .app-chat .chat-table-wrap th,.app-chat .chat-table-wrap td{padding:6px 7px}
 }
+
+
+/* 30 · CHAT LINKS · readable, restrained and keyboard-visible */
+.assistant-flow a,
+.message-content a,
+.reason-body a,
+.tool-call-details a {
+  color: var(--accent, #527f91);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 42%, transparent);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+  transition: text-decoration-color .16s ease, opacity .16s ease;
+}
+.assistant-flow a:hover,
+.message-content a:hover,
+.reason-body a:hover,
+.tool-call-details a:hover {
+  text-decoration-color: currentColor;
+}
+.assistant-flow a:focus-visible,
+.message-content a:focus-visible,
+.reason-body a:focus-visible,
+.tool-call-details a:focus-visible {
+  outline: 2px solid var(--accent, #527f91);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
