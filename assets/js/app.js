@@ -1361,7 +1361,9 @@
     if (!streamEl && raw) {
       try {
         var o = JSON.parse(raw.trim());
-        var c = o.choices && o.choices[0] && ((o.choices[0].message && o.choices[0].message.content) || (o.choices[0].delta && o.choices[0].delta.content));
+        var rawMessage = o.choices && o.choices[0] && o.choices[0].message;
+        if (rawMessage && Array.isArray(rawMessage.tool_calls)) streamToolCalls = rawMessage.tool_calls.map(function (t) { return { id: t.id || '', name: t.function && t.function.name || 'tool', arguments: t.function && t.function.arguments || '', status: 'returned' }; });
+        var c = o.choices && o.choices[0] && ((rawMessage && rawMessage.content) || (o.choices[0].delta && o.choices[0].delta.content));
         if (typeof c === 'string' && c) pushDelta(c);
       } catch (e5) { /* noop */ }
     }
