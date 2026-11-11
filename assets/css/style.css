@@ -3096,3 +3096,81 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .reason-bar,.app-chat .tool-call-toggle,.app-chat .msg-actions button{transition:none}
 }
 
+
+/* 30 · CHAT MARKDOWN TYPOGRAPHY · readable hierarchy for assistant answers */
+.app-chat .msg.ai .bubble p,
+.app-chat .msg.ai .bubble-piece p{margin:0 0 8px}
+.app-chat .msg.ai .bubble p:last-child,
+.app-chat .msg.ai .bubble-piece p:last-child{margin-bottom:0}
+.app-chat .msg.ai .bubble h1,
+.app-chat .msg.ai .bubble h2,
+.app-chat .msg.ai .bubble h3,
+.app-chat .msg.ai .bubble h4,
+.app-chat .msg.ai .bubble-piece h1,
+.app-chat .msg.ai .bubble-piece h2,
+.app-chat .msg.ai .bubble-piece h3,
+.app-chat .msg.ai .bubble-piece h4{
+  margin:3px 0 8px;color:var(--ink);font-weight:700;line-height:1.4;letter-spacing:-.015em
+}
+.app-chat .msg.ai .bubble h1,.app-chat .msg.ai .bubble-piece h1{font-size:17px}
+.app-chat .msg.ai .bubble h2,.app-chat .msg.ai .bubble-piece h2{font-size:15px}
+.app-chat .msg.ai .bubble h3,.app-chat .msg.ai .bubble-piece h3{font-size:14px}
+.app-chat .msg.ai .bubble h4,.app-chat .msg.ai .bubble-piece h4{font-size:13px}
+.app-chat .msg.ai .bubble strong,
+.app-chat .msg.ai .bubble-piece strong{font-weight:700;color:var(--ink)}
+.app-chat .msg.ai .bubble em,
+.app-chat .msg.ai .bubble-piece em{font-style:italic}
+.app-chat .msg.ai .bubble del,
+.app-chat .msg.ai .bubble-piece del{opacity:.68}
+.app-chat .msg.ai .bubble code,
+.app-chat .msg.ai .bubble-piece code{
+  padding:2px 5px;border:1px solid rgba(108,163,181,.12);border-radius:5px;
+  background:rgba(115,174,193,.085);color:var(--accent-deep);
+  font: .88em/1.55 var(--mono);overflow-wrap:anywhere
+}
+.app-chat .msg.ai .bubble pre,
+.app-chat .msg.ai .bubble-piece pre{
+  max-width:100%;margin:8px 0;padding:10px 11px;overflow:auto;
+  border:1px solid rgba(108,163,181,.14);border-radius:10px;
+  background:rgba(35,65,77,.045);color:var(--ink);
+  font:10px/1.65 var(--mono);tab-size:2;-webkit-overflow-scrolling:touch
+}
+.app-chat .msg.ai .bubble pre code,
+.app-chat .msg.ai .bubble-piece pre code{
+  padding:0;border:0;border-radius:0;background:transparent;color:inherit;
+  font:inherit;white-space:pre;overflow-wrap:normal
+}
+.app-chat .msg.ai .bubble ul,
+.app-chat .msg.ai .bubble ol,
+.app-chat .msg.ai .bubble-piece ul,
+.app-chat .msg.ai .bubble-piece ol{
+  margin:5px 0 7px;padding-left:20px
+}
+.app-chat .msg.ai .bubble li,
+.app-chat .msg.ai .bubble-piece li{padding-left:2px;margin:3px 0}
+.app-chat .msg.ai .bubble li::marker,
+.app-chat .msg.ai .bubble-piece li::marker{color:var(--accent-deep)}
+.app-chat .msg.ai .bubble blockquote,
+.app-chat .msg.ai .bubble-piece blockquote{
+  margin:6px 0;padding:2px 0 2px 10px;
+  border-left:2px solid rgba(108,163,181,.36);color:var(--ink-sub)
+}
+.app-chat .msg.ai .bubble mark.mark-hit,
+.app-chat .msg.ai .bubble-piece mark.mark-hit{
+  padding:0 2px;border-radius:3px;background:rgba(239,204,119,.42);color:inherit
+}
+[data-theme="night"] .app-chat .msg.ai .bubble pre,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece pre{
+  background:rgba(0,0,0,.16);border-color:rgba(185,220,232,.13)
+}
+[data-theme="night"] .app-chat .msg.ai .bubble code,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece code{
+  background:rgba(143,190,204,.1);border-color:rgba(185,220,232,.12);color:#b9dce8
+}
+[data-theme="rose"] .app-chat .msg.ai .bubble code,
+[data-theme="rose"] .app-chat .msg.ai .bubble-piece code{
+  background:rgba(217,158,188,.09);border-color:rgba(217,158,188,.15);color:#a47a8e
+}
+@media(max-width:380px){
+  .app-chat .msg.ai .bubble pre,.app-chat .msg.ai .bubble-piece pre{padding:8px 9px;font-size:9px}
+}
