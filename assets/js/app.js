@@ -307,34 +307,58 @@
   function renderChatSidebar() {
     var host = $('chatSessionList');
     if (!host) return;
-    var query = chatSidebarQuery.trim().toLowerCase();
+    var query = chatSidebarQuery.trim();
+    var lowQuery = query.toLowerCase();
     var sorted = chatSessions.slice().sort(function (a, b) { return Number(b.pinned === true) - Number(a.pinned === true) || b.updatedAt - a.updatedAt; });
+    function messageText(message) {
+      return String(message.content || (message.image ? '照片' : message.sticker ? '贴纸' : message.voice ? '语音' : ''));
+    }
+    function highlightPreview(value) {
+      var raw = String(value || '');
+      if (!lowQuery) return esc(raw);
+      var low = raw.toLowerCase(), at = low.indexOf(lowQuery);
+      if (at < 0) return esc(raw);
+      var from = Math.max(0, at - 22), to = Math.min(raw.length, at + query.length + 34);
+      var before = from ? '…' : '', after = to < raw.length ? '…' : '';
+      return before + esc(raw.slice(from, at)) + '<mark class="chat-session-hit">' + esc(raw.slice(at, at + query.length)) + '</mark>' + esc(raw.slice(at + query.length, to)) + after;
+    }
     var visible = sorted.filter(function (item) {
       if (chatSidebarFilter === 'archived' ? !item.archived : item.archived) return false;
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息';
-      var transcript = (item.messages || []).map(function (m) { return String(m.content || ''); }).join(' ');
-      return !query || (String(item.title || '') + ' ' + preview + ' ' + transcript).toLowerCase().indexOf(query) >= 0;
+      var preview = last ? messageText(last).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息';
+      var transcript = (item.messages || []).map(messageText).join(' ');
+      return !lowQuery || (String(item.title || '') + ' ' + preview + ' ' + transcript).toLowerCase().indexOf(lowQuery) >= 0;
     });
     host.innerHTML = visible.length ? visible.map(function (item) {
-      var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
-      return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + (item.pinned ? ' is-pinned' : '') + '">' +
+      var messages = item.messages || [];
+      var last = messages.length ? messages[messages.length - 1] : null;
+      var preview = last ? messageText(last).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      var hitCount = lowQuery ? messages.filter(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; }).length : 0;
+      var title = esc(item.title || '未命名窗口');
+      var previewMarkup = lowQuery ? highlightPreview(preview) : esc(preview);
+      if (lowQuery && preview.toLowerCase().indexOf(lowQuery) < 0) {
+        var hitMessage = messages.find(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; });
+        if (hitMessage) previewMarkup = highlightPreview(messageText(hitMessage).replace(/\\s+/g, ' '));
+        else if (String(item.title || '').toLowerCase().indexOf(lowQuery) >= 0) previewMarkup = '窗口名称匹配';
+      }
+      return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + (item.pinned ? ' is-pinned' : '') + (lowQuery ? ' has-search-hit' : '') + '">' +
         '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
-        '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small>' + (item.id === activeChatId ? '<i class="chat-session-current">当前窗口</i>' : '') + '</span>' +
+        '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + (lowQuery && String(item.title || '').toLowerCase().indexOf(lowQuery) >= 0 ? highlightPreview(item.title) : title) + '</b><small>' + previewMarkup + '</small>' +
+        (lowQuery ? '<i class="chat-session-hit-count">命中 ' + hitCount + ' 条消息</i>' : '') +
+        (item.id === activeChatId ? '<i class="chat-session-current">当前窗口</i>' : '') + '</span>' +
         '<time>' + hhmm(item.updatedAt) + '</time></button>' +
         '<div class="chat-session-tools">' +
         '<button type="button" data-chat-pin="' + esc(item.id) + '" aria-label="' + (item.pinned ? '取消置顶' : '置顶') + '">' + (item.pinned ? '★' : '☆') + '</button>' +
         '<button type="button" data-chat-archive="' + esc(item.id) + '" aria-label="' + (item.archived ? '取消归档' : '归档') + '">' + (item.archived ? '↶' : '⌑') + '</button>' +
-        (chatSessions.length > 1 ? '<button class="chat-session-delete" type="button" data-chat-delete="' + esc(item.id) + '" aria-label="删除' + esc(item.title) + '">×</button>' : '') +
+        (chatSessions.length > 1 ? '<button class="chat-session-delete" type="button" data-chat-delete="' + esc(item.title || '聊天窗口') + '" data-chat-id="' + esc(item.id) + '" aria-label="删除' + esc(item.title || '聊天窗口') + '">×</button>' : '') +
         '</div>' +
         '</div>';
-    }).join('') : '<p class="chat-session-empty">没有找到这段对话</p>';
+    }).join('') : '<p class="chat-session-empty">' + (lowQuery ? '没有找到匹配的聊天内容' : '这里还没有对话') + '</p>';
     var count = $('chatSessionCount');
     var totalInFilter = chatSessions.filter(function (item) { return chatSidebarFilter === 'archived' ? item.archived : !item.archived; }).length;
     if (count) count.textContent = String(visible.length).padStart(2, '0') + ' / ' + String(totalInFilter).padStart(2, '0') + ' WINDOWS';
     var sectionTitle = $('chatSessionSectionTitle');
-    if (sectionTitle) sectionTitle.textContent = chatSidebarFilter === 'archived' ? '归档的对话' : '最近的对话';
+    if (sectionTitle) sectionTitle.textContent = lowQuery ? '搜索结果' : (chatSidebarFilter === 'archived' ? '归档的对话' : '最近的对话');
     Array.prototype.forEach.call(document.querySelectorAll('[data-chat-filter]'), function (button) {
       var active = button.getAttribute('data-chat-filter') === chatSidebarFilter;
       button.classList.toggle('is-active', active);
@@ -3517,7 +3541,7 @@
     var archive = e.target.closest('[data-chat-archive]');
     if (archive) { var archiveItem = chatSessions.find(function (item) { return item.id === archive.getAttribute('data-chat-archive'); }); if (archiveItem) updateChatSessionFlag(archiveItem.id, 'archived', !archiveItem.archived); return; }
     var del = e.target.closest('[data-chat-delete]');
-    if (del) { deleteChatSession(del.getAttribute('data-chat-delete')); return; }
+    if (del) { deleteChatSession(del.getAttribute('data-chat-id') || del.getAttribute('data-chat-delete')); return; }
     var pick = e.target.closest('[data-chat-switch]');
     if (pick) switchChatSession(pick.getAttribute('data-chat-switch'));
   });
