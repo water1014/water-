@@ -3884,3 +3884,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .chat-date-nav{min-height:38px;gap:6px;padding:4px 10px}
   .chat-date-nav input{width:116px}
 }
+
+
+/* 43 · SEARCH STEPPER · touch-friendly previous/next controls */
+.app-chat .search-step{
+  flex:0 0 30px;width:30px;height:30px;border:1px solid var(--line-soft);
+  border-radius:10px;background:var(--surface-soft);color:var(--ink-sub);
+  font-size:15px;line-height:1
+}
+.app-chat .search-step:disabled{opacity:.32}
+.app-chat .search-step:not(:disabled):active{background:var(--surface-strong);transform:scale(.96)}
