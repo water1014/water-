@@ -3275,3 +3275,41 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 [data-theme="night"] .app-chat .tool-call-arguments{background:rgba(0,0,0,.14);border-color:rgba(185,220,232,.12)}
 [data-theme="rose"] .app-chat .tool-call-arguments{background:rgba(217,158,188,.045);border-color:rgba(217,158,188,.13)}
 @media(max-width:380px){.app-chat .tool-call-arguments{max-height:140px;padding:6px 7px;font-size:8px}}
+
+
+/* 34 · CHAT TABLES · compact horizontal comparison tables */
+.app-chat .chat-table-wrap{
+  width:100%;max-width:100%;margin:8px 0;overflow-x:auto;
+  border:1px solid rgba(108,163,181,.14);border-radius:9px;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain
+}
+.app-chat .chat-table-wrap table{
+  width:100%;min-width:260px;border-collapse:separate;border-spacing:0;
+  font-size:10px;line-height:1.55
+}
+.app-chat .chat-table-wrap th,
+.app-chat .chat-table-wrap td{
+  padding:7px 9px;border-right:1px solid rgba(108,163,181,.1);
+  border-bottom:1px solid rgba(108,163,181,.1);vertical-align:top;
+  overflow-wrap:anywhere
+}
+.app-chat .chat-table-wrap th:last-child,
+.app-chat .chat-table-wrap td:last-child{border-right:0}
+.app-chat .chat-table-wrap tbody tr:last-child td{border-bottom:0}
+.app-chat .chat-table-wrap th{
+  background:rgba(115,174,193,.085);color:var(--ink);
+  font-weight:700;white-space:nowrap
+}
+.app-chat .chat-table-wrap td{color:var(--ink-sub)}
+[data-theme="night"] .app-chat .chat-table-wrap{border-color:rgba(185,220,232,.14)}
+[data-theme="night"] .app-chat .chat-table-wrap th,
+[data-theme="night"] .app-chat .chat-table-wrap td{border-color:rgba(185,220,232,.1)}
+[data-theme="night"] .app-chat .chat-table-wrap th{background:rgba(143,190,204,.1)}
+[data-theme="rose"] .app-chat .chat-table-wrap{border-color:rgba(217,158,188,.16)}
+[data-theme="rose"] .app-chat .chat-table-wrap th,
+[data-theme="rose"] .app-chat .chat-table-wrap td{border-color:rgba(217,158,188,.12)}
+[data-theme="rose"] .app-chat .chat-table-wrap th{background:rgba(217,158,188,.09)}
+@media(max-width:380px){
+  .app-chat .chat-table-wrap table{font-size:9px}
+  .app-chat .chat-table-wrap th,.app-chat .chat-table-wrap td{padding:6px 7px}
+}
