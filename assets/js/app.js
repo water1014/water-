@@ -334,6 +334,7 @@
       var last = messages.length ? messages[messages.length - 1] : null;
       var preview = last ? messageText(last).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       var hitCount = lowQuery ? messages.filter(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; }).length : 0;
+      var firstHitIndex = lowQuery ? messages.findIndex(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; }) : -1;
       var title = esc(item.title || '未命名窗口');
       var previewMarkup = lowQuery ? highlightPreview(preview) : esc(preview);
       if (lowQuery && preview.toLowerCase().indexOf(lowQuery) < 0) {
@@ -342,7 +343,7 @@
         else if (String(item.title || '').toLowerCase().indexOf(lowQuery) >= 0) previewMarkup = '窗口名称匹配';
       }
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + (item.pinned ? ' is-pinned' : '') + (lowQuery ? ' has-search-hit' : '') + '">' +
-        '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
+        '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '" data-chat-hit-index="' + firstHitIndex + '">' +
         '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + (lowQuery && String(item.title || '').toLowerCase().indexOf(lowQuery) >= 0 ? highlightPreview(item.title) : title) + '</b><small>' + previewMarkup + '</small>' +
         (lowQuery ? '<i class="chat-session-hit-count">命中 ' + hitCount + ' 条消息</i>' : '') +
         (item.id === activeChatId ? '<i class="chat-session-current">当前窗口</i>' : '') + '</span>' +
@@ -1318,6 +1319,23 @@
     renderQuotePreview();
     msgInput.focus();
     toast('已引用这句话');
+  }
+
+  function jumpToChatMessage(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= history.length) return;
+    requestAnimationFrame(function () {
+      var target = msgList.querySelector('.msg[data-index="' + index + '"]');
+      if (!target) return;
+      var top = target.offsetTop - msgList.offsetTop - Math.max(24, chatScroll.clientHeight * 0.22);
+      if (chatScroll.scrollTo) {
+        try { chatScroll.scrollTo({ top: Math.max(0, top), behavior: REDUCE ? 'auto' : 'smooth' }); }
+        catch (e) { chatScroll.scrollTop = Math.max(0, top); }
+      } else chatScroll.scrollTop = Math.max(0, top);
+      target.classList.remove('search-jump-focus');
+      void target.offsetWidth;
+      target.classList.add('search-jump-focus');
+      setTimeout(function () { target.classList.remove('search-jump-focus'); }, 1800);
+    });
   }
 
   function renderChat() {
@@ -3543,7 +3561,15 @@
     var del = e.target.closest('[data-chat-delete]');
     if (del) { deleteChatSession(del.getAttribute('data-chat-id') || del.getAttribute('data-chat-delete')); return; }
     var pick = e.target.closest('[data-chat-switch]');
-    if (pick) switchChatSession(pick.getAttribute('data-chat-switch'));
+    if (pick) {
+      var targetChatId = pick.getAttribute('data-chat-switch');
+      var hitIndex = Number(pick.getAttribute('data-chat-hit-index'));
+      switchChatSession(targetChatId);
+      if (Number.isInteger(hitIndex) && hitIndex >= 0) {
+        if (targetChatId === activeChatId) jumpToChatMessage(hitIndex);
+        else requestAnimationFrame(function () { jumpToChatMessage(hitIndex); });
+      }
+    }
   });
   document.querySelectorAll('[data-chat-filter]').forEach(function (button) {
     button.addEventListener('click', function () { chatSidebarFilter = this.getAttribute('data-chat-filter') === 'archived' ? 'archived' : 'active'; renderChatSidebar(); });
