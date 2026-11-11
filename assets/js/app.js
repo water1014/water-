@@ -529,7 +529,7 @@
     if (!host) return;
     var settings = item && item.settings ? item.settings : {};
     var skins = ['classic', 'qq-blue', 'mint', 'rose', 'glass'];
-    var skin = skins.indexOf(settings.bubbleSkin) >= 0 ? settings.bubbleSkin : 'classic';
+    var skin = skins.indexOf(settings.bubbleSkin) >= 0 ? settings.bubbleSkin : 'qq-blue';
     host.setAttribute('data-bubble-skin', skin);
     var wallpaper = typeof settings.chatWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.chatWallpaper) ? settings.chatWallpaper : '';
     var bubbleImage = typeof settings.bubbleWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.bubbleWallpaper) ? settings.bubbleWallpaper : '';
@@ -553,7 +553,7 @@
     var reasoning = chatSetting('showReasoning', config.showReasoning !== false);
     var times = chatSetting('showTimestamps', true);
     var toolsVisible = chatSetting('showToolCalls', true);
-    var bubbleSkin = chatSetting('bubbleSkin', 'classic');
+    var bubbleSkin = chatSetting('bubbleSkin', 'qq-blue');
     var hasWallpaper = !!chatSetting('chatWallpaper', '');
     var hasBubbleWallpaper = !!chatSetting('bubbleWallpaper', '');
     openSheet('<div class="panel-head"><div><p class="chat-settings-kicker">THIS WINDOW · CHAT SETTINGS</p><h2 class="panel-title">当前窗口设置</h2></div><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div>' +
