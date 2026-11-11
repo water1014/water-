@@ -3502,3 +3502,21 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   border-left-color:rgba(180,139,145,.48);
   background:rgba(180,139,145,.05);
 }
+
+
+/* Streaming text keeps paragraph breaks visible before final Markdown rendering. */
+.app-chat .msg.ai .bubble .stream-text {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  line-height:1.72;
+}
+.app-chat .msg.ai .bubble:has(.stream-text) {
+  min-width:2.5em;
+}
+@media (prefers-reduced-motion:reduce) {
+  .app-chat .caret,
+  .app-chat .typing-bubble i {
+    animation:none!important;
+  }
+}
