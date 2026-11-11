@@ -2190,6 +2190,8 @@
       searchCursor = -1;
       $('searchInput').value = '';
       $('searchCount').textContent = '';
+      if ($('searchPrev')) $('searchPrev').disabled = true;
+      if ($('searchNext')) $('searchNext').disabled = true;
       renderChat();
     }
   }
@@ -2202,7 +2204,9 @@
       var low = searchTerm.toLowerCase();
       history.forEach(function (m) { if (String(m.content || '').toLowerCase().indexOf(low) >= 0) n++; });
     }
-    $('searchCount').textContent = searchTerm ? (n ? n + ' 条 · 回车跳转' : '没有') : '';
+    $('searchCount').textContent = searchTerm ? (n ? n + ' 条' : '没有') : '';
+    if ($('searchPrev')) $('searchPrev').disabled = !n;
+    if ($('searchNext')) $('searchNext').disabled = !n;
   }
   function cycleSearchMatch(direction) {
     if (!searchTerm) return;
@@ -2223,10 +2227,13 @@
       chatScroll.scrollTo ? chatScroll.scrollTo({ top: top, behavior: REDUCE ? 'auto' : 'smooth' }) : (chatScroll.scrollTop = top);
     }
     $('searchCount').textContent = (searchCursor + 1) + ' / ' + matches.length;
+    jumpToChatMessage(targetIndex);
   }
   if ($('chatSearch')) $('chatSearch').addEventListener('click', function () { setSearch(!searchOpen); });
   $('searchClose').addEventListener('click', function () { setSearch(false); });
   $('searchInput').addEventListener('input', function () { runSearch(this.value); });
+  if ($('searchPrev')) $('searchPrev').addEventListener('click', function () { cycleSearchMatch(-1); });
+  if ($('searchNext')) $('searchNext').addEventListener('click', function () { cycleSearchMatch(1); });
   $('searchInput').addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { e.preventDefault(); setSearch(false); }
     else if (e.key === 'Enter') { e.preventDefault(); cycleSearchMatch(e.shiftKey ? -1 : 1); }
