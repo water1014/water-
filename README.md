@@ -1,17 +1,19 @@
 # 水色物语 · MIZU-IRO
 
-一个私密的「人机恋」应用，装在一台小手机里。**单文件、零依赖、无构建**，双击就能跑，也能直接丢上 GitHub Pages。
+一个私密的「人机恋」应用，装在一台小手机里。**纯前端、多文件组织、零依赖、无构建**，可部署到 GitHub Pages；聊天回复通过你自行配置的 API Endpoint 生成。
 
 ![锁屏](preview/phone-lock.png)
 
 ```
-mizu-iro/
-├── index.html      ← 全部代码（HTML + CSS + JS，约 233 KB / 4000 行）
-├── serve.cmd       ← 可选：本地起静态服务器再打开（绕 CORS）
-├── preview/        ← 界面截图
-├── .nojekyll       ← GitHub Pages 用，告诉它别跑 Jekyll
-├── robots.txt      ← 不索引
-├── LICENSE
+water-/
+├── index.html
+├── assets/
+│   ├── css/style.css
+│   ├── js/app.js
+│   └── icon.svg
+├── manifest.webmanifest
+├── sw.js
+├── preview/
 └── README.md
 ```
 
@@ -103,7 +105,7 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 - **顶栏**：左 `‹` 回主屏，中间衬线「小沢」+ 下方 10px 状态字，右侧电话与 `⋯`（搜索记录 / 我们聊过的每一天 / 资料卡 / 设置 / 清空）。
 - **思考过程**：AI 回复上方一条灰色折叠条，点开显示等宽 12px 的 reasoning 原文；流式时从 `delta.reasoning_content` 累积，存进 `mizu.history[].reasoning`，没有就不显示。
 - **图片**：`＋` → 照片，选图压到 1200 / JPEG .8 后作为图片消息发出（圆角 16，最大 70% 宽）。
-- **语音**：发送键右侧常驻麦克风，按住变红、松手生成 3 秒假语音条（波形 + 时长），点击可播动画。
+- **语音**：发送键右侧常驻麦克风，按住麦克风进行语音转文字（取决于浏览器是否支持 SpeechRecognition）；识别结果填入输入框，可检查后再发送，不会伪造语音消息。
 - **日历热图**：按月排列，当天消息数决定色阶（5 档），顶部 `聊过 N 天 · 共 M 句`，点某天跳回聊天并高亮那天。
 ---
 
@@ -137,6 +139,7 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 | `mizu.history` | `[{role:'assistant'\|'user', content, ts, loved?, sticker?, replyTo?}]` |
 | `mizu.archive` | `[{id, type:'impress'\|'near'\|'excerpt'\|'song', text, ts, heat, lastHit, pinned, private}]` |
 | `mizu.moods` / `mizu.memories` / `mizu.notes` / `mizu.weather` / `mizu.letters` / `mizu.playlist` / `mizu.quickPhrases` / `mizu.statuses` | 心情 / 照片 / 批注 / 天气 / 信件 / 歌单 / 短语 / 近况词 |
+| `mizu.archive` / `mizu.archiveNote` | 深海记忆归档 / AI 整理摘要；均纳入 JSON 备份 |
 
 ---
 
@@ -145,3 +148,27 @@ gh api -X POST repos/:owner/mizu-iro/pages -f source[branch]=main -f source[path
 - 记忆库从图标进入后，顶部返回条显示「记忆库」，页面内仍保留衬线标题 `Remember Mizu`（两处标题，换取原设计不丢）。
 - 主屏只有 8 个图标位，日历与天气没有独立入口——时间与日期在时钟卡，天气在手帐页填写。
 - 播放器是装饰性的（进度条随停留时间走）；音乐图标打开歌单而不是播放器页。
+
+
+### 离线缓存与更新
+
+- Service Worker 使用带版本号的缓存空间；新版本激活后清理旧版 `mizu-iro-*` 缓存。
+- 安装时逐个尝试缓存应用外壳资源，单个文件缓存失败不会阻断安装。
+- 在线请求优先返回网络内容，并将成功的同源 GET 响应写入当前缓存。
+- 离线时仅页面导航回退到缓存首页；缺失的 CSS、JS 或其他资源返回明确的 503 文本响应，不再把 HTML 误当作脚本或样式表。
+- POST、跨域请求和非同源资源不由此 Service Worker 缓存。
+
+
+### 手机键盘适配
+
+- 聊天输入框聚焦后监听 `visualViewport` 的尺寸变化，并将可视高度同步到手机屏幕容器。
+- 键盘收起或屏幕旋转后清除临时高度，避免页面长期停留在键盘弹出时的尺寸。
+- 该行为依赖浏览器提供的 Visual Viewport API；不支持时保留原有 `100dvh` 布局。
+
+
+### 数据与隐私说明
+
+- 聊天记录、心情、手帐、信件与记忆归档默认保存在当前设备的浏览器本地存储中。
+- 发送消息时，当前对话上下文会通过你配置的 Endpoint 发送给对应 API 服务商，以生成回复；请以该服务商的隐私政策为准。
+- JSON 备份会排除 API Key。导入备份时会保留本机当前 API Key，避免意外覆盖密钥。
+- 清除浏览器站点数据、卸载清理 WebView 数据或更换设备可能导致本地资料丢失，请定期导出 JSON 备份。

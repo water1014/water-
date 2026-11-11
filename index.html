@@ -205,9 +205,29 @@ try{
 
 <!-- ================= 聊天 ================= -->
     <section id="view-chat" class="view app app-chat" data-app="chat" aria-label="聊天">
+      <div class="chat-sidebar-scrim" id="chatSidebarScrim" hidden>
+        <aside class="chat-sidebar" id="chatSidebar" role="dialog" aria-modal="true" aria-label="聊天窗口">
+          <div class="chat-sidebar-top">
+            <div><span class="chat-sidebar-kicker">MESSAGES · WINDOWS</span><h2>聊天窗口</h2><p>把每一段对话，放在自己的小窗里</p></div>
+            <button class="icon-btn" id="chatSidebarClose" type="button" aria-label="关闭侧栏">×</button>
+          </div>
+          <button class="chat-new-window" id="chatNewWindow" type="button"><span>＋</span><span><b>开启新窗口</b><small>一段新的聊天，从这里开始</small></span></button>
+          <label class="chat-session-search"><span aria-hidden="true">⌕</span><input id="chatSessionSearch" type="search" maxlength="80" placeholder="搜索聊天窗口…" aria-label="搜索聊天窗口"></label>
+          <div class="chat-session-filters" role="tablist" aria-label="聊天窗口分类">
+            <button type="button" class="is-active" data-chat-filter="active" role="tab" aria-selected="true">最近</button>
+            <button type="button" data-chat-filter="archived" role="tab" aria-selected="false">已归档</button>
+          </div>
+          <div class="chat-session-caption"><span id="chatSessionSectionTitle">最近的对话</span><small id="chatSessionCount">01 WINDOW</small></div>
+          <div class="chat-session-list" id="chatSessionList"></div>
+          <div class="chat-sidebar-bottom">
+            <button type="button" id="chatSidebarSettings"><span>⚙</span> 当前窗口设置</button>
+            <button type="button" id="chatSidebarHome"><span>⌂</span> 返回主屏</button>
+          </div>
+        </aside>
+      </div>
       <header class="chat-head">
-        <button class="icon-btn chat-back" id="chatMenu" type="button" aria-label="返回主屏">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        <button class="icon-btn chat-back" id="chatMenu" type="button" aria-label="打开聊天窗口侧栏" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
         </button>
         <button class="chat-title" id="chatTitleBtn" type="button" aria-label="恋人资料卡">
           <span class="chat-title-name">小沢</span>
@@ -217,6 +237,7 @@ try{
           <button class="icon-btn" id="chatCall" type="button" aria-label="打电话">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5L16 13l4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4 6.2 2 2 0 0 1 6.5 4z"/></svg>
           </button>
+          <button class="chat-select-trigger" id="chatSelectMessages" type="button" aria-pressed="false">选择</button>
           <button class="icon-btn" id="chatMore" type="button" aria-label="更多">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="18.5" cy="12" r="1.1" fill="currentColor"/></svg>
           </button>
@@ -227,9 +248,18 @@ try{
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
         <input id="searchInput" type="search" placeholder="搜一句话…" aria-label="搜索消息">
         <span class="search-count" id="searchCount"></span>
+        <button class="search-step" id="searchPrev" type="button" aria-label="上一条匹配" disabled>↑</button>
+        <button class="search-step" id="searchNext" type="button" aria-label="下一条匹配" disabled>↓</button>
         <button class="icon-btn" id="searchClose" type="button" aria-label="关闭搜索">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
+      </div>
+
+      <div class="chat-date-nav" id="chatDateNav" aria-label="按日期浏览聊天">
+        <button type="button" id="chatDatePrev" aria-label="更早一天">‹</button>
+        <label for="chatDatePicker"><span>回看日期</span><input id="chatDatePicker" type="date" aria-label="选择聊天日期"></label>
+        <button type="button" id="chatDateNext" aria-label="更晚一天">›</button>
+        <button type="button" id="chatDateLatest">最新</button>
       </div>
 
       <div class="chat-scroll" id="chatScroll">
@@ -256,6 +286,7 @@ try{
           <div class="chips-scroll" id="chipsRow"></div>
         </div>
 
+        <div class="quote-preview" id="quotePreview" hidden></div>
         <div class="composer-bar">
           <button class="icon-btn sticker-btn" id="openStickers" type="button" aria-label="贴一张贴纸">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v5.5L13.5 20H8a4 4 0 0 1-4-4z"/><path d="M20 13.5h-3.5a3 3 0 0 0-3 3V20"/></svg>
@@ -309,6 +340,7 @@ try{
           <input type="date" id="journalDate" class="date-chip" aria-label="选择日期">
           <button class="icon-btn" id="jNext" type="button" aria-label="后一天"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
+        <section class="journal-calendar" id="journalCalendar" aria-label="回忆日历"></section>
         <article class="journal-page" id="journalPage"></article>
       </div>
     </section>
@@ -404,6 +436,19 @@ try{
             </button>
           </div>
 
+          <div class="mt-search-tools">
+            <label class="mt-search-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg>
+              <input id="archiveSearch" type="search" maxlength="120" placeholder="搜索记忆里的关键词" aria-label="搜索记忆">
+            </label>
+            <select id="archiveFilter" class="mt-filter-select" aria-label="筛选记忆">
+              <option value="all">全部记忆</option>
+              <option value="pinned">只看锚点</option>
+              <option value="recent">最近 30 天</option>
+              <option value="sleep">沉睡记忆</option>
+            </select>
+          </div>
+
           <section class="mt-sec is-open" data-sec="anchors">
             <button class="mt-sec-head" type="button">
               <span class="mt-caret" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9h12l-6 7z"/></svg></span>
@@ -439,6 +484,9 @@ try{
     <section id="view-more" class="view app" data-app="more" aria-label="更多">
       <div class="page-shell">
         <div class="page-head">
+          <button class="back-btn" data-back="1" type="button" aria-label="返回">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
           <div class="page-head-txt"><p class="page-kicker">MORE</p><h2 class="page-title">更多</h2></div>
         </div>
         <div class="card">
@@ -449,6 +497,19 @@ try{
             <button class="theme-btn" data-theme-name="night" type="button"><span class="theme-dot night"></span>夜湖</button>
           </div>
         </div>
+        <section class="more-backup" aria-labelledby="moreBackupTitle">
+          <div class="more-backup-head">
+            <span class="more-backup-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+            </span>
+            <span><b id="moreBackupTitle">把共同生活好好收起来</b><small>LOCAL DATA · 本地数据管理</small></span>
+          </div>
+          <p>回忆保存在当前设备。定期导出一份备份，换手机或清理浏览器前就多一份安心。</p>
+          <div class="more-backup-actions">
+            <button id="moreExportBtn" type="button">导出备份</button>
+            <button id="moreImportBtn" type="button">恢复备份</button>
+          </div>
+        </section>
         <button class="hub-row" id="moreAbout" type="button">
           <span class="hub-row-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8.2v.4"/></svg></span>
           <span class="hub-row-txt">About · 关于</span>
@@ -520,15 +581,33 @@ try{
     </div>
 
     <div class="settings-body">
+      <div class="settings-section-title"><span>连接与模型</span><small>CONNECTION · API</small></div>
       <label class="field"><span class="field-label">API Endpoint · 接口地址</span>
-        <input id="setEndpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions"></label>
+        <input id="setEndpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions">
+        <span class="field-hint">填写服务商提供的完整接口地址。若提示浏览器无法读取响应，通常需要服务端开放 CORS 跨域访问；仅修改网页端无法绕过服务商限制。</span></label>
       <label class="field"><span class="field-label">API Key</span>
-        <input id="setKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…"></label>
+        <div class="key-field-row"><input id="setKey" type="password" spellcheck="off" autocomplete="off" placeholder="sk-…"><button class="btn-ghost" id="toggleKeyVisibility" type="button" aria-label="显示 API Key" aria-pressed="false">显示</button></div></label>
       <label class="field"><span class="field-label">Model · 模型名</span>
         <div style="display:flex;gap:8px">
           <input id="setModel" type="text" spellcheck="false" placeholder="gpt-4o-mini" style="flex:1 1 auto">
           <button class="btn-ghost" id="pullModels" type="button" style="flex:0 0 auto;padding:8px 16px">拉取</button>
         </div></label>
+      <div class="settings-section-title"><span>聊天体验</span><small>CHAT EXPERIENCE</small></div>
+      <label class="field"><span class="field-label">回复气泡排版</span>
+        <select id="setBubbleMode">
+          <option value="split">分割气泡 · 按段落拆开</option>
+          <option value="single">完整气泡 · 保持一整条</option>
+        </select>
+        <span class="field-hint">只调整聊天显示方式，不会改变原始聊天记录或发送给模型的内容。</span>
+      </label>
+      <label class="field"><span class="field-label">思考摘要显示</span>
+        <select id="setReasoningDisplay">
+          <option value="show">显示接口返回的思考摘要</option>
+          <option value="hide">隐藏思考摘要</option>
+        </select>
+        <span class="field-hint">仅显示接口实际返回的 reasoning / reasoning_content 字段。若服务商或模型没有提供，就不会凭空生成。</span>
+      </label>
+      <div class="settings-section-title"><span>共同生活</span><small>OUR LIFE</small></div>
       <label class="field"><span class="field-label">在一起的第一天</span>
         <input id="setAnniversary" type="date"></label>
 
@@ -540,9 +619,13 @@ try{
         <div class="header-rows" id="headerRows"></div>
       </div>
 
+      <label class="field"><span class="field-label">音乐服务地址 · 原版网易云播放器</span>
+        <input id="setMusicUrl" type="url" spellcheck="false" placeholder="部署后填写 HTTPS 地址（可留空）"></label>
+
       <label class="field"><span class="field-label">System Prompt · 人设</span>
         <textarea id="setSystem" rows="5" spellcheck="false"></textarea></label>
 
+      <div class="settings-section-title"><span>外观与氛围</span><small>APPEARANCE</small></div>
       <div class="field">
         <span class="field-label">外观 · THEME</span>
         <div class="theme-row" role="group" aria-label="主题">
@@ -570,6 +653,7 @@ try{
         <input id="setShell" type="checkbox" style="width:24px;height:24px;min-height:24px;padding:0;accent-color:#4FB8D4">
       </label>
 
+      <div class="settings-section-title"><span>本地数据</span><small>LOCAL DATA</small></div>
       <div class="field" style="margin-bottom:8px">
         <span class="field-label">导出回忆</span>
         <button class="btn-ghost" id="exportBtn" type="button" style="width:100%">打包成 JSON</button>
@@ -580,7 +664,7 @@ try{
 
     <div class="panel-actions">
       <button class="btn-primary" id="saveSettings" type="button">保存设置</button>
-      <button class="btn-ghost btn-danger" id="clearChat" type="button">清空聊天记录</button>
+      <button class="btn-ghost btn-danger" id="clearChat" type="button">清空当前窗口记录</button>
     </div>
   </div>
 </div>
@@ -595,9 +679,9 @@ try{
       </button>
     </div>
     <p style="font-family:var(--serif);font-size:20px;line-height:32px;color:var(--ink)">水色物语 · MIZU-IRO</p>
-    <p style="font-family:var(--mono);font-size:11px;line-height:16px;color:var(--ink-sub);margin-bottom:16px">v1.0 · single file · no dependency</p>
+    <p style="font-family:var(--mono);font-size:11px;line-height:16px;color:var(--ink-sub);margin-bottom:16px">纯前端 · 本地优先 · 无需安装依赖</p>
     <div id="aboutStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
-    <p style="font-size:11px;line-height:16px;color:var(--ink-sub);margin-top:16px">所有数据只存在这台设备的浏览器里，没有后端，也不会上传。</p>
+    <p style="font-size:11px;line-height:16px;color:var(--ink-sub);margin-top:16px">聊天内容会发送到你在设置中填写的 API 服务以生成回复；聊天记录与其他资料保存在这台设备的浏览器中。</p>
   </div>
 </div>
 
@@ -607,6 +691,9 @@ try{
     <img id="lbImg" alt="">
     <p class="lb-cap" id="lbCap"></p>
     <p class="lb-date" id="lbDate"></p>
+    <p class="lb-extra" id="lbExtra" hidden></p>
+    <p class="lb-source" id="lbSource" hidden></p>
+    <div class="lb-actions"><button id="lbFavorite" type="button">♡ 收藏</button><button id="lbEdit" type="button">编辑注记</button><button id="lbDelete" type="button">移除照片</button><button id="lbChatSource" type="button" hidden>回到聊天</button></div>
   </div>
 </div>
 
