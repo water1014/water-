@@ -3703,3 +3703,37 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     min-height:32px;
   }
 }
+
+
+/* 37 · EDIT & RESEND · make the latest prompt revisable in place */
+.app-chat .msg .msg-actions .msg-edit-btn{
+  min-width:32px;
+  min-height:30px;
+  padding:0 8px;
+  border:1px solid var(--line-soft);
+  border-radius:9px;
+  background:var(--surface-soft);
+  color:var(--ink-sub);
+  font-size:11px;
+  line-height:1;
+}
+.app-chat .msg .msg-actions .msg-edit-btn:active{
+  background:var(--surface);
+  transform:translateY(1px);
+}
+.app-chat .quote-preview .edit-preview-copy span{
+  color:var(--accent-strong,var(--ink-sub));
+  font-weight:650;
+}
+.app-chat .quote-preview .edit-preview-copy p{
+  opacity:.78;
+}
+.app-chat .quote-preview .edit-cancel{
+  flex:0 0 25px;
+}
+@media(hover:none){
+  .app-chat .msg .msg-actions .msg-edit-btn{
+    min-width:36px;
+    min-height:34px;
+  }
+}
