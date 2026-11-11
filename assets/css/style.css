@@ -2441,3 +2441,101 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 }
 
 .app-chat .msg.hide-time .msg-time{display:none}
+
+
+/* ============================================================
+   22 · CHAT MOBILE FIT · reclaim composer space on Android
+   ============================================================ */
+.app-chat{
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+}
+.app-chat .chat-head{
+  flex:0 0 auto;
+  min-height:66px;
+}
+.app-chat .chat-scroll{
+  flex:1 1 0%;
+  min-height:0;
+  padding:12px 12px 16px;
+  overscroll-behavior-y:contain;
+}
+.app-chat .chat-composer{
+  flex:0 0 auto;
+  padding:7px 10px calc(12px + env(safe-area-inset-bottom));
+}
+.app-chat .chips-row{
+  min-height:32px;
+  gap:7px;
+  margin:0 1px 6px;
+}
+.app-chat .chips-scroll{
+  min-width:0;
+  mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%);
+}
+.app-chat .composer-bar{
+  align-items:center;
+  min-height:54px;
+  padding:5px 7px;
+}
+.app-chat #msgInput{
+  flex:1 1 0%;
+  width:0;
+  min-width:0;
+  max-height:112px;
+  line-height:1.45;
+}
+.app-chat .sticker-btn,
+.app-chat .mic-btn{
+  flex:0 0 34px;
+}
+.app-chat .send-btn{
+  flex:0 0 36px;
+}
+.app-chat .jump-pill{
+  right:12px;
+  bottom:calc(112px + env(safe-area-inset-bottom));
+  z-index:8;
+  box-shadow:0 5px 18px rgba(52,101,118,.12);
+}
+.app-chat .quote-preview{
+  margin-bottom:6px;
+  max-height:76px;
+  overflow:auto;
+}
+.app-chat .msg-day{
+  margin:17px 0 13px;
+}
+.app-chat .msg{
+  margin-bottom:3px;
+}
+@media(max-width:380px){
+  .app-chat .chat-composer{
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .app-chat .chips-row{gap:6px}
+  .app-chat .chip-tool{width:30px;height:30px}
+  .app-chat .model-pill{
+    max-width:112px;
+    min-width:0;
+    overflow:hidden;
+  }
+  .app-chat .model-pill span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+}
+@media(max-height:700px){
+  .app-chat .chat-head{min-height:58px}
+  .app-chat .chat-scroll{padding-top:8px;padding-bottom:10px}
+  .app-chat .chat-composer{padding-top:5px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .app-chat .chips-row{margin-bottom:4px}
+  .app-chat .composer-bar{min-height:48px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-chat .chips-scroll{scroll-behavior:auto}
+}
