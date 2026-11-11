@@ -493,7 +493,7 @@
     renderChatSidebar(); renderChatTitle(); renderChat(); renderHome();
     toast('聊天窗口已删除');
   }
-  function compressChatSkinFile(file) {
+  function compressChatSkinFile(file, maxSide, maxDataLength) {
     return new Promise(function (resolve, reject) {
       if (!file) { resolve(''); return; }
       if (!/^image\//i.test(file.type || '')) { reject(new Error('请选择图片文件')); return; }
@@ -504,7 +504,9 @@
         var image = new Image();
         image.onerror = function () { reject(new Error('无法识别这张图片')); };
         image.onload = function () {
-          var maxSide = 1100, ratio = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+          maxSide = Number(maxSide) || 1100;
+          maxDataLength = Number(maxDataLength) || 1200000;
+          var ratio = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
           var canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
           canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
@@ -514,7 +516,7 @@
           ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
           try {
             var result = canvas.toDataURL('image/jpeg', 0.74);
-            if (result.length > 1200000) { reject(new Error('压缩后仍然太大，请换一张简单些的图片')); return; }
+            if (result.length > maxDataLength) { reject(new Error('图片压缩后仍然太大，请换一张尺寸更小的图片')); return; }
             resolve(result);
           } catch (err) { reject(new Error('图片压缩失败')); }
         };
@@ -545,6 +547,12 @@
     if (bubbleImage) host.style.setProperty('--chat-bubble-image', 'url("' + bubbleImage + '")');
     else host.style.removeProperty('--chat-bubble-image');
     host.toggleAttribute('data-custom-bubble-image', !!bubbleImage);
+    var aiAvatar = typeof settings.aiAvatar === 'string' && /^data:image\/jpeg;base64,/.test(settings.aiAvatar) ? settings.aiAvatar : '';
+    var userAvatar = typeof settings.userAvatar === 'string' && /^data:image\/jpeg;base64,/.test(settings.userAvatar) ? settings.userAvatar : '';
+    if (aiAvatar) host.style.setProperty('--chat-ai-avatar', 'url("' + aiAvatar + '")'); else host.style.removeProperty('--chat-ai-avatar');
+    if (userAvatar) host.style.setProperty('--chat-user-avatar', 'url("' + userAvatar + '")'); else host.style.removeProperty('--chat-user-avatar');
+    host.toggleAttribute('data-custom-ai-avatar', !!aiAvatar);
+    host.toggleAttribute('data-custom-user-avatar', !!userAvatar);
   }
   function openChatSettings() {
     var item = activeChatSession();
@@ -556,6 +564,8 @@
     var bubbleSkin = chatSetting('bubbleSkin', 'qq-blue');
     var hasWallpaper = !!chatSetting('chatWallpaper', '');
     var hasBubbleWallpaper = !!chatSetting('bubbleWallpaper', '');
+    var hasAiAvatar = !!chatSetting('aiAvatar', '');
+    var hasUserAvatar = !!chatSetting('userAvatar', '');
     openSheet('<div class="panel-head"><div><p class="chat-settings-kicker">THIS WINDOW · CHAT SETTINGS</p><h2 class="panel-title">当前窗口设置</h2></div><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div>' +
       '<label class="field"><span class="field-label">窗口名称</span><input id="chatPrefTitle" type="text" maxlength="24" placeholder="给这段聊天取个名字"></label>' +
       '<label class="field"><span class="field-label">回复气泡排版</span><select id="chatPrefBubble"><option value="split">分割气泡 · 按段落拆开</option><option value="single">完整气泡 · 保持一整条</option></select><span class="field-hint">只影响当前聊天窗口，不会改动其他窗口。</span></label>' +
@@ -564,8 +574,12 @@
       '<label class="field"><span class="field-label">工具调用记录</span><select id="chatPrefTools"><option value="show">显示折叠的调用记录</option><option value="hide">隐藏调用记录</option></select><span class="field-hint">只影响当前窗口的显示，不影响接口请求和已保存记录。</span></label>' +
       '<div class="chat-skin-divider"><span>CHAT APPEARANCE · 聊天装扮</span><small>每个聊天窗口独立保存</small></div>' +
       '<label class="field"><span class="field-label">气泡皮肤</span><select id="chatPrefSkin"><option value="classic">水色物语 · 原生</option><option value="qq-blue">QQ · 清透蓝</option><option value="mint">薄荷绿</option><option value="rose">雾粉</option><option value="glass">轻雾玻璃</option></select></label>' +
+      '<div class="chat-skin-preview" id="chatSkinPreview" data-bubble-skin="' + bubbleSkin + '"><div class="chat-skin-preview-label">实时预览 · 外观不会立即保存</div><div class="chat-skin-preview-line"><span class="chat-skin-preview-avatar">TA</span><span class="chat-skin-preview-bubble ai">今天想和你分享一点小事。</span></div><div class="chat-skin-preview-line mine"><span class="chat-skin-preview-bubble user">好呀，我在听。</span><span class="chat-skin-preview-avatar">我</span></div></div>' +
       '<label class="field"><span class="field-label">聊天背景图片</span><input id="chatPrefWallpaper" type="file" accept="image/*"><span class="field-hint" id="chatWallpaperHint">' + (hasWallpaper ? '当前窗口已设置背景图' : '选择一张图片，作为当前聊天的背景') + '</span><button class="btn-quiet chat-skin-clear" id="chatWallpaperClear" type="button">清除聊天背景</button></label>' +
       '<label class="field"><span class="field-label">气泡背景图片</span><input id="chatPrefBubbleWallpaper" type="file" accept="image/*"><span class="field-hint" id="bubbleWallpaperHint">' + (hasBubbleWallpaper ? '当前窗口已设置气泡图片' : '选择图片作为消息气泡纹理') + '</span><button class="btn-quiet chat-skin-clear" id="bubbleWallpaperClear" type="button">清除气泡图片</button></label>' +
+      '<div class="chat-skin-divider"><span>AVATARS · 头像</span><small>只作用于当前窗口</small></div>' +
+      '<label class="field"><span class="field-label">对方头像</span><input id="chatPrefAiAvatar" type="file" accept="image/*"><span class="field-hint" id="aiAvatarHint">' + (hasAiAvatar ? '当前窗口已设置对方头像' : '上传角色头像，建议正方形图片') + '</span><button class="btn-quiet chat-skin-clear" id="aiAvatarClear" type="button">恢复默认头像</button></label>' +
+      '<label class="field"><span class="field-label">我的头像</span><input id="chatPrefUserAvatar" type="file" accept="image/*"><span class="field-hint" id="userAvatarHint">' + (hasUserAvatar ? '当前窗口已设置我的头像' : '上传自己的头像，建议正方形图片') + '</span><button class="btn-quiet chat-skin-clear" id="userAvatarClear" type="button">恢复默认头像</button></label>' +
       '<button class="btn-primary" id="chatPrefSave" type="button" style="width:100%;margin-top:14px">保存当前窗口设置</button>',
       function (ov, close) {
         ov.querySelector('#chatPrefTitle').value = item.title || '';
@@ -574,7 +588,12 @@
         ov.querySelector('#chatPrefTimes').value = times ? 'show' : 'hide';
         ov.querySelector('#chatPrefTools').value = toolsVisible ? 'show' : 'hide';
         ov.querySelector('#chatPrefSkin').value = bubbleSkin;
-        var clearWallpaper = false, clearBubbleWallpaper = false;
+        var clearWallpaper = false, clearBubbleWallpaper = false, clearAiAvatar = false, clearUserAvatar = false;
+        ov.querySelector('#chatPrefSkin').addEventListener('change', function () { ov.querySelector('#chatSkinPreview').setAttribute('data-bubble-skin', this.value); });
+        ov.querySelector('#aiAvatarClear').addEventListener('click', function () { clearAiAvatar = true; ov.querySelector('#chatPrefAiAvatar').value = ''; ov.querySelector('#aiAvatarHint').textContent = '保存后恢复默认头像'; });
+        ov.querySelector('#userAvatarClear').addEventListener('click', function () { clearUserAvatar = true; ov.querySelector('#chatPrefUserAvatar').value = ''; ov.querySelector('#userAvatarHint').textContent = '保存后恢复默认头像'; });
+        ov.querySelector('#chatPrefAiAvatar').addEventListener('change', function () { if (this.files && this.files[0]) { clearAiAvatar = false; ov.querySelector('#aiAvatarHint').textContent = '已选择头像，保存时会自动裁切压缩'; } });
+        ov.querySelector('#chatPrefUserAvatar').addEventListener('change', function () { if (this.files && this.files[0]) { clearUserAvatar = false; ov.querySelector('#userAvatarHint').textContent = '已选择头像，保存时会自动裁切压缩'; } });
         ov.querySelector('#chatWallpaperClear').addEventListener('click', function () { clearWallpaper = true; ov.querySelector('#chatPrefWallpaper').value = ''; ov.querySelector('#chatWallpaperHint').textContent = '保存后清除当前聊天背景'; });
         ov.querySelector('#bubbleWallpaperClear').addEventListener('click', function () { clearBubbleWallpaper = true; ov.querySelector('#chatPrefBubbleWallpaper').value = ''; ov.querySelector('#bubbleWallpaperHint').textContent = '保存后清除当前气泡图片'; });
         ov.querySelector('#chatPrefWallpaper').addEventListener('change', function () { if (this.files && this.files[0]) { clearWallpaper = false; ov.querySelector('#chatWallpaperHint').textContent = '已选择新背景，保存时会自动压缩'; } });
@@ -587,9 +606,13 @@
           try {
             var wallpaperFile = ov.querySelector('#chatPrefWallpaper').files[0];
             var bubbleFile = ov.querySelector('#chatPrefBubbleWallpaper').files[0];
+            var aiAvatarFile = ov.querySelector('#chatPrefAiAvatar').files[0];
+            var userAvatarFile = ov.querySelector('#chatPrefUserAvatar').files[0];
             var imageResults = await Promise.all([
               wallpaperFile ? compressChatSkinFile(wallpaperFile) : Promise.resolve(previous.chatWallpaper || ''),
-              bubbleFile ? compressChatSkinFile(bubbleFile) : Promise.resolve(previous.bubbleWallpaper || '')
+              bubbleFile ? compressChatSkinFile(bubbleFile) : Promise.resolve(previous.bubbleWallpaper || ''),
+              aiAvatarFile ? compressChatSkinFile(aiAvatarFile, 320, 240000) : Promise.resolve(previous.aiAvatar || ''),
+              userAvatarFile ? compressChatSkinFile(userAvatarFile, 320, 240000) : Promise.resolve(previous.userAvatar || '')
             ]);
             item.title = ov.querySelector('#chatPrefTitle').value.trim() || previousTitle;
             item.settings = Object.assign({}, previous, {
@@ -599,7 +622,9 @@
               showToolCalls: ov.querySelector('#chatPrefTools').value !== 'hide',
               bubbleSkin: ov.querySelector('#chatPrefSkin').value,
               chatWallpaper: clearWallpaper ? '' : imageResults[0],
-              bubbleWallpaper: clearBubbleWallpaper ? '' : imageResults[1]
+              bubbleWallpaper: clearBubbleWallpaper ? '' : imageResults[1],
+              aiAvatar: clearAiAvatar ? '' : imageResults[2],
+              userAvatar: clearUserAvatar ? '' : imageResults[3]
             });
             if (!saveChatSessions()) { item.settings = previous; item.title = previousTitle; saveBtn.disabled = false; saveBtn.textContent = '保存当前窗口设置'; return; }
             applyChatSkin(); renderChatTitle(); renderChatSidebar(); renderChat(); close(); toast('当前窗口装扮已保存');
