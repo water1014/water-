@@ -4007,3 +4007,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai .row{margin-left:34px}
   .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .row{margin-right:34px}
 }
+
+
+[data-theme="night"] .app-chat .chat-scroll[data-custom-bubble-image] .msg .bubble,
+[data-theme="night"] .app-chat .chat-scroll[data-custom-bubble-image] .msg .bubble-piece{
+  background-image:linear-gradient(rgba(22,39,48,.58),rgba(22,39,48,.58)),var(--chat-bubble-image);
+  border-color:rgba(210,231,239,.24);color:#eef5f7;text-shadow:0 1px 2px rgba(0,0,0,.22);
+}
+[data-theme="night"] .app-chat .chat-scroll[data-custom-bubble-image] .msg.user .bubble{
+  background-image:linear-gradient(rgba(39,67,82,.48),rgba(39,67,82,.48)),var(--chat-bubble-image);
+}
