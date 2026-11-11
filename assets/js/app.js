@@ -196,7 +196,7 @@
         return h && typeof h.key === 'string' && h.key.trim();
       }).map(function (h) { return { key: h.key, value: String(h.value == null ? '' : h.value) }; }) : [],
       system: typeof raw.system === 'string' && raw.system.trim() ? raw.system : DEFAULT_SYSTEM,
-      anniversary: typeof raw.anniversary === 'string' ? raw.anniversary : '',
+      anniversary: typeof raw.anniversary === 'string' && raw.anniversary.trim() ? raw.anniversary.trim() : '2026-10-28',
       theme: ['water', 'rose', 'night'].indexOf(raw.theme) >= 0 ? raw.theme : 'water',
       wallpaper: typeof raw.wallpaper === 'string' ? raw.wallpaper : '',
       shell: raw.shell !== false,
