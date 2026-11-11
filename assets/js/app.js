@@ -2007,7 +2007,7 @@
       if (String(m.content || '').toLowerCase().indexOf(low) >= 0) matches.push(index);
     });
     if (!matches.length) return;
-    searchCursor = (searchCursor + (direction < 0 ? -1 : 1) + matches.length) % matches.length;
+    searchCursor = searchCursor < 0 ? (direction < 0 ? matches.length - 1 : 0) : (searchCursor + (direction < 0 ? -1 : 1) + matches.length) % matches.length;
     var targetIndex = matches[searchCursor];
     var nodes = msgList.querySelectorAll('.msg[data-index]');
     Array.prototype.forEach.call(nodes, function (node) {
