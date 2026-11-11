@@ -900,6 +900,17 @@
     if (!Array.isArray(m.toolCalls) || !m.toolCalls.length) return '';
     var rows = m.toolCalls.map(function (tool) {
       var args = String(tool.arguments || '');
+      try {
+        var parsedArgs = JSON.parse(args);
+        (function redact(value) {
+          if (!value || typeof value !== 'object') return;
+          Object.keys(value).forEach(function (key) {
+            if (/authorization|cookie|api[_-]?key|token|secret|password|credential/i.test(key)) value[key] = '[已隐藏]';
+            else redact(value[key]);
+          });
+        })(parsedArgs);
+        args = JSON.stringify(parsedArgs, null, 2);
+      } catch (e) { args = args.replace(/(authorization|cookie|api[_-]?key|token|secret|password|credential)(\\s*[=:]\\s*)[^,}\\s]+/gi, '$1$2[已隐藏]'); }
       var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
       return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>接口返回</em></div>';
     }).join('');
@@ -1167,7 +1178,7 @@
     followIfNear();
 
     if (err) showError(err);
-    else if (!text) showError('没有收到任何回复内容，也许对面走神了');
+    else if (!text && !streamToolCalls.length) showError('没有收到任何回复内容，也许对面走神了');
 
     sending = false;
     setSendUI(false);
