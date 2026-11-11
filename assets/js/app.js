@@ -932,13 +932,53 @@
       } catch (e) { /* keep the original text if the search expression is invalid */ }
     }
     function inline(value) {
-      var safe = esc(value);
-      safe = safe.replace(new RegExp('\\x60([^\\x60\\n]+)\\x60', 'g'), '<code>$1</code>');
+      var tokens = [];
+      function stash(html) {
+        var token = '\u0000MIZULINK' + tokens.length + '\u0000';
+        tokens.push(html);
+        return token;
+      }
+      function safeHref(raw) {
+        var candidate = String(raw || '').trim();
+        if (!candidate || /[\u0000-\u0020\u007f]/.test(candidate)) return '';
+        try {
+          var parsed = new URL(candidate);
+          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:' && parsed.protocol !== 'mailto:') return '';
+          return parsed.href;
+        } catch (e) { return ''; }
+      }
+      var source = String(value || '');
+      // Keep inline code literal so link syntax inside it is never activated.
+      source = source.replace(/\x60([^\x60\n]+)\x60/g, function (_, code) {
+        return stash('<code>' + esc(code) + '</code>');
+      });
+      // Markdown links accept only absolute HTTP(S) and mailto destinations.
+      source = source.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, function (whole, label, rawUrl) {
+        var href = safeHref(rawUrl);
+        if (!href) return whole;
+        var external = /^https?:/i.test(href);
+        return stash('<a href="' + esc(href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer nofollow"' : '') + '>' + esc(label) + '</a>');
+      });
+      // Plain web addresses become links; trailing sentence punctuation stays outside.
+      source = source.replace(/https?:\/\/[^\s<>"']+/gi, function (rawUrl) {
+        var url = rawUrl, trailing = '';
+        while (/[.,!?;:，。！？；：)\]】》]$/.test(url)) {
+          trailing = url.slice(-1) + trailing;
+          url = url.slice(0, -1);
+        }
+        var href = safeHref(url);
+        if (!href) return rawUrl;
+        return stash('<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer nofollow">' + esc(url) + '</a>') + esc(trailing);
+      });
+      var safe = esc(source);
       safe = safe.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
       safe = safe.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
       safe = safe.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
       safe = safe.replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
       safe = safe.replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+      tokens.forEach(function (html, index) {
+        safe = safe.replace('\u0000MIZULINK' + index + '\u0000', html);
+      });
       return safe;
     }
     var lines = source.replace(/\r/g, '').split('\n');
