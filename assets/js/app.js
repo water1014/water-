@@ -977,28 +977,36 @@
   }
 
   function splitAssistantBubbles(content) {
-    var blocks = String(content || '').replace(/\r/g, '').split(/\n\s*\n+/).map(function (part) {
-      return part.trim();
-    }).filter(Boolean);
-    if (blocks.length > 1) return blocks;
-    var source = blocks[0] || '';
+    var source = String(content || '').replace(/\r/g, '').trim();
     if (!source) return [];
-    var lines = source.split(/\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
-    if (lines.length > 1) return lines;
-    var sentences = source.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [source];
-    if (sentences.length < 3) return [source];
-    var result = [], current = '';
-    sentences.forEach(function (sentence) {
-      sentence = sentence.trim();
-      if (!sentence) return;
-      if (current && (current.length + sentence.length > 92 || current.length > 58)) {
-        result.push(current);
-        current = sentence;
-      } else {
-        current += sentence;
+    var paragraphs = source.split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+    var result = [];
+    paragraphs.forEach(function (paragraph) {
+      var lines = paragraph.split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+      var isList = lines.length > 1 && lines.every(function (line) {
+        return /^(?:[-*•]|\d+[.、)、])\s*/.test(line);
+      });
+      if (isList) {
+        result.push(lines.join('\n'));
+        return;
       }
+      var text = lines.join(' ');
+      var sentences = text.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [text];
+      var current = '', count = 0;
+      sentences.forEach(function (sentence) {
+        sentence = sentence.trim();
+        if (!sentence) return;
+        if (current && (count >= 2 || current.length + sentence.length > 96)) {
+          result.push(current);
+          current = sentence;
+          count = 1;
+        } else {
+          current += sentence;
+          count++;
+        }
+      });
+      if (current) result.push(current);
     });
-    if (current) result.push(current);
     return result.length > 1 ? result : [source];
   }
 
