@@ -3220,3 +3220,38 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .msg.group-start,.app-chat .msg.group-middle{margin-bottom:3px}
   .app-chat .msg.group-end{margin-bottom:10px}
 }
+
+
+/* 32 · DISCLOSURE POLISH · accessible, compact detail panels */
+.app-chat .reason-body[hidden],
+.app-chat .tool-call-details[hidden]{display:none!important}
+.app-chat .reason-body:not([hidden]),
+.app-chat .tool-call-details:not([hidden]){display:block}
+.app-chat .reason-bar:focus-visible,
+.app-chat .tool-call-toggle:focus-visible{
+  outline:2px solid rgba(92,158,181,.48);
+  outline-offset:2px;
+}
+.app-chat .reason-body{
+  max-height:min(34vh,260px);overflow:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+.app-chat .tool-call-details{
+  max-height:min(38vh,300px);overflow:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+.app-chat .tool-call-note{
+  margin:5px 0 3px;padding:5px 7px;
+  border-radius:7px;background:rgba(115,174,193,.07);
+  color:var(--ink-sub);font-size:9px;line-height:1.5;
+}
+[data-theme="night"] .app-chat .tool-call-note{
+  background:rgba(143,190,204,.08);color:#a8c1ca;
+}
+[data-theme="rose"] .app-chat .tool-call-note{
+  background:rgba(217,158,188,.08);color:#a47a8e;
+}
+@media(max-width:380px){
+  .app-chat .reason-body{max-height:30vh;padding:8px 10px}
+  .app-chat .tool-call-details{max-height:34vh}
+}
