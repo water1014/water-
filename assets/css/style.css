@@ -3680,3 +3680,26 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .reason-caret,
   .app-chat .tool-call-toggle>i{transition:none}
 }
+
+
+/* 36 · REGENERATE ACTION · one-tap retry for the latest assistant turn */
+.app-chat .msg .msg-actions .msg-regenerate-btn{
+  min-width:30px;
+  padding:0 8px;
+  color:var(--ink-sub);
+  font-size:0;
+}
+.app-chat .msg .msg-actions .msg-regenerate-btn::before{
+  content:"↻";
+  font-size:16px;
+  line-height:1;
+}
+.app-chat .msg .msg-actions .msg-regenerate-btn:active{
+  transform:rotate(-24deg);
+}
+@media(hover:none){
+  .app-chat .msg .msg-actions .msg-regenerate-btn{
+    min-width:32px;
+    min-height:32px;
+  }
+}
