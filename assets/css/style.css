@@ -2654,3 +2654,48 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(prefers-reduced-motion:reduce){
   .app-chat .reason-bar .reason-caret{transition:none}
 }
+
+
+/* 24 · TOOL CALL TRACE · compact, truthful provider-returned records */
+.app-chat .tool-call-group{
+  width:min(84%,520px);margin:0 0 5px 2px;
+  border:1px solid rgba(119,166,184,.14);
+  border-radius:13px;overflow:hidden;
+  background:rgba(255,255,255,.36);
+}
+.app-chat .tool-call-toggle{
+  width:100%;min-height:31px;padding:5px 9px;
+  display:flex;align-items:center;gap:7px;
+  border:0;background:transparent;color:var(--ink-sub);
+  text-align:left;font-size:10px;
+}
+.app-chat .tool-call-toggle>span{font-size:14px;opacity:.72}
+.app-chat .tool-call-toggle>b{font-weight:600}
+.app-chat .tool-call-toggle>small{margin-left:auto;opacity:.7;font-size:9px}
+.app-chat .tool-call-toggle>i{font-style:normal;font-size:17px;transition:transform .18s ease}
+.app-chat .tool-call-group.is-open .tool-call-toggle>i{transform:rotate(90deg)}
+.app-chat .tool-call-details{display:none;padding:0 8px 7px}
+.app-chat .tool-call-group.is-open .tool-call-details{display:block}
+.app-chat .tool-call-row{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 3px;border-top:1px solid rgba(119,166,184,.10);
+}
+.app-chat .tool-call-mark{
+  flex:0 0 21px;width:21px;height:21px;
+  display:grid;place-items:center;border-radius:7px;
+  background:rgba(119,166,184,.12);font-size:12px;
+}
+.app-chat .tool-call-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.app-chat .tool-call-copy>b{font-size:10px;font-weight:600;color:var(--ink)}
+.app-chat .tool-call-copy>small{
+  max-height:64px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;
+  color:var(--ink-sub);font-size:9px;line-height:1.45;
+}
+.app-chat .tool-call-row>em{
+  flex:0 0 auto;font-style:normal;font-size:8px;color:#86a99a;
+}
+[data-theme="rose"] .app-chat .tool-call-group{
+  border-color:rgba(217,158,188,.18);background:rgba(255,247,250,.48)
+}
+[data-theme="rose"] .app-chat .tool-call-mark{background:rgba(217,158,188,.14)}
+@media(max-width:380px){.app-chat .tool-call-group{width:88%}}
