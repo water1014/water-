@@ -245,7 +245,13 @@
           messages: normalizeHistory(item.messages),
           settings: item.settings && typeof item.settings === 'object' ? item.settings : {},
           pinned: item.pinned === true,
-          archived: item.archived === true
+          archived: item.archived === true,
+          scrollState: item.scrollState && typeof item.scrollState === 'object' ? {
+            atBottom: item.scrollState.atBottom === true,
+            anchorIndex: Number.isInteger(Number(item.scrollState.anchorIndex)) ? Number(item.scrollState.anchorIndex) : -1,
+            offset: Number.isFinite(Number(item.scrollState.offset)) ? Number(item.scrollState.offset) : 0,
+            top: Math.max(0, Number(item.scrollState.top) || 0)
+          } : null
         };
       });
       if (valid.length) return valid;
@@ -392,6 +398,7 @@
   }
   function createChatSession() {
     if (sending) { toast('等这条消息发送完成，再开启新窗口吧'); return; }
+    captureChatScrollState(true);
     if (!saveHistory()) return;
     var id = 'chat-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     var item = { id: id, title: '新的聊天', createdAt: Date.now(), updatedAt: Date.now(), messages: [], settings: {}, pinned: false, archived: false };
@@ -413,6 +420,7 @@
     if (sending) { toast('请等当前回复结束后再切换窗口'); return; }
     var target = chatSessions.filter(function (item) { return item.id === id; })[0];
     if (!target || target.id === activeChatId) { closeChatSidebar(); return; }
+    captureChatScrollState(true);
     if (!saveHistory()) return;
     var previousId = activeChatId, previousHistory = history;
     activeChatId = id;
@@ -420,7 +428,7 @@
     pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = ''; editingMessageIndex = -1;
     if (!saveChatSessions()) { activeChatId = previousId; history = previousHistory; return; }
     closeChatSidebar();
-    renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
+    renderChatTitle(); renderChat(); renderHome(); restoreChatScrollState();
     updateStatus();
   }
   function updateChatSessionFlag(id, key, value) {
@@ -445,6 +453,7 @@
     if (index < 0) return;
     var oldSessions = chatSessions.slice(), oldId = activeChatId, oldHistory = history;
     var wasActive = id === activeChatId;
+    if (wasActive) captureChatScrollState(true);
     chatSessions.splice(index, 1);
     if (wasActive) {
       var next = chatSessions[0];
@@ -601,6 +610,8 @@
 
   function openApp(name, originEl, pane) {
     if (!name) return;
+    var nextAppName = name === 'stars' ? 'archive' : name;
+    if (currentView === 'chat' && nextAppName !== 'chat') captureChatScrollState(true);
     if (name === 'settings') { openSettings(); return; }
     if (name === 'music') { openMusic(); return; }
     var appName = name === 'stars' ? 'archive' : name;
@@ -645,7 +656,7 @@
       /* 静态页 */
     } else if (appName === 'chat') {
       renderChat();
-      requestAnimationFrame(function () { chatScroll.scrollTop = chatScroll.scrollHeight; });
+      restoreChatScrollState();
     }
   }
 
@@ -917,6 +928,58 @@
   var searchTerm = '';
   var searchOpen = false;
   var searchCursor = -1;
+
+  var chatScrollSaveTimer = null;
+  function captureChatScrollState(persist) {
+    var session = activeChatSession();
+    if (!session || !chatScroll) return;
+    var atBottom = isNearBottom();
+    var state = { atBottom: atBottom, anchorIndex: -1, offset: 0, top: Math.max(0, chatScroll.scrollTop || 0) };
+    if (!atBottom) {
+      var box = chatScroll.getBoundingClientRect();
+      var nodes = msgList.querySelectorAll('.msg[data-index]');
+      for (var i = 0; i < nodes.length; i++) {
+        var rect = nodes[i].getBoundingClientRect();
+        if (rect.bottom > box.top + 8) {
+          state.anchorIndex = Number(nodes[i].dataset.index);
+          state.offset = rect.top - box.top;
+          break;
+        }
+      }
+    }
+    session.scrollState = state;
+    if (persist) saveChatSessions();
+    return state;
+  }
+  function scheduleChatScrollSave() {
+    if (chatScrollSaveTimer) clearTimeout(chatScrollSaveTimer);
+    chatScrollSaveTimer = setTimeout(function () {
+      chatScrollSaveTimer = null;
+      captureChatScrollState(true);
+    }, 420);
+  }
+  function restoreChatScrollState() {
+    var session = activeChatSession(), state = session && session.scrollState;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (!state || state.atBottom) {
+          scrollToBottom(false);
+        } else {
+          var target = state.anchorIndex >= 0 ? msgList.querySelector('.msg[data-index="' + state.anchorIndex + '"]') : null;
+          if (target) {
+            var box = chatScroll.getBoundingClientRect(), rect = target.getBoundingClientRect();
+            chatScroll.scrollTop = Math.max(0, chatScroll.scrollTop + rect.top - box.top - state.offset);
+          } else {
+            chatScroll.scrollTop = Math.min(state.top || 0, Math.max(0, chatScroll.scrollHeight - chatScroll.clientHeight));
+          }
+        }
+        stickyBottom = isNearBottom();
+        updateJump();
+        updateChatDateNavFromScroll();
+        captureChatScrollState(false);
+      });
+    });
+  }
 
   function isNearBottom() {
     return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 96;
@@ -1863,6 +1926,7 @@
     stickyBottom = isNearBottom();
     updateJump();
     updateChatDateNavFromScroll();
+    scheduleChatScrollSave();
   }, { passive: true });
 
   jumpBtn.addEventListener('click', function () { scrollToBottom(true); jumpBtn.classList.remove('show'); });
@@ -2239,6 +2303,7 @@
     else if (e.key === 'Enter') { e.preventDefault(); cycleSearchMatch(e.shiftKey ? -1 : 1); }
   });
 
+  window.addEventListener('pagehide', function () { if (currentView === 'chat') captureChatScrollState(true); });
   /* ================= 贴纸 ================= */
   var stickerTray = null;
   function buildTray() {
