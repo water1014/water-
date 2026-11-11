@@ -213,7 +213,11 @@ try{
           </div>
           <button class="chat-new-window" id="chatNewWindow" type="button"><span>＋</span><span><b>开启新窗口</b><small>一段新的聊天，从这里开始</small></span></button>
           <label class="chat-session-search"><span aria-hidden="true">⌕</span><input id="chatSessionSearch" type="search" maxlength="80" placeholder="搜索聊天窗口…" aria-label="搜索聊天窗口"></label>
-          <div class="chat-session-caption"><span>最近的对话</span><small id="chatSessionCount">01 WINDOW</small></div>
+          <div class="chat-session-filters" role="tablist" aria-label="聊天窗口分类">
+            <button type="button" class="is-active" data-chat-filter="active" role="tab" aria-selected="true">最近</button>
+            <button type="button" data-chat-filter="archived" role="tab" aria-selected="false">已归档</button>
+          </div>
+          <div class="chat-session-caption"><span id="chatSessionSectionTitle">最近的对话</span><small id="chatSessionCount">01 WINDOW</small></div>
           <div class="chat-session-list" id="chatSessionList"></div>
           <div class="chat-sidebar-bottom">
             <button type="button" id="chatSidebarSettings"><span>⚙</span> 当前窗口设置</button>
