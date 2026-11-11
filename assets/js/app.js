@@ -980,17 +980,19 @@
     var source = String(content || '').replace(/\r/g, '').trim();
     if (!source) return [];
 
-    // Parse blocks line-by-line so blank lines inside fenced code are never
-    // mistaken for message boundaries.
+    // Keep fenced code intact, including blank lines inside the fence.
     var lines = source.split('\n');
     var blocks = [], paragraph = [], code = [], fence = '', inCode = false;
     function flushParagraph() {
       if (!paragraph.length) return;
-      blocks.push({ type: 'text', value: paragraph.join(' ').trim() });
+      var hasStructure = paragraph.some(function (line) {
+        return /^(?:[-*+]\s|\d+[.)、]\s|\||#{1,6}\s|>\s?)/.test(line);
+      });
+      blocks.push({ type: 'text', value: (hasStructure ? paragraph.join('\n') : paragraph.join(' ')).trim() });
       paragraph = [];
     }
     lines.forEach(function (line) {
-      var marker = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+      var marker = line.match(/^\s{0,3}([\x60]{3,}|~{3,})/);
       if (inCode) {
         code.push(line);
         if (marker && marker[1].charAt(0) === fence.charAt(0) && marker[1].length >= fence.length) {
@@ -1015,8 +1017,7 @@
       var value = block.value;
       if (!value) return;
       // Lists, tables, headings and quoted blocks stay structurally whole.
-      // Splitting these would detach list items or damage Markdown syntax.
-      var structural = /^(?:[-*+]\\s|\\d+[.)、]\\s|\\|.*\\||#{1,6}\\s|>\\s?)/m.test(value);
+      var structural = /^(?:[-*+]\s|\d+[.)、]\s|\|.*\||#{1,6}\s|>\s?)/m.test(value);
       if (block.type === 'fixed' || structural || value.length <= 230) {
         result.push(value);
         return;
@@ -1037,7 +1038,6 @@
     });
     return result.length > 1 ? result : [source];
   }
-
   function buildMsg(m, i) {
     var el = document.createElement('div');
     var isUser = m.role === 'user';
