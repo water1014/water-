@@ -4381,12 +4381,30 @@
     var stamp = new Date().toISOString().slice(0, 10);
     var content, mime, extension;
     if (format === 'json') {
+      var safeMessages = JSON.parse(JSON.stringify(messages));
+      function redactExport(value) {
+        if (!value || typeof value !== 'object') return;
+        Object.keys(value).forEach(function (key) {
+          if (/authorization|cookie|api[_-]?key|access[_-]?token|refresh[_-]?token|secret|password|credential/i.test(key)) {
+            value[key] = '[已隐藏]';
+          } else if ((key === 'arguments' || key === 'args') && typeof value[key] === 'string') {
+            try {
+              var parsed = JSON.parse(value[key]);
+              redactExport(parsed);
+              value[key] = JSON.stringify(parsed);
+            } catch (ignore) {
+              value[key] = value[key].replace(/(authorization|cookie|api[_-]?key|access[_-]?token|refresh[_-]?token|secret|password|credential)(\\s*[=:]\\s*)[^,}\\s]+/gi, '$1$2[已隐藏]');
+            }
+          } else redactExport(value[key]);
+        });
+      }
+      redactExport(safeMessages);
       content = JSON.stringify({
         format: 'mizu-chat-export',
         version: 1,
         exportedAt: new Date().toISOString(),
         session: { title: session.title || '我们的聊天', createdAt: session.createdAt || null, updatedAt: session.updatedAt || null },
-        messages: messages
+        messages: safeMessages
       }, null, 2);
       mime = 'application/json;charset=utf-8';
       extension = 'json';
