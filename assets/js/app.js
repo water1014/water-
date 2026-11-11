@@ -976,6 +976,32 @@
     return out;
   }
 
+  function splitAssistantBubbles(content) {
+    var blocks = String(content || '').replace(/\r/g, '').split(/\n\s*\n+/).map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+    if (blocks.length > 1) return blocks;
+    var source = blocks[0] || '';
+    if (!source) return [];
+    var lines = source.split(/\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+    if (lines.length > 1) return lines;
+    var sentences = source.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [source];
+    if (sentences.length < 3) return [source];
+    var result = [], current = '';
+    sentences.forEach(function (sentence) {
+      sentence = sentence.trim();
+      if (!sentence) return;
+      if (current && (current.length + sentence.length > 92 || current.length > 58)) {
+        result.push(current);
+        current = sentence;
+      } else {
+        current += sentence;
+      }
+    });
+    if (current) result.push(current);
+    return result.length > 1 ? result : [source];
+  }
+
   function buildMsg(m, i) {
     var el = document.createElement('div');
     var isUser = m.role === 'user';
@@ -1015,10 +1041,10 @@
     var messageBody = highlight(m.content);
     var bubbleMarkup = m.content ? '<div class="bubble">' + messageBody + '</div>' : '';
     if (!isUser && m.content && chatSetting('bubbleMode', config.bubbleMode || 'split') === 'split') {
-      var paragraphs = String(m.content).split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+      var paragraphs = splitAssistantBubbles(m.content);
       if (paragraphs.length > 1) {
         bubbleMarkup = '<div class="bubble-stack">' + paragraphs.map(function (part, index) {
-          return '<div class="bubble bubble-piece" data-piece="' + index + '">' + highlight(part.replace(/\n/g, '\n')) + '</div>';
+          return '<div class="bubble bubble-piece" data-piece="' + index + '">' + highlight(part) + '</div>';
         }).join('') + '</div>';
       }
     }
