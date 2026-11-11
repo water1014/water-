@@ -1181,7 +1181,7 @@
     if (hint) hint.remove();
     typingEl = document.createElement('div');
     typingEl.className = 'msg ai enter';
-    typingEl.innerHTML = '<div class="row"><div class="bubble typing-bubble" aria-label="对方正在输入"><i></i><i></i><i></i></div></div>';
+    typingEl.innerHTML = '<div class="assistant-flow"><div class="row"><div class="bubble typing-bubble" aria-label="对方正在输入"><i></i><i></i><i></i></div></div></div>';
     msgList.appendChild(typingEl);
     followIfNear();
   }
@@ -1190,7 +1190,7 @@
     removeTyping();
     streamEl = document.createElement('div');
     streamEl.className = 'msg ai enter';
-    streamEl.innerHTML = '<div class="row"><div class="bubble"><span class="stream-text"></span><span class="caret" aria-hidden="true"></span></div></div>';
+    streamEl.innerHTML = '<div class="assistant-flow"><div class="row"><div class="bubble"><span class="stream-text"></span><span class="caret" aria-hidden="true"></span></div></div></div>';
     streamBody = streamEl.querySelector('.stream-text');
     msgList.appendChild(streamEl);
     followIfNear();
