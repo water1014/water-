@@ -3737,3 +3737,23 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     min-height:34px;
   }
 }
+
+
+/* 38 · CHAT SEARCH NAVIGATION · focus the current match */
+.app-chat .msg.search-current .bubble{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+  box-shadow:0 5px 20px rgba(88,153,174,.12);
+}
+.app-chat .search-count{
+  min-width:max-content;
+  font-variant-numeric:tabular-nums;
+}
+.app-chat .searchbar input:focus-visible{
+  outline:none;
+}
+@media(prefers-reduced-motion:no-preference){
+  .app-chat .msg.search-current .bubble{
+    transition:outline-color .18s ease,box-shadow .18s ease;
+  }
+}
