@@ -167,7 +167,7 @@
   var activeChatId = read(LS_ACTIVE_CHAT, chatSessions[0] ? chatSessions[0].id : 'chat-main');
   if (!chatSessions.some(function (item) { return item.id === activeChatId; })) activeChatId = chatSessions[0] ? chatSessions[0].id : 'chat-main';
   var history = loadActiveHistory();
-  var pendingQuote = null, activeQuote = null, retryQuote = null;
+  var pendingQuote = null, activeQuote = null, retryQuote = null, editingMessageIndex = -1;
   var moods = read('mizu.moods', []) || [];
   var memories = read('mizu.memories', []) || [];
   var notes = read('mizu.notes', {}) || {};
@@ -1218,7 +1218,14 @@
 
     el.className = 'msg ' + (isUser ? 'user' : 'ai');
     el.dataset.index = String(i);
-    var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' +
+    var lastUserIndex = -1;
+    if (isUser) {
+      for (var ui = history.length - 1; ui >= 0; ui--) {
+        if (history[ui] && history[ui].role === 'user') { lastUserIndex = ui; break; }
+      }
+    }
+    var editAction = isUser && i === lastUserIndex ? '<button class="msg-edit-btn" type="button" aria-label="编辑并重发这条消息" title="编辑并重发">编辑</button>' : '';
+    var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' + editAction +
       (isUser ? '' : '<button class="msg-regenerate-btn" type="button" aria-label="重新生成这条回复" title="重新生成">重新生成</button><button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     var messageBody = highlight(m.content);
     var bubbleMarkup = m.content ? '<div class="bubble">' + messageBody + '</div>' : '';
@@ -1247,6 +1254,21 @@
   function renderQuotePreview() {
     var host = $('quotePreview');
     if (!host) return;
+    if (editingMessageIndex >= 0) {
+      var editingMessage = history[editingMessageIndex];
+      if (!editingMessage || editingMessage.role !== 'user') { editingMessageIndex = -1; }
+      else {
+        host.hidden = false;
+        host.innerHTML = '<div class="quote-preview-copy edit-preview-copy"><span>正在编辑 · 修改后将替换这条问题及其后续回复</span><p>' + esc(String(editingMessage.content || '').slice(0, 100)) + '</p></div><button class="quote-cancel edit-cancel" type="button" aria-label="取消编辑">×</button>';
+        host.querySelector('.edit-cancel').addEventListener('click', function () {
+          editingMessageIndex = -1;
+          msgInput.value = '';
+          autoGrow();
+          renderQuotePreview();
+        });
+        return;
+      }
+    }
     if (!pendingQuote) { host.innerHTML = ''; host.hidden = true; return; }
     host.hidden = false;
     host.innerHTML = '<div class="quote-preview-copy"><span>正在引用 · ' + (pendingQuote.role === 'user' ? '我' : 'TA') + '</span><p>' + esc(pendingQuote.content) + '</p></div><button class="quote-cancel" type="button" aria-label="取消引用">×</button>';
@@ -1657,6 +1679,22 @@
     var t = msgInput.value.trim();
     if (!t || sending) return;
     var quote = pendingQuote;
+    if (editingMessageIndex >= 0) {
+      var editAt = editingMessageIndex;
+      var previousHistory = history.slice();
+      var editedRecord = { role: 'user', content: t, ts: Date.now() };
+      history = history.slice(0, editAt);
+      history.push(editedRecord);
+      if (!saveHistory()) { history = previousHistory; return; }
+      editingMessageIndex = -1;
+      pendingQuote = null;
+      msgInput.value = '';
+      autoGrow();
+      renderQuotePreview();
+      renderChat();
+      sendText(t, true, true, quote);
+      return;
+    }
     msgInput.value = '';
     autoGrow();
     sendText(t, false, false, quote);
@@ -1816,6 +1854,32 @@
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(copyText).then(copied).catch(function () { fallbackCopy(copyText, copied); });
       } else fallbackCopy(copyText, copied);
+      return;
+    }
+    var editBtn = e.target.closest('.msg-edit-btn');
+    if (editBtn) {
+      e.preventDefault();
+      if (sending) { toast('等当前回复结束后再编辑'); return; }
+      var editRow = editBtn.closest('.msg');
+      var editIndex = editRow ? Number(editRow.dataset.index) : -1;
+      var editMessage = history[editIndex];
+      var latestUserIndex = -1;
+      for (var ei = history.length - 1; ei >= 0; ei--) {
+        if (history[ei] && history[ei].role === 'user') { latestUserIndex = ei; break; }
+      }
+      if (!editMessage || editMessage.role !== 'user' || editIndex !== latestUserIndex || editMessage.image || editMessage.voice || editMessage.sticker) {
+        toast('目前只能编辑最新的一条文字消息');
+        return;
+      }
+      if (!window.confirm('编辑这条消息后，它后面的回复会被移除，并根据新内容重新发送。确定继续吗？')) return;
+      editingMessageIndex = editIndex;
+      pendingQuote = null;
+      msgInput.value = String(editMessage.content || '');
+      autoGrow();
+      renderQuotePreview();
+      msgInput.focus();
+      try { msgInput.setSelectionRange(msgInput.value.length, msgInput.value.length); } catch (ignore) {}
+      toast('已载入编辑内容，修改后点击发送即可');
       return;
     }
     var regenBtn = e.target.closest('.msg-regenerate-btn');
