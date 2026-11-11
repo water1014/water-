@@ -1321,6 +1321,53 @@
     toast('已引用这句话');
   }
 
+  function localDateInputValue(date) {
+    var d = date || new Date();
+    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  }
+  function chatDateIndices() {
+    var dates = [];
+    history.forEach(function (message, index) {
+      var value = localDateInputValue(new Date(message.ts));
+      if (!dates.length || dates[dates.length - 1].value !== value) dates.push({ value: value, index: index });
+    });
+    return dates;
+  }
+  function syncChatDateNav(value) {
+    var picker = $('chatDatePicker'), prev = $('chatDatePrev'), next = $('chatDateNext');
+    if (!picker || !prev || !next) return;
+    var dates = chatDateIndices();
+    if (!dates.length) {
+      picker.value = ''; picker.disabled = true; prev.disabled = true; next.disabled = true;
+      return;
+    }
+    picker.disabled = false;
+    picker.min = dates[0].value; picker.max = dates[dates.length - 1].value;
+    var current = value || (history.length ? localDateInputValue(new Date(history[history.length - 1].ts)) : dates[dates.length - 1].value);
+    picker.value = current;
+    var pos = dates.findIndex(function (entry) { return entry.value === current; });
+    if (pos < 0) pos = dates.findIndex(function (entry) { return entry.value > current; });
+    prev.disabled = pos <= 0;
+    next.disabled = pos < 0 || pos >= dates.length - 1;
+  }
+  function jumpToChatDate(value) {
+    var dates = chatDateIndices();
+    if (!dates.length) { toast('这段对话还没有消息'); return; }
+    var exact = dates.find(function (entry) { return entry.value === value; });
+    var chosen = exact || dates.find(function (entry) { return entry.value >= value; }) || dates[dates.length - 1];
+    syncChatDateNav(chosen.value);
+    jumpToChatMessage(chosen.index);
+  }
+  function moveChatDate(direction) {
+    var dates = chatDateIndices(), picker = $('chatDatePicker');
+    if (!dates.length || !picker) return;
+    var current = picker.value || dates[dates.length - 1].value;
+    var pos = dates.findIndex(function (entry) { return entry.value === current; });
+    if (pos < 0) pos = direction < 0 ? dates.length - 1 : 0;
+    else pos = Math.max(0, Math.min(dates.length - 1, pos + direction));
+    jumpToChatDate(dates[pos].value);
+  }
+
   function jumpToChatMessage(index) {
     if (!Number.isInteger(index) || index < 0 || index >= history.length) return;
     requestAnimationFrame(function () {
@@ -1376,6 +1423,7 @@
 
     if (atBottom) requestAnimationFrame(function () { scrollToBottom(false); });
     updateJump();
+    syncChatDateNav();
     updateStatus();
     updateThoughts();
   }
@@ -1805,6 +1853,14 @@
   }, { passive: true });
 
   jumpBtn.addEventListener('click', function () { scrollToBottom(true); jumpBtn.classList.remove('show'); });
+  if ($('chatDatePicker')) $('chatDatePicker').addEventListener('change', function () { if (this.value) jumpToChatDate(this.value); });
+  if ($('chatDatePrev')) $('chatDatePrev').addEventListener('click', function () { moveChatDate(-1); });
+  if ($('chatDateNext')) $('chatDateNext').addEventListener('click', function () { moveChatDate(1); });
+  if ($('chatDateLatest')) $('chatDateLatest').addEventListener('click', function () {
+    if (!history.length) return;
+    var latest = localDateInputValue(new Date(history[history.length - 1].ts));
+    syncChatDateNav(latest); scrollToBottom(true);
+  });
 
   chatScroll.addEventListener('click', function (e) {
     if (e.target.closest('.bubble, button, a')) return;
