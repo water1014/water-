@@ -316,7 +316,7 @@
       var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + '">' +
         '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
-        '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small></span>' +
+        '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small>' + (item.id === activeChatId ? '<i class="chat-session-current">当前窗口</i>' : '') + '</span>' +
         '<time>' + hhmm(item.updatedAt) + '</time></button>' +
         (chatSessions.length > 1 ? '<button class="chat-session-delete" type="button" data-chat-delete="' + esc(item.id) + '" aria-label="删除' + esc(item.title) + '">×</button>' : '') +
         '</div>';
