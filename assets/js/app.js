@@ -997,13 +997,13 @@
     }
     lines.forEach(function (line, lineIndex) {
       if (lineIndex <= skipTableUntil) return;
-      var fenceMatch = line.match(/^\s{0,3}([\x60]{3,}|~{3,})/);
+      var fenceMatch = line.match(/^\s{0,3}([`]{3,}|~{3,})(.*)$/);
       if (inCode) {
         if (fenceMatch && fenceMatch[1].charAt(0) === fence.charAt(0) && fenceMatch[1].length >= fence.length) closeCode();
         else code.push(line);
         return;
       }
-      if (fenceMatch) { flushParagraph(); closeList(); inCode = true; fence = fenceMatch[1]; code = []; return; }
+      if (fenceMatch) { flushParagraph(); closeList(); inCode = true; fence = fenceMatch[1]; codeLanguage = String(fenceMatch[2] || '').trim().split(/\\s+/)[0].slice(0, 24); code = []; return; }
       if (!line.trim()) { flushParagraph(); closeList(); return; }
       var nextLine = lines[lineIndex + 1] || '';
       if (/^\s*\|?.+\|.+\|?\s*$/.test(line) && /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(nextLine)) {
