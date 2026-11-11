@@ -3399,7 +3399,10 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   border-radius:7px;
   background:rgba(255,255,255,.52);
   color:var(--ink-sub);
-  font:500 10px/1.3 inherit;
+  font-family:inherit;
+  font-size:10px;
+  font-weight:500;
+  line-height:1.3;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
