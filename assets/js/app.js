@@ -1835,7 +1835,7 @@
       if (!originalPrompt) { toast('没有找到对应的用户消息'); return; }
       if (!window.confirm('重新生成这条回复？当前回复会被替换，之前的聊天记录会保留。')) return;
       var previousHistory = history.slice();
-      history.splice(regenIndex);
+      history = history.slice(0, regenIndex);
       if (!saveHistory()) { history = previousHistory; return; }
       renderChat();
       sendText(originalPrompt, true, true, null);
