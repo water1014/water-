@@ -3970,3 +3970,40 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(max-width:420px){
   .app-chat .chat-skin-divider{align-items:flex-start;flex-direction:column;gap:3px}
 }
+
+
+/* QQ conversation rhythm: compact avatar gutter and aligned message lanes */
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai .row,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .row{
+  max-width:calc(100% - 38px);
+}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai .row{margin-left:38px}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .row{margin-right:38px}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai.group-start .row::before,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai.group-solo .row::before,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user.group-start .row::before,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user.group-solo .row::before{
+  position:absolute;top:0;display:grid;place-items:center;
+  width:28px;height:28px;border-radius:9px;
+  font-size:10px;font-weight:750;letter-spacing:.02em;
+  box-shadow:0 2px 8px rgba(57,105,139,.12);
+}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai.group-start .row::before,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai.group-solo .row::before{
+  content:"TA";left:-36px;color:#527b96;
+  background:linear-gradient(145deg,#eaf6fc,#cfe7f5);
+  border:1px solid rgba(115,166,196,.22);
+}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user.group-start .row::before,
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user.group-solo .row::before{
+  content:"我";right:-36px;color:#527b96;
+  background:linear-gradient(145deg,#f4fbff,#dceefa);
+  border:1px solid rgba(115,166,196,.22);
+}
+.app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .bubble-pix{display:none}
+@media(max-width:380px){
+  .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai .row,
+  .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .row{max-width:calc(100% - 34px)}
+  .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.ai .row{margin-left:34px}
+  .app-chat .chat-scroll[data-bubble-skin="qq-blue"] .msg.user .row{margin-right:34px}
+}
