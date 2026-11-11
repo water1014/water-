@@ -1721,6 +1721,29 @@
   });
 
   msgList.addEventListener('click', function (e) {
+    var codeCopy = e.target.closest('[data-copy-code]');
+    if (codeCopy) {
+      e.preventDefault();
+      var codeBlock = codeCopy.closest('.chat-code-block');
+      var codeNode = codeBlock && codeBlock.querySelector('code');
+      var codeText = codeNode ? codeNode.textContent : '';
+      if (!codeText) { toast('这段代码是空的'); return; }
+      function codeCopied() {
+        codeCopy.textContent = '已复制';
+        codeCopy.classList.add('is-copied');
+        toast('代码已复制');
+        setTimeout(function () {
+          if (codeCopy.isConnected) {
+            codeCopy.textContent = '复制';
+            codeCopy.classList.remove('is-copied');
+          }
+        }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(codeText).then(codeCopied).catch(function () { fallbackCopy(codeText, codeCopied); });
+      } else fallbackCopy(codeText, codeCopied);
+      return;
+    }
     var toolToggle = e.target.closest('.tool-call-toggle');
     if (toolToggle) {
       var toolGroup = toolToggle.closest('.tool-call-group');
