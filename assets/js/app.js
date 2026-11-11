@@ -1039,7 +1039,19 @@
         return;
       }
       var quote = line.match(/^\s{0,3}>\s?(.*)$/);
-      if (quote) { flushParagraph(); closeList(); out.push('<blockquote>' + inline(quote[1]) + '</blockquote>'); return; }
+      if (quote) {
+        flushParagraph(); closeList();
+        var quoteLines = [quote[1]], quoteIndex = lineIndex + 1;
+        while (quoteIndex < lines.length) {
+          var nextQuote = lines[quoteIndex].match(/^\s{0,3}>\s?(.*)$/);
+          if (!nextQuote) break;
+          quoteLines.push(nextQuote[1]);
+          quoteIndex++;
+        }
+        out.push('<blockquote>' + inline(quoteLines.join('\n')).replace(/\n/g, '<br>') + '</blockquote>');
+        skipTableUntil = Math.max(skipTableUntil, quoteIndex - 1);
+        return;
+      }
       var item = line.match(/^\s*(?:[-*+]\s+)(.*)$/);
       var numbered = line.match(/^\s*\d+[.)、]\s+(.*)$/);
       if (item || numbered) {
