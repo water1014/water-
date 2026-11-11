@@ -979,10 +979,14 @@
   function splitAssistantBubbles(content) {
     var source = String(content || '').replace(/\r/g, '').trim();
     if (!source) return [];
-    var paragraphs = source.split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+    var paragraphs = source.split(/\n\s*\n+/).map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
     var result = [];
     paragraphs.forEach(function (paragraph) {
-      var lines = paragraph.split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+      var lines = paragraph.split(/\n+/).map(function (line) {
+        return line.trim();
+      }).filter(Boolean);
       var isList = lines.length > 1 && lines.every(function (line) {
         return /^(?:[-*•]|\d+[.、)、])\s*/.test(line);
       });
@@ -991,18 +995,22 @@
         return;
       }
       var text = lines.join(' ');
+      // Keep normal paragraphs intact. Only divide unusually long blocks,
+      // and do so at sentence boundaries rather than every two sentences.
+      if (text.length <= 230) {
+        result.push(text);
+        return;
+      }
       var sentences = text.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [text];
-      var current = '', count = 0;
+      var current = '';
       sentences.forEach(function (sentence) {
         sentence = sentence.trim();
         if (!sentence) return;
-        if (current && (count >= 2 || current.length + sentence.length > 96)) {
+        if (current && current.length + sentence.length > 230) {
           result.push(current);
           current = sentence;
-          count = 1;
         } else {
           current += sentence;
-          count++;
         }
       });
       if (current) result.push(current);
