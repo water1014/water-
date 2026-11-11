@@ -533,6 +533,8 @@
     var skins = ['classic', 'qq-blue', 'mint', 'rose', 'glass'];
     var skin = skins.indexOf(settings.bubbleSkin) >= 0 ? settings.bubbleSkin : 'qq-blue';
     host.setAttribute('data-bubble-skin', skin);
+    var wallpaperPreset = ['mist', 'lake', 'petal', 'midnight'].indexOf(settings.chatWallpaperPreset) >= 0 ? settings.chatWallpaperPreset : 'mist';
+    host.setAttribute('data-wallpaper-preset', wallpaperPreset);
     var wallpaper = typeof settings.chatWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.chatWallpaper) ? settings.chatWallpaper : '';
     var bubbleImage = typeof settings.bubbleWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.bubbleWallpaper) ? settings.bubbleWallpaper : '';
     if (wallpaper) {
@@ -563,6 +565,7 @@
     var toolsVisible = chatSetting('showToolCalls', true);
     var bubbleSkin = chatSetting('bubbleSkin', 'qq-blue');
     var hasWallpaper = !!chatSetting('chatWallpaper', '');
+    var wallpaperPreset = chatSetting('chatWallpaperPreset', 'mist');
     var hasBubbleWallpaper = !!chatSetting('bubbleWallpaper', '');
     var hasAiAvatar = !!chatSetting('aiAvatar', '');
     var hasUserAvatar = !!chatSetting('userAvatar', '');
@@ -575,6 +578,7 @@
       '<div class="chat-skin-divider"><span>CHAT APPEARANCE · 聊天装扮</span><small>每个聊天窗口独立保存</small></div>' +
       '<label class="field"><span class="field-label">气泡皮肤</span><select id="chatPrefSkin"><option value="classic">水色物语 · 原生</option><option value="qq-blue">QQ · 清透蓝</option><option value="mint">薄荷绿</option><option value="rose">雾粉</option><option value="glass">轻雾玻璃</option></select></label>' +
       '<div class="chat-skin-preview" id="chatSkinPreview" data-bubble-skin="' + bubbleSkin + '"><div class="chat-skin-preview-label">实时预览 · 外观不会立即保存</div><div class="chat-skin-preview-line"><span class="chat-skin-preview-avatar">TA</span><span class="chat-skin-preview-bubble ai">今天想和你分享一点小事。</span></div><div class="chat-skin-preview-line mine"><span class="chat-skin-preview-bubble user">好呀，我在听。</span><span class="chat-skin-preview-avatar">我</span></div></div>' +
+      '<div class="chat-wallpaper-presets" id="chatWallpaperPresets" data-selected="' + wallpaperPreset + '"><span class="field-label">内置聊天背景</span><div class="chat-wallpaper-preset-grid"><button type="button" data-wallpaper-preset="mist" aria-label="晨雾" class="wallpaper-preset mist"><span>晨雾</span></button><button type="button" data-wallpaper-preset="lake" aria-label="湖光" class="wallpaper-preset lake"><span>湖光</span></button><button type="button" data-wallpaper-preset="petal" aria-label="花汐" class="wallpaper-preset petal"><span>花汐</span></button><button type="button" data-wallpaper-preset="midnight" aria-label="夜航" class="wallpaper-preset midnight"><span>夜航</span></button></div><span class="field-hint">先选一款背景，也可以在下面上传自己的图片。</span></div>' +
       '<label class="field"><span class="field-label">聊天背景图片</span><input id="chatPrefWallpaper" type="file" accept="image/*"><span class="field-hint" id="chatWallpaperHint">' + (hasWallpaper ? '当前窗口已设置背景图' : '选择一张图片，作为当前聊天的背景') + '</span><button class="btn-quiet chat-skin-clear" id="chatWallpaperClear" type="button">清除聊天背景</button></label>' +
       '<label class="field"><span class="field-label">气泡背景图片</span><input id="chatPrefBubbleWallpaper" type="file" accept="image/*"><span class="field-hint" id="bubbleWallpaperHint">' + (hasBubbleWallpaper ? '当前窗口已设置气泡图片' : '选择图片作为消息气泡纹理') + '</span><button class="btn-quiet chat-skin-clear" id="bubbleWallpaperClear" type="button">清除气泡图片</button></label>' +
       '<div class="chat-skin-divider"><span>AVATARS · 头像</span><small>只作用于当前窗口</small></div>' +
@@ -589,6 +593,17 @@
         ov.querySelector('#chatPrefTools').value = toolsVisible ? 'show' : 'hide';
         ov.querySelector('#chatPrefSkin').value = bubbleSkin;
         var clearWallpaper = false, clearBubbleWallpaper = false, clearAiAvatar = false, clearUserAvatar = false;
+        var selectedWallpaperPreset = wallpaperPreset;
+        ov.querySelectorAll('[data-wallpaper-preset]').forEach(function (button) {
+          button.setAttribute('aria-pressed', button.getAttribute('data-wallpaper-preset') === selectedWallpaperPreset ? 'true' : 'false');
+          button.addEventListener('click', function () {
+            selectedWallpaperPreset = this.getAttribute('data-wallpaper-preset');
+            ov.querySelector('#chatWallpaperPresets').setAttribute('data-selected', selectedWallpaperPreset);
+            ov.querySelectorAll('[data-wallpaper-preset]').forEach(function (node) { node.setAttribute('aria-pressed', node === button ? 'true' : 'false'); });
+            clearWallpaper = true; ov.querySelector('#chatPrefWallpaper').value = '';
+            ov.querySelector('#chatWallpaperHint').textContent = '已选择内置背景「' + this.textContent.trim() + '」';
+          });
+        });
         ov.querySelector('#chatPrefSkin').addEventListener('change', function () { ov.querySelector('#chatSkinPreview').setAttribute('data-bubble-skin', this.value); });
         ov.querySelector('#aiAvatarClear').addEventListener('click', function () { clearAiAvatar = true; ov.querySelector('#chatPrefAiAvatar').value = ''; ov.querySelector('#aiAvatarHint').textContent = '保存后恢复默认头像'; });
         ov.querySelector('#userAvatarClear').addEventListener('click', function () { clearUserAvatar = true; ov.querySelector('#chatPrefUserAvatar').value = ''; ov.querySelector('#userAvatarHint').textContent = '保存后恢复默认头像'; });
@@ -622,6 +637,7 @@
               showToolCalls: ov.querySelector('#chatPrefTools').value !== 'hide',
               bubbleSkin: ov.querySelector('#chatPrefSkin').value,
               chatWallpaper: clearWallpaper ? '' : imageResults[0],
+              chatWallpaperPreset: selectedWallpaperPreset,
               bubbleWallpaper: clearBubbleWallpaper ? '' : imageResults[1],
               aiAvatar: clearAiAvatar ? '' : imageResults[2],
               userAvatar: clearUserAvatar ? '' : imageResults[3]
