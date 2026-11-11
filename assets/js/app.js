@@ -307,7 +307,8 @@
     var visible = sorted.filter(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
       var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息';
-      return !query || (String(item.title || '') + ' ' + preview).toLowerCase().indexOf(query) >= 0;
+      var transcript = (item.messages || []).map(function (m) { return String(m.content || ''); }).join(' ');
+      return !query || (String(item.title || '') + ' ' + preview + ' ' + transcript).toLowerCase().indexOf(query) >= 0;
     });
     host.innerHTML = visible.length ? visible.map(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
