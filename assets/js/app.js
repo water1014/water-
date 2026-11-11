@@ -972,7 +972,7 @@
       }
     }
     el.innerHTML = buildReason(m) + buildToolCalls(m) +
-      '<div class="row"> + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
+      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
   }
