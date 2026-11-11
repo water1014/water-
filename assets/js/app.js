@@ -1000,7 +1000,7 @@
     return el;
   }
 
-  function buildToolCalls(m) {
+  function buildToolCalls(m, index) {
     if (chatSetting('showToolCalls', true) === false) return '';
     if (!Array.isArray(m.toolCalls) || !m.toolCalls.length) return '';
     var rows = m.toolCalls.map(function (tool) {
@@ -1019,17 +1019,19 @@
       var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
       return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>请求记录</em></div>';
     }).join('');
-    return '<section class="tool-call-group"><button class="tool-call-toggle" type="button" aria-expanded="false"><span>⌘</span><b>工具调用 · ' + m.toolCalls.length + '</b><small>查看记录</small><i>›</i></button><div class="tool-call-details">' + rows + '</div></section>';
+    var panelId = 'chat-tools-' + Number(index);
+    return '<section class="tool-call-group"><button class="tool-call-toggle" type="button" aria-expanded="false" aria-controls="' + panelId + '"><span>⌘</span><b>工具调用 · ' + m.toolCalls.length + '</b><small>查看记录</small><i>›</i></button><div class="tool-call-details" id="' + panelId + '" hidden><p class="tool-call-note">模型提出的调用请求，仅为记录，不代表工具已执行</p>' + rows + '</div></section>';
   }
 
-  function buildReason(m) {
+  function buildReason(m, index) {
     if (!m.reasoning) return '';
     if (chatSetting('showReasoning', config.showReasoning !== false) === false) return '';
-    return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考摘要">' +
+    var panelId = 'chat-thinking-' + Number(index);
+    return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考摘要" aria-expanded="false" aria-controls="' + panelId + '">' +
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.4 9.2 3.9 3.9 0 0 1 17 18z"/></svg>' +
       '<span>Thinking</span>' +
       '<svg class="reason-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>' +
-      '</button><div class="reason-body">' + esc(m.reasoning) + '</div></div>';
+      '</button><div class="reason-body" id="' + panelId + '" hidden>' + esc(m.reasoning) + '</div></div>';
   }
 
   function voiceBars(seed) {
@@ -1157,7 +1159,7 @@
       el.innerHTML = messageRow + timeMarkup;
     } else {
       el.innerHTML = '<div class="assistant-flow">' +
-        buildReason(m) + buildToolCalls(m) + messageRow + timeMarkup +
+        buildReason(m, i) + buildToolCalls(m, i) + messageRow + timeMarkup +
         '</div>';
     }
     return el;
@@ -1657,6 +1659,8 @@
       var toolGroup = toolToggle.closest('.tool-call-group');
       var toolExpanded = toolGroup.classList.toggle('is-open');
       toolToggle.setAttribute('aria-expanded', toolExpanded ? 'true' : 'false');
+      var toolDetails = toolGroup.querySelector('.tool-call-details');
+      if (toolDetails) toolDetails.hidden = !toolExpanded;
       return;
     }
     var reasonToggle = e.target.closest('.reason-bar');
@@ -1665,6 +1669,8 @@
       var expanded = reasonPanel.classList.toggle('is-open');
       reasonToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       reasonToggle.setAttribute('aria-label', expanded ? '收起思考摘要' : '展开思考摘要');
+      var reasonBody = reasonPanel.querySelector('.reason-body');
+      if (reasonBody) reasonBody.hidden = !expanded;
       return;
     }
     var photoSave = e.target.closest('[data-chat-photo]');
