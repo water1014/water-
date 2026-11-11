@@ -307,13 +307,13 @@
     var sorted = chatSessions.slice().sort(function (a, b) { return b.updatedAt - a.updatedAt; });
     var visible = sorted.filter(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息';
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息';
       var transcript = (item.messages || []).map(function (m) { return String(m.content || ''); }).join(' ');
       return !query || (String(item.title || '') + ' ' + preview + ' ' + transcript).toLowerCase().indexOf(query) >= 0;
     });
     host.innerHTML = visible.length ? visible.map(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + '">' +
         '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
         '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small></span>' +
@@ -915,7 +915,7 @@
           });
         })(parsedArgs);
         args = JSON.stringify(parsedArgs, null, 2);
-      } catch (e) { args = args.replace(/(authorization|cookie|api[_-]?key|token|secret|password|credential)(\\s*[=:]\\s*)[^,}\\s]+/gi, '$1$2[已隐藏]'); }
+      } catch (e) { args = args.replace(/(authorization|cookie|api[_-]?key|token|secret|password|credential)(\s*[=:]\s*)[^,}\s]+/gi, '$1$2[已隐藏]'); }
       var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
       return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>请求记录</em></div>';
     }).join('');
