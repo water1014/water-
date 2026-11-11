@@ -534,7 +534,9 @@
     var wallpaper = typeof settings.chatWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.chatWallpaper) ? settings.chatWallpaper : '';
     var bubbleImage = typeof settings.bubbleWallpaper === 'string' && /^data:image\/jpeg;base64,/.test(settings.bubbleWallpaper) ? settings.bubbleWallpaper : '';
     if (wallpaper) {
-      host.style.backgroundImage = 'linear-gradient(rgba(246,250,252,.60),rgba(246,250,252,.60)),url("' + wallpaper + '")';
+      var pageTheme = document.documentElement.getAttribute('data-theme');
+      var veil = pageTheme === 'night' ? 'rgba(17,34,43,.58)' : (pageTheme === 'rose' ? 'rgba(255,241,247,.54)' : 'rgba(246,250,252,.60)');
+      host.style.backgroundImage = 'linear-gradient(' + veil + ',' + veil + '),url("' + wallpaper + '")';
       host.style.backgroundSize = 'cover'; host.style.backgroundPosition = 'center'; host.style.backgroundRepeat = 'no-repeat';
     } else {
       host.style.removeProperty('background-image'); host.style.removeProperty('background-size');
