@@ -3610,3 +3610,73 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 [data-theme="night"] .app-chat .msg .msg-actions button{color:rgba(205,226,234,.7)}
 [data-theme="rose"] .app-chat .msg .msg-actions button{color:rgba(135,105,117,.78)}
 @media(prefers-reduced-motion:reduce){.app-chat .msg .msg-actions,.app-chat .msg .msg-actions button{transition:none}}
+
+
+/* 35 · TRACE PANELS · keep expanded diagnostics inside the chat viewport */
+.app-chat .reason,
+.app-chat .tool-call-group{min-width:0}
+.app-chat .reason-body{
+  box-sizing:border-box;
+  max-height:min(38vh,300px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(112,160,178,.28) transparent;
+}
+.app-chat .tool-call-details{
+  box-sizing:border-box;
+  max-height:min(42vh,340px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(112,160,178,.28) transparent;
+}
+.app-chat .tool-call-note{
+  position:sticky;
+  top:0;
+  z-index:1;
+  margin:0;
+  padding:5px 0 7px;
+  background:var(--bubble-ai);
+  line-height:1.45;
+}
+.app-chat .tool-call-row{min-width:0}
+.app-chat .tool-call-copy{min-width:0;max-width:100%}
+.app-chat .tool-call-arguments{
+  max-height:116px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  touch-action:pan-x pan-y;
+}
+.app-chat .reason-body :first-child{margin-top:0}
+.app-chat .reason-body :last-child{margin-bottom:0}
+.app-chat .reason.is-open .reason-caret,
+.app-chat .tool-call-group.is-open .tool-call-toggle>i{transform:rotate(90deg)}
+.app-chat .reason-caret,
+.app-chat .tool-call-toggle>i{transition:transform 160ms ease}
+@media(max-width:600px){
+  .app-chat .reason,
+  .app-chat .tool-call-group{width:100%;max-width:min(94%,640px)}
+  .app-chat .reason-body{
+    max-height:30vh;
+    padding:9px 10px;
+    font-size:11px;
+  }
+  .app-chat .tool-call-details{
+    max-height:34vh;
+    padding-right:3px;
+  }
+  .app-chat .tool-call-arguments{max-height:104px;font-size:9px}
+  .app-chat .tool-call-toggle{max-width:100%}
+}
+@media(max-width:380px){
+  .app-chat .reason-body{max-height:26vh;padding:8px 9px}
+  .app-chat .tool-call-details{max-height:30vh}
+  .app-chat .tool-call-arguments{max-height:88px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-chat .reason-caret,
+  .app-chat .tool-call-toggle>i{transition:none}
+}
