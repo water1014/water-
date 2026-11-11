@@ -330,7 +330,11 @@
     if (chatSidebarCloseTimer) { clearTimeout(chatSidebarCloseTimer); chatSidebarCloseTimer = null; }
     renderChatSidebar();
     scrim.hidden = false;
-    requestAnimationFrame(function () { scrim.classList.add('is-open'); });
+    requestAnimationFrame(function () {
+      scrim.classList.add('is-open');
+      var search = $('chatSessionSearch');
+      if (search) search.focus();
+    });
     $('chatMenu').setAttribute('aria-expanded', 'true');
   }
   function closeChatSidebar() {
@@ -2996,6 +3000,23 @@
       });
     }
   }
+  document.addEventListener('keydown', function (e) {
+    var scrim = $('chatSidebarScrim');
+    if (!scrim || scrim.hidden || !scrim.classList.contains('is-open')) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeChatSidebar();
+      $('chatMenu').focus();
+      return;
+    }
+    if (e.key === 'Tab') {
+      var focusable = Array.prototype.slice.call(scrim.querySelectorAll('button:not([disabled]),input:not([disabled]),[href],[tabindex]:not([tabindex="-1"])')).filter(function (el) { return el.offsetParent !== null; });
+      if (!focusable.length) return;
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
   $('chatMenu').addEventListener('click', openChatSidebar);
   if ($('chatSidebarClose')) $('chatSidebarClose').addEventListener('click', closeChatSidebar);
   if ($('chatSidebarScrim')) $('chatSidebarScrim').addEventListener('click', function (e) {
