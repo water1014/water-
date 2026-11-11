@@ -2763,3 +2763,161 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .chat-session-tools button{width:25px}
   .chat-session-filters button{min-height:28px}
 }
+
+
+/* 27 · CHAT COMPOSITION RESET · match the compact AI-assistant reference */
+.app-chat .chat-scroll{
+  padding:14px 13px 20px;
+}
+.app-chat .msg{
+  width:100%;
+  margin:0 0 12px;
+  gap:4px;
+}
+.app-chat .msg.ai .row,
+.app-chat .msg.user .row{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:100%;
+  gap:4px;
+}
+.app-chat .msg.ai .row{align-items:flex-start}
+.app-chat .msg.user .row{align-items:flex-end}
+.app-chat .msg .bubble-stack,
+.app-chat .msg .bubble{
+  width:auto;
+  max-width:min(88%,520px);
+}
+.app-chat .msg.ai .bubble,
+.app-chat .msg.ai .bubble-stack .bubble-piece{
+  padding:9px 13px;
+  border-radius:15px;
+  font-size:14px;
+  line-height:1.58;
+  letter-spacing:0;
+  box-shadow:none;
+}
+.app-chat .msg.user .bubble{
+  max-width:min(88%,520px);
+  padding:9px 13px;
+  border-radius:15px;
+  font-size:14px;
+  line-height:1.58;
+}
+.app-chat .msg.ai .bubble-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+  max-width:100%;
+}
+.app-chat .msg.ai .bubble-stack .bubble-piece{
+  max-width:min(88%,520px);
+  border-radius:15px;
+}
+.app-chat .msg.ai .bubble-stack .bubble-piece:last-child{
+  border-bottom-left-radius:15px;
+}
+.app-chat .msg .msg-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin:1px 0 0 2px;
+  opacity:.72;
+}
+.app-chat .msg .msg-actions button{
+  min-height:23px;
+  padding:2px 7px;
+  border-radius:8px;
+  font-size:9px;
+}
+.app-chat .msg .msg-time{
+  margin:2px 4px 0;
+  font-size:9px;
+  line-height:13px;
+  color:#9aabb2;
+}
+.app-chat .msg.ai .reason{
+  width:min(88%,520px);
+  margin:0 0 3px 1px;
+}
+.app-chat .reason-bar{
+  min-height:27px;
+  padding:4px 8px;
+  border-radius:9px;
+  font-size:10px;
+  background:rgba(112,175,194,.075);
+}
+.app-chat .reason-body{
+  margin-top:5px;
+  padding:9px 11px;
+  border-radius:11px;
+  font-size:11px;
+  line-height:1.55;
+}
+.app-chat .tool-call-group{
+  width:min(88%,520px);
+  margin:0 0 4px 1px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+.app-chat .tool-call-toggle{
+  width:auto;
+  min-height:25px;
+  padding:3px 7px;
+  gap:6px;
+  border:1px solid rgba(119,166,184,.13);
+  border-radius:8px;
+  background:rgba(119,166,184,.055);
+  font-size:10px;
+}
+.app-chat .tool-call-toggle>small{font-size:9px}
+.app-chat .tool-call-details{
+  margin:4px 0 0 5px;
+  padding:2px 8px 5px;
+  border-left:1px solid rgba(119,166,184,.2);
+}
+.app-chat .tool-call-row{padding:6px 2px}
+.app-chat .tool-call-copy>b{font-size:10px}
+.app-chat .tool-call-copy>small{font-size:9px}
+.app-chat .msg.group-start,
+.app-chat .msg.group-middle,
+.app-chat .msg.group-end{margin-top:0}
+.app-chat .msg.group-start{margin-top:5px}
+.app-chat .msg.group-end{margin-bottom:10px}
+.app-chat .msg.group-start .bubble,
+.app-chat .msg.group-middle .bubble,
+.app-chat .msg.group-end .bubble,
+.app-chat .msg.group-solo .bubble{
+  border-radius:15px;
+}
+.app-chat .msg.group-start .bubble-stack .bubble-piece,
+.app-chat .msg.group-middle .bubble-stack .bubble-piece,
+.app-chat .msg.group-end .bubble-stack .bubble-piece{
+  border-radius:15px;
+}
+[data-theme="night"] .app-chat .reason-bar,
+[data-theme="night"] .app-chat .tool-call-toggle{
+  color:#a8c6d0;background:rgba(143,190,204,.08);
+  border-color:rgba(143,190,204,.13)
+}
+[data-theme="rose"] .app-chat .reason-bar,
+[data-theme="rose"] .app-chat .tool-call-toggle{
+  background:rgba(217,158,188,.075);
+  border-color:rgba(217,158,188,.14)
+}
+@media(max-width:380px){
+  .app-chat .chat-scroll{padding:12px 11px 18px}
+  .app-chat .msg .bubble,
+  .app-chat .msg .bubble-stack .bubble-piece,
+  .app-chat .msg.user .bubble{font-size:13.5px;padding:8px 11px}
+  .app-chat .msg.ai .reason,
+  .app-chat .tool-call-group{width:91%}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-chat .msg .bubble,
+  .app-chat .tool-call-toggle{transition:none}
+}
