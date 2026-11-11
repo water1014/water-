@@ -4066,3 +4066,50 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 [data-theme="night"] .app-chat .chat-skin-preview{background:rgba(16,32,40,.34)}
 [data-theme="night"] .app-chat .chat-skin-preview-bubble.ai{background:rgba(29,48,58,.92);color:#e6f0f3}
 [data-theme="night"] .app-chat .chat-skin-preview-bubble.user{background:linear-gradient(145deg,#31566a,#254457);color:#eff7fa}
+
+
+/* Avatar rails are available across every chat skin, not only QQ blue */
+.app-chat .chat-scroll .msg.ai.group-start .row,
+.app-chat .chat-scroll .msg.ai.group-solo .row{margin-left:38px;max-width:calc(100% - 38px)}
+.app-chat .chat-scroll .msg.user.group-start .row,
+.app-chat .chat-scroll .msg.user.group-solo .row{margin-right:38px;max-width:calc(100% - 38px)}
+.app-chat .chat-scroll .msg.ai.group-start .row::before,
+.app-chat .chat-scroll .msg.ai.group-solo .row::before,
+.app-chat .chat-scroll .msg.user.group-start .row::before,
+.app-chat .chat-scroll .msg.user.group-solo .row::before{
+  position:absolute;top:0;display:grid;place-items:center;
+  width:28px;height:28px;border-radius:9px;font-size:10px;font-weight:750;
+  box-shadow:0 2px 8px rgba(57,105,139,.12);
+}
+.app-chat .chat-scroll .msg.ai.group-start .row::before,
+.app-chat .chat-scroll .msg.ai.group-solo .row::before{
+  content:"TA";left:-36px;color:#527b96;
+  background:linear-gradient(145deg,#eaf6fc,#cfe7f5);
+  border:1px solid rgba(115,166,196,.22);
+}
+.app-chat .chat-scroll .msg.user.group-start .row::before,
+.app-chat .chat-scroll .msg.user.group-solo .row::before{
+  content:"我";right:-36px;color:#527b96;
+  background:linear-gradient(145deg,#f4fbff,#dceefa);
+  border:1px solid rgba(115,166,196,.22);
+}
+.app-chat .chat-scroll[data-custom-ai-avatar] .msg.ai.group-start .row::before,
+.app-chat .chat-scroll[data-custom-ai-avatar] .msg.ai.group-solo .row::before{
+  content:"";background-image:var(--chat-ai-avatar);background-size:cover;background-position:center;
+  background-repeat:no-repeat;border:1px solid rgba(255,255,255,.82);
+}
+.app-chat .chat-scroll[data-custom-user-avatar] .msg.user.group-start .row::before,
+.app-chat .chat-scroll[data-custom-user-avatar] .msg.user.group-solo .row::before{
+  content:"";background-image:var(--chat-user-avatar);background-size:cover;background-position:center;
+  background-repeat:no-repeat;border:1px solid rgba(255,255,255,.82);
+}
+@media(max-width:380px){
+  .app-chat .chat-scroll .msg.ai.group-start .row,
+  .app-chat .chat-scroll .msg.ai.group-solo .row,
+  .app-chat .chat-scroll .msg.user.group-start .row,
+  .app-chat .chat-scroll .msg.user.group-solo .row{max-width:calc(100% - 34px)}
+  .app-chat .chat-scroll .msg.ai.group-start .row,
+  .app-chat .chat-scroll .msg.ai.group-solo .row{margin-left:34px}
+  .app-chat .chat-scroll .msg.user.group-start .row,
+  .app-chat .chat-scroll .msg.user.group-solo .row{margin-right:34px}
+}
