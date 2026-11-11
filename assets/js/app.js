@@ -4372,6 +4372,63 @@
     });
   }
 
+  function downloadCurrentChat(format) {
+    var session = activeChatSession();
+    if (!session) { toast('没有可导出的聊天窗口'); return; }
+    var messages = Array.isArray(history) ? history : [];
+    if (!messages.length) { toast('当前窗口还没有聊天记录'); return; }
+    var title = String(session.title || '我们的聊天').replace(/[\\/:*?"<>|]+/g, '_').trim().slice(0, 32) || '聊天记录';
+    var stamp = new Date().toISOString().slice(0, 10);
+    var content, mime, extension;
+    if (format === 'json') {
+      content = JSON.stringify({
+        format: 'mizu-chat-export',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        session: { title: session.title || '我们的聊天', createdAt: session.createdAt || null, updatedAt: session.updatedAt || null },
+        messages: messages
+      }, null, 2);
+      mime = 'application/json;charset=utf-8';
+      extension = 'json';
+    } else {
+      var lines = ['# ' + (session.title || '我们的聊天'), '', '导出时间：' + new Date().toLocaleString(), '消息数量：' + messages.length, ''];
+      messages.forEach(function (m) {
+        var role = m.role === 'user' ? '我' : 'TA';
+        lines.push('## ' + role + ' · ' + (m.ts ? new Date(m.ts).toLocaleString() : ''));
+        if (m.image) lines.push('[图片消息]');
+        if (m.sticker) lines.push('[贴纸消息] ' + String(m.content || ''));
+        if (m.voice) lines.push('[语音消息]');
+        if (m.content && !m.image && !m.sticker && !m.voice) lines.push(String(m.content));
+        if (m.reasoning || m.reasoning_content) lines.push('\n> Thinking 摘要：\n> ' + String(m.reasoning || m.reasoning_content).replace(/\n/g, '\n> '));
+        if (Array.isArray(m.toolCalls) && m.toolCalls.length) {
+          lines.push('\n工具调用请求记录：');
+          m.toolCalls.forEach(function (tool) {
+            lines.push('- ' + String(tool.name || tool.function && tool.function.name || '工具') + (tool.arguments ? '：' + String(typeof tool.arguments === 'string' ? tool.arguments : JSON.stringify(tool.arguments)) : ''));
+          });
+        }
+        lines.push('');
+      });
+      content = lines.join('\n');
+      mime = 'text/markdown;charset=utf-8';
+      extension = 'md';
+    }
+    try {
+      var blob = new Blob(['\uFEFF', content], { type: mime });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = title + '-' + stamp + '.' + extension;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      toast('聊天记录已导出');
+    } catch (err) {
+      toast('导出失败，请检查浏览器下载权限');
+    }
+  }
+
   /* ⋯ 菜单 */
   if ($('chatMore')) {
     $('chatMore').addEventListener('click', function () {
@@ -4380,6 +4437,8 @@
         '<button class="hub-row" data-act="heat" type="button" style="margin-bottom:8px"><span class="hub-row-txt">我们聊过的每一天</span></button>' +
         '<button class="hub-row" data-act="profile" type="button" style="margin-bottom:8px"><span class="hub-row-txt">恋人资料卡</span></button>' +
         '<button class="hub-row" data-act="settings" type="button" style="margin-bottom:8px"><span class="hub-row-txt">当前窗口设置</span></button>' +
+        '<button class="hub-row" data-act="export-md" type="button" style="margin-bottom:8px"><span class="hub-row-txt">导出聊天 · Markdown 文档</span></button>' +
+        '<button class="hub-row" data-act="export-json" type="button" style="margin-bottom:8px"><span class="hub-row-txt">导出聊天 · 完整 JSON 备份</span></button>' +
         '<button class="hub-row" data-act="clear" type="button"><span class="hub-row-txt" style="color:#A8545C">清空当前窗口记录</span></button>',
         function (ov, close) {
           ov.addEventListener('click', function (e) {
@@ -4392,6 +4451,8 @@
               else if (act === 'heat') openHeat();
               else if (act === 'profile') openProfile();
               else if (act === 'settings') openChatSettings();
+              else if (act === 'export-md') downloadCurrentChat('md');
+              else if (act === 'export-json') downloadCurrentChat('json');
               else if (act === 'clear') {
                 history = [];
                 saveHistory();
