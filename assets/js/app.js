@@ -1333,6 +1333,18 @@
     });
     return dates;
   }
+  function updateChatDateNavFromScroll() {
+    if (!history.length || !msgList.children.length) return;
+    var visible = null, scrollTop = chatScroll.scrollTop + 18;
+    var nodes = msgList.querySelectorAll('.msg[data-index]');
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].offsetTop - msgList.offsetTop >= scrollTop) {
+        visible = Number(nodes[i].dataset.index); break;
+      }
+    }
+    if (visible === null) visible = history.length - 1;
+    if (history[visible]) syncChatDateNav(localDateInputValue(new Date(history[visible].ts)));
+  }
   function syncChatDateNav(value) {
     var picker = $('chatDatePicker'), prev = $('chatDatePrev'), next = $('chatDateNext');
     if (!picker || !prev || !next) return;
@@ -1850,6 +1862,7 @@
   chatScroll.addEventListener('scroll', function () {
     stickyBottom = isNearBottom();
     updateJump();
+    updateChatDateNavFromScroll();
   }, { passive: true });
 
   jumpBtn.addEventListener('click', function () { scrollToBottom(true); jumpBtn.classList.remove('show'); });
