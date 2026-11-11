@@ -4167,3 +4167,38 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   background:linear-gradient(135deg,#d7e9ef,#f4f7f8);
   border:1px solid var(--line,rgba(120,145,158,.16));
 }
+
+
+/* 主屏设置入口与三间房 */
+.home-settings{
+  position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:18;
+  width:38px;height:38px;display:grid;place-items:center;border-radius:50%;
+  color:var(--ink-sub);background:rgba(255,255,255,.56);
+  border:1px solid var(--glass-line);box-shadow:0 4px 16px rgba(46,74,86,.08);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.home-settings:active{transform:scale(.94)}
+[data-theme="night"] .home-settings{background:rgba(40,40,46,.72);color:#D5E0E5;border-color:rgba(255,255,255,.1)}
+.hpage-apps{justify-content:center;padding-bottom:132px}
+.hpage-apps .hp-eyebrow{font-size:13px;letter-spacing:.08em;color:var(--ink-sub);text-align:center}
+.hpage-apps .app-grid{
+  width:min(100%,280px);margin:0 auto;padding-top:8px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;
+}
+.hpage-apps .app-cell{
+  min-height:112px;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 8px;border-radius:22px;background:rgba(255,255,255,.58);
+  border:1px solid rgba(255,255,255,.72);box-shadow:0 8px 24px rgba(46,74,86,.07);
+}
+.hpage-apps .app-icon{
+  width:52px;height:52px;border-radius:17px;background:rgba(255,255,255,.82);
+  border:1px solid rgba(255,255,255,.84);box-shadow:0 5px 16px rgba(46,74,86,.08);
+}
+.hpage-apps .app-label{font-size:12px;letter-spacing:.08em;opacity:1}
+.hpage-apps .room-empty{background:rgba(255,255,255,.18);border:1px dashed rgba(107,138,150,.28);box-shadow:none}
+.room-empty-mark{width:42px;height:42px;display:grid;place-items:center;border:1px dashed rgba(107,138,150,.34);border-radius:50%;font-size:22px;font-weight:300;color:var(--ink-sub);opacity:.7}
+[data-theme="night"] .hpage-apps .app-cell{background:rgba(40,40,46,.62);border-color:rgba(255,255,255,.08)}
+[data-theme="night"] .hpage-apps .room-empty{background:rgba(255,255,255,.025);border-style:dashed}
+.dice-kicker{letter-spacing:.08em}
+.dice-actions{justify-content:flex-end}
+.dice-actions .btn-primary{flex:0 1 132px}
