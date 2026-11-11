@@ -3174,3 +3174,49 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 @media(max-width:380px){
   .app-chat .msg.ai .bubble pre,.app-chat .msg.ai .bubble-piece pre{padding:8px 9px;font-size:9px}
 }
+
+
+/* 31 · MESSAGE THREAD SHAPES · subtle continuity across consecutive turns */
+.app-chat .msg.group-start,
+.app-chat .msg.group-middle{margin-bottom:4px}
+.app-chat .msg.group-end{margin-bottom:12px}
+.app-chat .msg.group-start .bubble,
+.app-chat .msg.group-start .bubble-piece{
+  border-bottom-left-radius:7px!important;
+}
+.app-chat .msg.group-middle .bubble,
+.app-chat .msg.group-middle .bubble-piece{
+  border-top-left-radius:7px!important;
+  border-bottom-left-radius:7px!important;
+}
+.app-chat .msg.group-end .bubble,
+.app-chat .msg.group-end .bubble-piece{
+  border-top-left-radius:7px!important;
+}
+.app-chat .msg.user.group-start .bubble,
+.app-chat .msg.user.group-start .bubble-piece{
+  border-bottom-right-radius:7px!important;
+  border-bottom-left-radius:15px!important;
+}
+.app-chat .msg.user.group-middle .bubble,
+.app-chat .msg.user.group-middle .bubble-piece{
+  border-top-right-radius:7px!important;
+  border-bottom-right-radius:7px!important;
+  border-top-left-radius:15px!important;
+  border-bottom-left-radius:15px!important;
+}
+.app-chat .msg.user.group-end .bubble,
+.app-chat .msg.user.group-end .bubble-piece{
+  border-top-right-radius:7px!important;
+  border-top-left-radius:15px!important;
+}
+.app-chat .msg.group-middle .msg-time{display:none}
+.app-chat .msg.group-start .assistant-flow,
+.app-chat .msg.group-middle .assistant-flow,
+.app-chat .msg.group-end .assistant-flow{gap:4px}
+.app-chat .msg.group-start .msg-actions,
+.app-chat .msg.group-middle .msg-actions{margin-top:0}
+@media(max-width:380px){
+  .app-chat .msg.group-start,.app-chat .msg.group-middle{margin-bottom:3px}
+  .app-chat .msg.group-end{margin-bottom:10px}
+}
