@@ -3357,3 +3357,108 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .tool-call-details a:active {
   opacity: .72;
 }
+
+
+/* 31 · CHAT CODE BLOCKS · toolbar stays still while code scrolls */
+.app-chat .msg.ai .bubble .chat-code-shell,
+.app-chat .msg.ai .bubble-piece .chat-code-shell {
+  width:100%;
+  max-width:100%;
+  margin:9px 0;
+  overflow:hidden;
+  border:1px solid rgba(108,163,181,.16);
+  border-radius:11px;
+  background:rgba(35,65,77,.045);
+}
+.app-chat .msg.ai .bubble .chat-code-toolbar,
+.app-chat .msg.ai .bubble-piece .chat-code-toolbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:34px;
+  padding:4px 8px 4px 11px;
+  border-bottom:1px solid rgba(108,163,181,.13);
+  background:rgba(108,163,181,.055);
+}
+.app-chat .msg.ai .bubble .chat-code-language,
+.app-chat .msg.ai .bubble-piece .chat-code-language {
+  min-width:0;
+  overflow:hidden;
+  color:var(--ink-sub);
+  font:600 10px/1.4 var(--mono);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.app-chat .msg.ai .bubble .chat-code-copy,
+.app-chat .msg.ai .bubble-piece .chat-code-copy {
+  flex:0 0 auto;
+  min-height:27px;
+  padding:3px 9px;
+  border:1px solid rgba(108,163,181,.18);
+  border-radius:7px;
+  background:rgba(255,255,255,.52);
+  color:var(--ink-sub);
+  font:500 10px/1.3 inherit;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.app-chat .msg.ai .bubble .chat-code-copy.is-copied,
+.app-chat .msg.ai .bubble-piece .chat-code-copy.is-copied {
+  color:var(--accent-deep);
+  border-color:rgba(108,163,181,.34);
+}
+.app-chat .msg.ai .bubble .chat-code-block,
+.app-chat .msg.ai .bubble-piece .chat-code-block {
+  display:block;
+  width:100%;
+  max-width:100%;
+  margin:0;
+  padding:10px 11px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--ink);
+  font:10px/1.65 var(--mono);
+  tab-size:2;
+}
+.app-chat .msg.ai .bubble .chat-code-block code,
+.app-chat .msg.ai .bubble-piece .chat-code-block code {
+  display:block;
+  min-width:max-content;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  white-space:pre;
+  overflow-wrap:normal;
+}
+[data-theme="night"] .app-chat .msg.ai .bubble .chat-code-shell,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece .chat-code-shell {
+  border-color:rgba(185,220,232,.14);
+  background:rgba(0,0,0,.16);
+}
+[data-theme="night"] .app-chat .msg.ai .bubble .chat-code-toolbar,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece .chat-code-toolbar {
+  border-bottom-color:rgba(185,220,232,.12);
+  background:rgba(185,220,232,.045);
+}
+[data-theme="night"] .app-chat .msg.ai .bubble .chat-code-copy,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece .chat-code-copy {
+  background:rgba(255,255,255,.055);
+  border-color:rgba(185,220,232,.16);
+  color:var(--ink-sub);
+}
+@media (max-width:380px) {
+  .app-chat .msg.ai .bubble .chat-code-block,
+  .app-chat .msg.ai .bubble-piece .chat-code-block {
+    padding:9px;
+    font-size:9px;
+  }
+}
