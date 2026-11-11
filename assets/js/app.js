@@ -978,7 +978,7 @@
       return safe;
     }
     var lines = source.replace(/\r/g, '').split('\n');
-    var out = [], paragraph = [], listType = '', inCode = false, fence = '', code = [];
+    var out = [], paragraph = [], listType = '', inCode = false, fence = '', code = [], codeLanguage = '';
     function flushParagraph() {
       if (!paragraph.length) return;
       out.push('<p>' + inline(paragraph.join('\n')).replace(/\n/g, '<br>') + '</p>');
@@ -988,8 +988,8 @@
       if (listType) { out.push('</' + listType + '>'); listType = ''; }
     }
     function closeCode() {
-      out.push('<pre><code>' + esc(code.join('\n')) + '</code></pre>');
-      code = []; inCode = false; fence = '';
+      out.push('<pre class="chat-code-block"><div class="chat-code-toolbar"><span class="chat-code-language">' + esc(codeLanguage || '代码') + '</span><button class="chat-code-copy" type="button" data-copy-code aria-label="复制代码" title="复制代码">复制</button></div><code>' + esc(code.join('\n')) + '</code></pre>');
+      code = []; inCode = false; fence = ''; codeLanguage = '';
     }
     var skipTableUntil = -1;
     function tableCells(line) {
