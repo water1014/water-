@@ -297,26 +297,35 @@
     var name = document.querySelector('#chatTitleBtn .chat-title-name');
     if (name) name.textContent = activeChatSession() ? activeChatSession().title : '我们的聊天';
   }
+  var chatSidebarQuery = '';
+  var chatSidebarCloseTimer = null;
   function renderChatSidebar() {
     var host = $('chatSessionList');
     if (!host) return;
+    var query = chatSidebarQuery.trim().toLowerCase();
     var sorted = chatSessions.slice().sort(function (a, b) { return b.updatedAt - a.updatedAt; });
-    host.innerHTML = sorted.map(function (item) {
+    var visible = sorted.filter(function (item) {
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息';
+      return !query || (String(item.title || '') + ' ' + preview).toLowerCase().indexOf(query) >= 0;
+    });
+    host.innerHTML = visible.length ? visible.map(function (item) {
+      var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
+      var preview = last ? String(last.content || (last.image ? '照片' : last.sticker ? '贴纸' : '语音')).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + '">' +
         '<button class="chat-session-open" type="button" data-chat-switch="' + esc(item.id) + '">' +
         '<span class="chat-session-avatar">水</span><span class="chat-session-copy"><b>' + esc(item.title) + '</b><small>' + esc(preview) + '</small></span>' +
         '<time>' + hhmm(item.updatedAt) + '</time></button>' +
         (chatSessions.length > 1 ? '<button class="chat-session-delete" type="button" data-chat-delete="' + esc(item.id) + '" aria-label="删除' + esc(item.title) + '">×</button>' : '') +
         '</div>';
-    }).join('');
+    }).join('') : '<p class="chat-session-empty">没有找到这段对话</p>';
     var count = $('chatSessionCount');
-    if (count) count.textContent = String(chatSessions.length).padStart(2, '0') + ' WINDOWS';
+    if (count) count.textContent = String(visible.length).padStart(2, '0') + ' / ' + String(chatSessions.length).padStart(2, '0') + ' WINDOWS';
   }
   function openChatSidebar() {
     var scrim = $('chatSidebarScrim');
     if (!scrim) return;
+    if (chatSidebarCloseTimer) { clearTimeout(chatSidebarCloseTimer); chatSidebarCloseTimer = null; }
     renderChatSidebar();
     scrim.hidden = false;
     requestAnimationFrame(function () { scrim.classList.add('is-open'); });
@@ -326,8 +335,12 @@
     var scrim = $('chatSidebarScrim');
     if (!scrim) return;
     scrim.classList.remove('is-open');
-    scrim.hidden = true;
     $('chatMenu').setAttribute('aria-expanded', 'false');
+    if (chatSidebarCloseTimer) clearTimeout(chatSidebarCloseTimer);
+    chatSidebarCloseTimer = setTimeout(function () {
+      if (!scrim.classList.contains('is-open')) scrim.hidden = true;
+      chatSidebarCloseTimer = null;
+    }, 300);
   }
   function createChatSession() {
     if (sending) { toast('等这条消息发送完成，再开启新窗口吧'); return; }
@@ -2934,6 +2947,39 @@
     if (del) { deleteChatSession(del.getAttribute('data-chat-delete')); return; }
     var pick = e.target.closest('[data-chat-switch]');
     if (pick) switchChatSession(pick.getAttribute('data-chat-switch'));
+  });
+  if ($('chatSessionSearch')) $('chatSessionSearch').addEventListener('input', function () {
+    chatSidebarQuery = this.value || '';
+    renderChatSidebar();
+  });
+  var chatSidebarGesture = null;
+  var chatView = $('view-chat');
+  if (chatView) {
+    chatView.addEventListener('pointerdown', function (e) {
+      var scrim = $('chatSidebarScrim');
+      var opened = scrim && !scrim.hidden && scrim.classList.contains('is-open');
+      if (e.target.closest('button,input,textarea,select')) return;
+      if (opened && e.target === scrim) chatSidebarGesture = { x: e.clientX, y: e.clientY, mode: 'close' };
+      else if (!opened && e.clientX <= 22) chatSidebarGesture = { x: e.clientX, y: e.clientY, mode: 'open' };
+      else chatSidebarGesture = null;
+    }, { passive: true });
+    chatView.addEventListener('pointerup', function (e) {
+      if (!chatSidebarGesture) return;
+      var dx = e.clientX - chatSidebarGesture.x;
+      var dy = e.clientY - chatSidebarGesture.y;
+      var mode = chatSidebarGesture.mode;
+      chatSidebarGesture = null;
+      if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+      if (mode === 'open' && dx > 0) openChatSidebar();
+      if (mode === 'close' && dx < 0) closeChatSidebar();
+    }, { passive: true });
+    chatView.addEventListener('pointercancel', function () { chatSidebarGesture = null; }, { passive: true });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var scrim = $('chatSidebarScrim');
+      if (scrim && !scrim.hidden && scrim.classList.contains('is-open')) closeChatSidebar();
+    }
   });
 
   /* ================= 手机绑定 ================= */
