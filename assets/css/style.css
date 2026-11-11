@@ -4113,3 +4113,39 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .chat-scroll .msg.user.group-start .row,
   .app-chat .chat-scroll .msg.user.group-solo .row{margin-right:34px}
 }
+
+
+/* 38 · BUILT-IN CHAT WALLPAPER GALLERY */
+.app-chat .chat-scroll[data-wallpaper-preset="mist"]:not([style*="background-image"]){
+  background-image:radial-gradient(ellipse at 12% 8%,rgba(191,220,235,.58),transparent 42%),linear-gradient(145deg,#edf5f8 0%,#e4eef3 48%,#f4f7f8 100%);
+}
+.app-chat .chat-scroll[data-wallpaper-preset="lake"]:not([style*="background-image"]){
+  background-image:radial-gradient(ellipse at 82% 16%,rgba(157,207,220,.54),transparent 40%),linear-gradient(155deg,#dceef1 0%,#d8e7ee 52%,#edf4f4 100%);
+}
+.app-chat .chat-scroll[data-wallpaper-preset="petal"]:not([style*="background-image"]){
+  background-image:radial-gradient(ellipse at 18% 12%,rgba(239,202,215,.5),transparent 42%),linear-gradient(145deg,#f6edf1 0%,#f0e7ed 52%,#f8f3f5 100%);
+}
+.app-chat .chat-scroll[data-wallpaper-preset="midnight"]:not([style*="background-image"]){
+  background-image:radial-gradient(ellipse at 78% 8%,rgba(83,125,151,.35),transparent 44%),linear-gradient(150deg,#1d3441 0%,#233d4b 54%,#172c38 100%);
+}
+[data-theme="night"] .app-chat .chat-scroll[data-wallpaper-preset="mist"]:not([style*="background-image"]),
+[data-theme="night"] .app-chat .chat-scroll[data-wallpaper-preset="lake"]:not([style*="background-image"]),
+[data-theme="night"] .app-chat .chat-scroll[data-wallpaper-preset="petal"]:not([style*="background-image"]){
+  background-image:radial-gradient(ellipse at 80% 12%,rgba(80,125,148,.22),transparent 44%),linear-gradient(150deg,#203743,#172d38);
+}
+.app-chat .chat-wallpaper-presets{display:flex;flex-direction:column;gap:9px;margin:2px 0 14px}
+.app-chat .chat-wallpaper-preset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.app-chat .wallpaper-preset{
+  position:relative;display:flex;align-items:flex-end;justify-content:flex-start;
+  min-width:0;height:72px;padding:7px;border:1px solid rgba(117,151,169,.2);
+  border-radius:12px;overflow:hidden;color:#355365;font:inherit;font-size:10px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)
+}
+.app-chat .wallpaper-preset span{position:relative;z-index:1;padding:3px 6px;border-radius:7px;background:rgba(255,255,255,.62)}
+.app-chat .wallpaper-preset.mist{background:radial-gradient(circle at 20% 15%,#fff,transparent 48%),linear-gradient(135deg,#c9e0ec,#eef4f5)}
+.app-chat .wallpaper-preset.lake{background:radial-gradient(circle at 78% 15%,#fff,transparent 45%),linear-gradient(135deg,#9fc9d8,#e1edf0)}
+.app-chat .wallpaper-preset.petal{background:radial-gradient(circle at 18% 12%,#fff,transparent 45%),linear-gradient(135deg,#e8cbd8,#f5eaf0)}
+.app-chat .wallpaper-preset.midnight{background:radial-gradient(circle at 75% 12%,#698da3,transparent 45%),linear-gradient(135deg,#1d3441,#36576a);color:#eff7fa}
+.app-chat .wallpaper-preset.midnight span{background:rgba(21,42,54,.68);color:#eff7fa}
+.app-chat .wallpaper-preset[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:380px){.app-chat .chat-wallpaper-preset-grid{gap:6px}.app-chat .wallpaper-preset{height:64px;padding:5px}}
