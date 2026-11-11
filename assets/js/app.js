@@ -962,7 +962,7 @@
     if (chatSetting('showReasoning', config.showReasoning !== false) === false) return '';
     return '<div class="reason"><button class="reason-bar" type="button" aria-label="展开思考摘要">' +
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.4 9.2 3.9 3.9 0 0 1 17 18z"/></svg>' +
-      '<span>模型思考摘要</span>' +
+      '<span>Thinking</span>' +
       '<svg class="reason-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>' +
       '</button><div class="reason-body">' + esc(m.reasoning) + '</div></div>';
   }
@@ -1059,8 +1059,14 @@
     var messageRow = bubbleMarkup || (m.content && actions)
       ? '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + (m.content ? actions : '') + '</div>'
       : '';
-    el.innerHTML = buildReason(m) + buildToolCalls(m) + messageRow +
-      '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
+    var timeMarkup = '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
+    if (isUser) {
+      el.innerHTML = messageRow + timeMarkup;
+    } else {
+      el.innerHTML = '<div class="assistant-flow">' +
+        buildReason(m) + buildToolCalls(m) + messageRow + timeMarkup +
+        '</div>';
+    }
     return el;
   }
 
