@@ -4149,3 +4149,13 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .app-chat .wallpaper-preset.midnight span{background:rgba(21,42,54,.68);color:#eff7fa}
 .app-chat .wallpaper-preset[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:380px){.app-chat .chat-wallpaper-preset-grid{gap:6px}.app-chat .wallpaper-preset{height:64px;padding:5px}}
+
+
+/* 39 · CHAT IMAGE PREVIEWS */
+.app-chat .chat-image-preview-wrap{display:flex;align-items:center;gap:12px;margin:4px 0 10px;padding:9px 11px;border:1px solid var(--line);border-radius:13px;background:var(--surface-soft)}
+.app-chat .chat-wallpaper-image-preview{display:none;width:112px;height:64px;object-fit:cover;border-radius:9px;background:linear-gradient(135deg,#d7e9ef,#f4f7f8)}
+.app-chat .chat-wallpaper-image-preview[src]{display:block}
+.app-chat .chat-image-preview-wrap span{font-size:11px;color:var(--muted)}
+.app-chat .chat-avatar-upload{position:relative}
+.app-chat .chat-avatar-image-preview{display:none;width:54px;height:54px;object-fit:cover;border-radius:15px;border:1px solid var(--line);background:var(--surface-soft);margin:2px 0 5px}
+.app-chat .chat-avatar-image-preview[src]{display:block}
