@@ -3341,3 +3341,19 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   outline-offset: 3px;
   border-radius: 3px;
 }
+
+
+/* Link affordance remains clear on touch screens as well as pointer devices. */
+.assistant-flow a,
+.message-content a,
+.reason-body a,
+.tool-call-details a {
+  text-decoration-thickness: 1px;
+  -webkit-tap-highlight-color: transparent;
+}
+.assistant-flow a:active,
+.message-content a:active,
+.reason-body a:active,
+.tool-call-details a:active {
+  opacity: .72;
+}
