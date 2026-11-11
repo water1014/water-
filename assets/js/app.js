@@ -325,20 +325,20 @@
     var visible = sorted.filter(function (item) {
       if (chatSidebarFilter === 'archived' ? !item.archived : item.archived) return false;
       var last = item.messages && item.messages.length ? item.messages[item.messages.length - 1] : null;
-      var preview = last ? messageText(last).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息';
+      var preview = last ? messageText(last).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息';
       var transcript = (item.messages || []).map(messageText).join(' ');
       return !lowQuery || (String(item.title || '') + ' ' + preview + ' ' + transcript).toLowerCase().indexOf(lowQuery) >= 0;
     });
     host.innerHTML = visible.length ? visible.map(function (item) {
       var messages = item.messages || [];
       var last = messages.length ? messages[messages.length - 1] : null;
-      var preview = last ? messageText(last).replace(/\\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
+      var preview = last ? messageText(last).replace(/\s+/g, ' ').slice(0, 42) : '还没有消息，点进来开始聊天';
       var hitCount = lowQuery ? messages.filter(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; }).length : 0;
       var title = esc(item.title || '未命名窗口');
       var previewMarkup = lowQuery ? highlightPreview(preview) : esc(preview);
       if (lowQuery && preview.toLowerCase().indexOf(lowQuery) < 0) {
         var hitMessage = messages.find(function (message) { return messageText(message).toLowerCase().indexOf(lowQuery) >= 0; });
-        if (hitMessage) previewMarkup = highlightPreview(messageText(hitMessage).replace(/\\s+/g, ' '));
+        if (hitMessage) previewMarkup = highlightPreview(messageText(hitMessage).replace(/\s+/g, ' '));
         else if (String(item.title || '').toLowerCase().indexOf(lowQuery) >= 0) previewMarkup = '窗口名称匹配';
       }
       return '<div class="chat-session-row' + (item.id === activeChatId ? ' is-active' : '') + (item.pinned ? ' is-pinned' : '') + (lowQuery ? ' has-search-hit' : '') + '">' +
