@@ -1761,6 +1761,9 @@
       var toolGroup = toolToggle.closest('.tool-call-group');
       var toolExpanded = toolGroup.classList.toggle('is-open');
       toolToggle.setAttribute('aria-expanded', toolExpanded ? 'true' : 'false');
+      toolToggle.setAttribute('aria-label', toolExpanded ? '收起工具调用记录' : '展开工具调用记录');
+      var toolHint = toolToggle.querySelector('small');
+      if (toolHint) toolHint.textContent = toolExpanded ? '收起记录' : '查看记录';
       var toolDetails = toolGroup.querySelector('.tool-call-details');
       if (toolDetails) toolDetails.hidden = !toolExpanded;
       return;
