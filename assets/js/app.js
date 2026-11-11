@@ -1454,6 +1454,7 @@
         try { chatScroll.scrollTo({ top: Math.max(0, top), behavior: REDUCE ? 'auto' : 'smooth' }); }
         catch (e) { chatScroll.scrollTop = Math.max(0, top); }
       } else chatScroll.scrollTop = Math.max(0, top);
+      if (history[index]) syncChatDateNav(localDateInputValue(new Date(history[index].ts)));
       target.classList.remove('search-jump-focus');
       void target.offsetWidth;
       target.classList.add('search-jump-focus');
@@ -2286,11 +2287,6 @@
     Array.prototype.forEach.call(nodes, function (node) {
       node.classList.toggle('search-current', Number(node.dataset.index) === targetIndex);
     });
-    var target = msgList.querySelector('.msg[data-index="' + targetIndex + '"]');
-    if (target) {
-      var top = target.offsetTop - Math.max(24, chatScroll.clientHeight * 0.28);
-      chatScroll.scrollTo ? chatScroll.scrollTo({ top: top, behavior: REDUCE ? 'auto' : 'smooth' }) : (chatScroll.scrollTop = top);
-    }
     $('searchCount').textContent = (searchCursor + 1) + ' / ' + matches.length;
     jumpToChatMessage(targetIndex);
   }
