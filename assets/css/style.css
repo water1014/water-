@@ -3520,3 +3520,93 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     animation:none!important;
   }
 }
+
+
+/* 33 · CHAT ACTION RAIL · quiet controls, predictable touch targets */
+.app-chat .msg .msg-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:4px;
+  min-height:30px;
+  margin:1px 0 0 2px;
+  padding:0;
+  opacity:.56;
+  transition:opacity 160ms ease;
+}
+.app-chat .msg.user .msg-actions{justify-content:flex-end;margin-right:2px}
+.app-chat .msg .msg-actions button{
+  position:static;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  min-width:30px;
+  min-height:30px;
+  width:auto;
+  height:30px;
+  padding:0 8px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  box-shadow:none;
+  color:var(--ink-sub);
+  opacity:1;
+  transform:none;
+  font:inherit;
+  font-size:10px;
+  line-height:1;
+  transition:background 150ms ease,border-color 150ms ease,color 150ms ease;
+}
+.app-chat .msg .msg-actions .msg-copy-btn,
+.app-chat .msg .msg-actions .msg-quote-btn{
+  font-size:0;
+  gap:0;
+}
+.app-chat .msg .msg-actions .msg-copy-btn::before{
+  content:"⧉";
+  font-size:15px;
+  line-height:1;
+}
+.app-chat .msg .msg-actions .msg-quote-btn::before{
+  content:"↩";
+  font-size:16px;
+  line-height:1;
+}
+.app-chat .msg .msg-actions .love-btn{
+  display:inline-flex;
+  width:30px;
+  min-width:30px;
+  height:30px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  box-shadow:none;
+  transform:none;
+  opacity:1;
+}
+.app-chat .msg .msg-actions .love-btn svg{width:14px;height:14px}
+.app-chat .msg .msg-actions button:active,
+.app-chat .msg .msg-actions button:focus-visible{
+  background:rgba(112,175,194,.11);
+  border-color:rgba(112,175,194,.18);
+  color:var(--accent-deep);
+  outline:none;
+}
+.app-chat .msg .msg-actions .love-btn.is-loved{color:var(--accent-deep)}
+.app-chat .msg .msg-actions .msg-copy-btn.is-copied{font-size:0}
+@media(hover:hover){
+  .app-chat .msg .msg-actions{opacity:0}
+  .app-chat .msg:hover .msg-actions,
+  .app-chat .msg:focus-within .msg-actions{opacity:.82}
+}
+@media(hover:none){
+  .app-chat .msg .msg-actions{opacity:.58}
+  .app-chat .msg .msg-actions button{min-width:32px;min-height:32px;height:32px}
+  .app-chat .msg .msg-actions .love-btn{width:32px;min-width:32px;height:32px}
+}
+[data-theme="night"] .app-chat .msg .msg-actions button{color:rgba(205,226,234,.7)}
+[data-theme="rose"] .app-chat .msg .msg-actions button{color:rgba(135,105,117,.78)}
+@media(prefers-reduced-motion:reduce){.app-chat .msg .msg-actions,.app-chat .msg .msg-actions button{transition:none}}
