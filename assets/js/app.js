@@ -979,29 +979,49 @@
   function splitAssistantBubbles(content) {
     var source = String(content || '').replace(/\r/g, '').trim();
     if (!source) return [];
-    var paragraphs = source.split(/\n\s*\n+/).map(function (part) {
-      return part.trim();
-    }).filter(Boolean);
+
+    // Parse blocks line-by-line so blank lines inside fenced code are never
+    // mistaken for message boundaries.
+    var lines = source.split('\n');
+    var blocks = [], paragraph = [], code = [], fence = '', inCode = false;
+    function flushParagraph() {
+      if (!paragraph.length) return;
+      blocks.push({ type: 'text', value: paragraph.join(' ').trim() });
+      paragraph = [];
+    }
+    lines.forEach(function (line) {
+      var marker = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+      if (inCode) {
+        code.push(line);
+        if (marker && marker[1].charAt(0) === fence.charAt(0) && marker[1].length >= fence.length) {
+          blocks.push({ type: 'fixed', value: code.join('\n') });
+          code = []; inCode = false; fence = '';
+        }
+        return;
+      }
+      if (marker) {
+        flushParagraph();
+        inCode = true; fence = marker[1]; code = [line];
+        return;
+      }
+      if (!line.trim()) { flushParagraph(); return; }
+      paragraph.push(line.trim());
+    });
+    if (inCode && code.length) blocks.push({ type: 'fixed', value: code.join('\n') });
+    flushParagraph();
+
     var result = [];
-    paragraphs.forEach(function (paragraph) {
-      var lines = paragraph.split(/\n+/).map(function (line) {
-        return line.trim();
-      }).filter(Boolean);
-      var isList = lines.length > 1 && lines.every(function (line) {
-        return /^(?:[-*•]|\d+[.、)、])\s*/.test(line);
-      });
-      if (isList) {
-        result.push(lines.join('\n'));
+    blocks.forEach(function (block) {
+      var value = block.value;
+      if (!value) return;
+      // Lists, tables, headings and quoted blocks stay structurally whole.
+      // Splitting these would detach list items or damage Markdown syntax.
+      var structural = /^(?:[-*+]\\s|\\d+[.)、]\\s|\\|.*\\||#{1,6}\\s|>\\s?)/m.test(value);
+      if (block.type === 'fixed' || structural || value.length <= 230) {
+        result.push(value);
         return;
       }
-      var text = lines.join(' ');
-      // Keep normal paragraphs intact. Only divide unusually long blocks,
-      // and do so at sentence boundaries rather than every two sentences.
-      if (text.length <= 230) {
-        result.push(text);
-        return;
-      }
-      var sentences = text.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [text];
+      var sentences = value.match(/[^。！？!?；;]+[。！？!?；;]?/g) || [value];
       var current = '';
       sentences.forEach(function (sentence) {
         sentence = sentence.trim();
