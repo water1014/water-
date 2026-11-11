@@ -4850,6 +4850,7 @@
     arcDecay();
     collectYesterday();
     renderArchive();
+    restoreChatDraft();
     autoGrow();
     setSendUI(false);
     if (sendBtn) sendBtn.disabled = true;
