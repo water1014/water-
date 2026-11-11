@@ -955,7 +955,12 @@
       out.push('<pre><code>' + esc(code.join('\n')) + '</code></pre>');
       code = []; inCode = false; fence = '';
     }
-    lines.forEach(function (line) {
+    var skipTableUntil = -1;
+    function tableCells(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (cell) { return cell.trim(); });
+    }
+    lines.forEach(function (line, lineIndex) {
+      if (lineIndex <= skipTableUntil) return;
       var fenceMatch = line.match(/^\s{0,3}([\x60]{3,}|~{3,})/);
       if (inCode) {
         if (fenceMatch && fenceMatch[1].charAt(0) === fence.charAt(0) && fenceMatch[1].length >= fence.length) closeCode();
@@ -964,6 +969,32 @@
       }
       if (fenceMatch) { flushParagraph(); closeList(); inCode = true; fence = fenceMatch[1]; code = []; return; }
       if (!line.trim()) { flushParagraph(); closeList(); return; }
+      var nextLine = lines[lineIndex + 1] || '';
+      if (/^\s*\|?.+\|.+\|?\s*$/.test(line) && /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(nextLine)) {
+        flushParagraph(); closeList();
+        var headers = tableCells(line), alignments = tableCells(nextLine).map(function (cell) {
+          return cell.charAt(0) === ':' && cell.charAt(cell.length - 1) === ':' ? 'center' : cell.charAt(cell.length - 1) === ':' ? 'right' : 'left';
+        });
+        var table = ['<div class="chat-table-wrap"><table><thead><tr>'];
+        headers.forEach(function (cell, cellIndex) {
+          table.push('<th style="text-align:' + (alignments[cellIndex] || 'left') + '">' + inline(cell) + '</th>');
+        });
+        table.push('</tr></thead><tbody>');
+        var rowIndex = lineIndex + 2;
+        while (rowIndex < lines.length && /^\s*\|?.+\|.+\|?\s*$/.test(lines[rowIndex]) && lines[rowIndex].indexOf('|') >= 0) {
+          var cells = tableCells(lines[rowIndex]);
+          table.push('<tr>');
+          headers.forEach(function (_, cellIndex) {
+            table.push('<td style="text-align:' + (alignments[cellIndex] || 'left') + '">' + inline(cells[cellIndex] || '') + '</td>');
+          });
+          table.push('</tr>');
+          rowIndex++;
+        }
+        table.push('</tbody></table></div>');
+        out.push(table.join(''));
+        skipTableUntil = rowIndex - 1;
+        return;
+      }
       var heading = line.match(/^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$/);
       if (heading) {
         flushParagraph(); closeList();
