@@ -3465,3 +3465,40 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
     font-size:9px;
   }
 }
+
+
+/* 32 · CHAT QUOTES · one calm quotation surface for consecutive lines */
+.app-chat .msg.ai .bubble blockquote,
+.app-chat .msg.ai .bubble-piece blockquote {
+  position:relative;
+  margin:9px 0;
+  padding:8px 11px 8px 13px;
+  border:1px solid rgba(108,163,181,.13);
+  border-left:2px solid rgba(108,163,181,.55);
+  border-radius:0 9px 9px 0;
+  background:rgba(108,163,181,.055);
+  color:var(--ink-sub);
+  line-height:1.7;
+  overflow-wrap:anywhere;
+}
+.app-chat .msg.ai .bubble blockquote p,
+.app-chat .msg.ai .bubble-piece blockquote p {
+  margin:0;
+}
+.app-chat .msg.ai .bubble blockquote strong,
+.app-chat .msg.ai .bubble-piece blockquote strong {
+  color:var(--ink);
+  font-weight:650;
+}
+[data-theme="night"] .app-chat .msg.ai .bubble blockquote,
+[data-theme="night"] .app-chat .msg.ai .bubble-piece blockquote {
+  border-color:rgba(185,220,232,.12);
+  border-left-color:rgba(151,202,220,.5);
+  background:rgba(185,220,232,.045);
+}
+[data-theme="rose"] .app-chat .msg.ai .bubble blockquote,
+[data-theme="rose"] .app-chat .msg.ai .bubble-piece blockquote {
+  border-color:rgba(180,139,145,.14);
+  border-left-color:rgba(180,139,145,.48);
+  background:rgba(180,139,145,.05);
+}
