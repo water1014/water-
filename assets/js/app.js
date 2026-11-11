@@ -401,24 +401,28 @@
     var bubble = chatSetting('bubbleMode', config.bubbleMode || 'split');
     var reasoning = chatSetting('showReasoning', config.showReasoning !== false);
     var times = chatSetting('showTimestamps', true);
+    var toolsVisible = chatSetting('showToolCalls', true);
     openSheet('<div class="panel-head"><div><p class="chat-settings-kicker">THIS WINDOW · CHAT SETTINGS</p><h2 class="panel-title">当前窗口设置</h2></div><button class="icon-btn" data-close type="button" aria-label="关闭">' + X2 + '</button></div>' +
       '<label class="field"><span class="field-label">窗口名称</span><input id="chatPrefTitle" type="text" maxlength="24" placeholder="给这段聊天取个名字"></label>' +
       '<label class="field"><span class="field-label">回复气泡排版</span><select id="chatPrefBubble"><option value="split">分割气泡 · 按段落拆开</option><option value="single">完整气泡 · 保持一整条</option></select><span class="field-hint">只影响当前聊天窗口，不会改动其他窗口。</span></label>' +
       '<label class="field"><span class="field-label">思考摘要</span><select id="chatPrefReason"><option value="show">显示接口返回的思考摘要</option><option value="hide">隐藏思考摘要</option></select><span class="field-hint">只显示服务商实际返回的 reasoning 摘要，不展示模型隐藏的内部思维链。</span></label>' +
       '<label class="field"><span class="field-label">消息时间</span><select id="chatPrefTimes"><option value="show">显示每条消息时间</option><option value="hide">隐藏消息时间</option></select></label>' +
+      '<label class="field"><span class="field-label">工具调用记录</span><select id="chatPrefTools"><option value="show">显示折叠的调用记录</option><option value="hide">隐藏调用记录</option></select><span class="field-hint">只影响当前窗口的显示，不影响接口请求和已保存记录。</span></label>' +
       '<button class="btn-primary" id="chatPrefSave" type="button" style="width:100%;margin-top:14px">保存当前窗口设置</button>',
       function (ov, close) {
         ov.querySelector('#chatPrefTitle').value = item.title || '';
         ov.querySelector('#chatPrefBubble').value = bubble;
         ov.querySelector('#chatPrefReason').value = reasoning ? 'show' : 'hide';
         ov.querySelector('#chatPrefTimes').value = times ? 'show' : 'hide';
+        ov.querySelector('#chatPrefTools').value = toolsVisible ? 'show' : 'hide';
         ov.querySelector('#chatPrefSave').addEventListener('click', function () {
           var previous = item.settings || {}, previousTitle = item.title;
           item.title = ov.querySelector('#chatPrefTitle').value.trim() || previousTitle;
           item.settings = Object.assign({}, previous, {
             bubbleMode: ov.querySelector('#chatPrefBubble').value,
             showReasoning: ov.querySelector('#chatPrefReason').value !== 'hide',
-            showTimestamps: ov.querySelector('#chatPrefTimes').value !== 'hide'
+            showTimestamps: ov.querySelector('#chatPrefTimes').value !== 'hide',
+            showToolCalls: ov.querySelector('#chatPrefTools').value !== 'hide'
           });
           if (!saveChatSessions()) { item.settings = previous; item.title = previousTitle; return; }
           renderChatTitle(); renderChatSidebar(); renderChat(); close(); toast('当前窗口设置已保存');
@@ -897,6 +901,7 @@
   }
 
   function buildToolCalls(m) {
+    if (chatSetting('showToolCalls', true) === false) return '';
     if (!Array.isArray(m.toolCalls) || !m.toolCalls.length) return '';
     var rows = m.toolCalls.map(function (tool) {
       var args = String(tool.arguments || '');
@@ -912,7 +917,7 @@
         args = JSON.stringify(parsedArgs, null, 2);
       } catch (e) { args = args.replace(/(authorization|cookie|api[_-]?key|token|secret|password|credential)(\\s*[=:]\\s*)[^,}\\s]+/gi, '$1$2[已隐藏]'); }
       var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
-      return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>接口返回</em></div>';
+      return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>请求记录</em></div>';
     }).join('');
     return '<section class="tool-call-group"><button class="tool-call-toggle" type="button" aria-expanded="false"><span>⌘</span><b>工具调用 · ' + m.toolCalls.length + '</b><small>查看记录</small><i>›</i></button><div class="tool-call-details">' + rows + '</div></section>';
   }
