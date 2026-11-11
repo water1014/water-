@@ -973,8 +973,8 @@
     var actions = '<div class="msg-actions"><button class="msg-copy-btn" type="button" aria-label="复制这条消息" title="复制">复制</button><button class="msg-quote-btn" type="button" aria-label="引用这条消息" title="引用">引用</button>' +
       (isUser ? '' : '<button class="love-btn' + (m.loved ? ' is-loved' : '') + '" type="button" aria-label="收藏这句话" aria-pressed="' + (m.loved ? 'true' : 'false') + '">' + HEART_SVG + '</button>') + '</div>';
     var messageBody = highlight(m.content);
-    var bubbleMarkup = '<div class="bubble">' + messageBody + '</div>';
-    if (!isUser && chatSetting('bubbleMode', config.bubbleMode || 'split') === 'split') {
+    var bubbleMarkup = m.content ? '<div class="bubble">' + messageBody + '</div>' : '';
+    if (!isUser && m.content && chatSetting('bubbleMode', config.bubbleMode || 'split') === 'split') {
       var paragraphs = String(m.content).split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
       if (paragraphs.length > 1) {
         bubbleMarkup = '<div class="bubble-stack">' + paragraphs.map(function (part, index) {
@@ -982,8 +982,10 @@
         }).join('') + '</div>';
       }
     }
-    el.innerHTML = buildReason(m) + buildToolCalls(m) +
-      '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + actions + '</div>' +
+    var messageRow = bubbleMarkup || (m.content && actions)
+      ? '<div class="row">' + (isUser ? '<span class="bubble-pix" aria-hidden="true"></span>' : '') + bubbleMarkup + (m.content ? actions : '') + '</div>'
+      : '';
+    el.innerHTML = buildReason(m) + buildToolCalls(m) + messageRow +
       '<span class="msg-time">·' + hhmm(m.ts) + '</span>';
     return el;
   }
