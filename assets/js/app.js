@@ -378,7 +378,7 @@
       return;
     }
     history = [];
-    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
+    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = ''; editingMessageIndex = -1;
     closeChatSidebar();
     renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
     toast('新聊天窗口已打开');
@@ -391,7 +391,7 @@
     var previousId = activeChatId, previousHistory = history;
     activeChatId = id;
     history = normalizeHistory(target.messages);
-    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = '';
+    pendingQuote = null; activeQuote = null; retryQuote = null; retryPayload = ''; editingMessageIndex = -1;
     if (!saveChatSessions()) { activeChatId = previousId; history = previousHistory; return; }
     closeChatSidebar();
     renderChatTitle(); renderChat(); renderHome(); scrollToBottom(true);
@@ -1281,6 +1281,7 @@
   function setQuoteFromMessage(index) {
     var m = history[index];
     if (!m || !m.content || m.sticker || m.image || m.voice) return;
+    editingMessageIndex = -1;
     pendingQuote = { role: m.role, content: String(m.content).slice(0, 240), index: index };
     renderQuotePreview();
     msgInput.focus();
