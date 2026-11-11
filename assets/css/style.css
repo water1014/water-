@@ -3844,3 +3844,17 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
   .app-chat .chat-session-tools{gap:1px}
   .app-chat .chat-session-tools button{width:27px;height:30px;min-width:27px}
 }
+
+
+/* 41 · SEARCH JUMP FOCUS · temporary destination marker */
+.app-chat .msg.search-jump-focus{
+  position:relative;z-index:2;
+  animation:chatSearchJump 1.8s ease both
+}
+@keyframes chatSearchJump{
+  0%,100%{filter:none}
+  12%,62%{filter:drop-shadow(0 0 10px rgba(91,157,181,.34))}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-chat .msg.search-jump-focus{animation:none;outline:2px solid rgba(91,157,181,.42);outline-offset:3px;border-radius:16px}
+}
