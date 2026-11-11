@@ -1017,7 +1017,7 @@
         args = JSON.stringify(parsedArgs, null, 2);
       } catch (e) { args = args.replace(/(authorization|cookie|api[_-]?key|token|secret|password|credential)(\s*[=:]\s*)[^,}\s]+/gi, '$1$2[已隐藏]'); }
       var safeArgs = args.length > 1200 ? args.slice(0, 1200) + '…' : args;
-      return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><small>' + esc(safeArgs || '没有参数摘要') + '</small></span><em>请求记录</em></div>';
+      return '<div class="tool-call-row"><span class="tool-call-mark">⌘</span><span class="tool-call-copy"><b>' + esc(tool.name || 'tool') + '</b><pre class="tool-call-arguments"><code>' + esc(safeArgs || '没有参数摘要') + '</code></pre></span><em>请求记录</em></div>';
     }).join('');
     var panelId = 'chat-tools-' + Number(index);
     return '<section class="tool-call-group"><button class="tool-call-toggle" type="button" aria-expanded="false" aria-controls="' + panelId + '"><span>⌘</span><b>工具调用 · ' + m.toolCalls.length + '</b><small>查看记录</small><i>›</i></button><div class="tool-call-details" id="' + panelId + '" hidden><p class="tool-call-note">模型提出的调用请求，仅为记录，不代表工具已执行</p>' + rows + '</div></section>';
@@ -1031,7 +1031,7 @@
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.4 9.2 3.9 3.9 0 0 1 17 18z"/></svg>' +
       '<span>Thinking</span>' +
       '<svg class="reason-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>' +
-      '</button><div class="reason-body" id="' + panelId + '" hidden>' + esc(m.reasoning) + '</div></div>';
+      '</button><div class="reason-body" id="' + panelId + '" hidden>' + highlight(m.reasoning) + '</div></div>';
   }
 
   function voiceBars(seed) {
