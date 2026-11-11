@@ -941,11 +941,7 @@
       function safeHref(raw) {
         var candidate = String(raw || '').trim();
         if (!candidate || /[\u0000-\u0020\u007f]/.test(candidate)) return '';
-        try {
-          var parsed = new URL(candidate);
-          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:' && parsed.protocol !== 'mailto:') return '';
-          return parsed.href;
-        } catch (e) { return ''; }
+        return /^(?:https?:\/\/|mailto:)/i.test(candidate) ? candidate : '';
       }
       var source = String(value || '');
       // Keep inline code literal so link syntax inside it is never activated.
