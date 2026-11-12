@@ -1719,7 +1719,7 @@ body{display:flex;align-items:center;justify-content:center;min-height:100dvh}
 .hp-thumb{width:60px;height:60px;border-radius:15px}
 .hp-now{width:100%;text-align:left}
 .dots{
-  bottom:91px;
+  bottom:calc(91px + env(safe-area-inset-bottom));
   gap:7px;
   padding:7px 11px;
   width:max-content;
